@@ -105,7 +105,7 @@
           <div class="grid-menu">
             <button type="button" class="menu-card" id="menuTriage">
               <h3>聊聊怎么了</h3>
-              <p>急事先筛、尿尿、吐拉、皮肤、误食、闹脾气等</p>
+              <p>含猫/犬标准化临床采集清单，与急事先筛、分症状追问</p>
             </button>
             <button type="button" class="menu-card" id="menuRed">
               <h3>这些情况要抓紧去医院</h3>
@@ -137,7 +137,14 @@
       <section data-view="triageMenu" hidden>
         <div class="hero">
           <h2>想从哪件事聊起？</h2>
-          <p class="muted">很多步骤可以<strong>多选</strong>，更像真实养宠时的「好几件同时担心」。</p>
+          <p class="muted">
+            需要更<strong>专业、可对照兽医</strong>的表述时，优先用下方「标准化采集」；信息越结构化，越利于判读紧急程度（非诊断）。
+          </p>
+          <div class="option-grid triage-picks triage-picks-intake">
+            <button type="button" class="btn option option-intake" id="startCatIntake">猫咪 · 标准化临床采集清单</button>
+            <button type="button" class="btn option option-intake" id="startDogIntake">狗狗 · 标准化临床采集清单</button>
+          </div>
+          <p class="muted triage-divider">或按症状快速问：</p>
           <div class="option-grid triage-picks">
             <button type="button" class="btn option" id="startScreen">先筛一筛：有没有急事</button>
             <button type="button" class="btn option" id="startUrinary">尿尿不太对</button>
@@ -215,6 +222,7 @@
     </div>
 
     <script src="/js/triageEngine.js"></script>
+    <script src="/js/intakeEval.js"></script>
     <script src="/js/app.js"></script>
   </body>
 </html>

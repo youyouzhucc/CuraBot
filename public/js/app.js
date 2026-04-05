@@ -6,15 +6,25 @@
     flowKey: null,
     stepId: null,
     lastOutcome: null,
+    intakeFlags: null,
   };
 
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
   async function loadKnowledge() {
-    const res = await fetch("/data/knowledge.json", { cache: "no-store" });
-    if (!res.ok) throw new Error("无法加载内容");
-    state.knowledge = await res.json();
+    const [k, intake] = await Promise.all([
+      fetch("/data/knowledge.json", { cache: "no-store" }).then((r) => {
+        if (!r.ok) throw new Error("无法加载内容");
+        return r.json();
+      }),
+      fetch("/data/intake-flows.json", { cache: "no-store" }).then((r) => {
+        if (!r.ok) throw new Error("无法加载采集清单");
+        return r.json();
+      }),
+    ]);
+    state.knowledge = k;
+    Object.assign(k.triageFlows || {}, intake.triageFlows || {});
   }
 
   function speciesLabel(sp) {
@@ -105,6 +115,19 @@
   function startFlow(key) {
     const flow = state.knowledge.triageFlows[key];
     if (!flow) return;
+    if (flow.flowType === "accumulate") {
+      if (key === "catIntake" && state.species !== "cat") {
+        alert("该清单专为猫咪设计，请先在首页选择「猫咪」。");
+        return;
+      }
+      if (key === "dogIntake" && state.species !== "dog") {
+        alert("该清单专为狗狗设计，请先在首页选择「狗狗」。");
+        return;
+      }
+      state.intakeFlags = new Set();
+    } else {
+      state.intakeFlags = null;
+    }
     state.flowKey = key;
     state.stepId = flow.start;
     state.lastOutcome = null;
@@ -121,12 +144,25 @@
           o.vetNeed
         )}</div></div>`
       : "";
+    const flowMeta = state.knowledge.triageFlows[state.flowKey];
+    const kicker =
+      flowMeta && flowMeta.outcomeKicker
+        ? flowMeta.outcomeKicker
+        : `${speciesLabel(state.species)} · 温柔小结`;
+    const copyBlock =
+      o.copyBlock &&
+      `<div class="copy-template">
+        <p class="muted">以下为可复制文本，便于在线问诊或就诊时使用（请补充持续时间、用药与化验单）：</p>
+        <textarea readonly class="copy-text" rows="12" id="intakeCopyArea">${escapeHtml(o.copyBlock)}</textarea>
+        <button type="button" class="btn secondary" id="btnCopyIntake">复制全文</button>
+      </div>`;
     host.innerHTML = `
       <div class="outcome ${levelClass}">
-        <p class="outcome-kicker">${escapeHtml(speciesLabel(state.species))} · 温柔小结</p>
+        <p class="outcome-kicker">${escapeHtml(kicker)}</p>
         <h2 class="outcome-title">${escapeHtml(o.title)}</h2>
         <div class="outcome-body">${escapeHtml(o.body).replace(/\n/g, "<br/>")}</div>
         ${vetBlock}
+        ${copyBlock || ""}
         ${renderRefs(o.refIds)}
         <div class="row">
           <button type="button" class="btn secondary" id="btnRestartFlow">再测一次</button>
@@ -136,6 +172,24 @@
     `;
     $("#btnRestartFlow").addEventListener("click", () => startFlow(state.flowKey));
     $("#btnBackMenu").addEventListener("click", () => showView("menu"));
+    const btnCopy = $("#btnCopyIntake");
+    if (btnCopy && o.copyBlock) {
+      btnCopy.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(o.copyBlock);
+          btnCopy.textContent = "已复制";
+          setTimeout(() => {
+            btnCopy.textContent = "复制全文";
+          }, 2000);
+        } catch {
+          const ta = $("#intakeCopyArea");
+          if (ta) {
+            ta.focus();
+            ta.select();
+          }
+        }
+      });
+    }
   }
 
   function renderMultiStep(flow, step) {
@@ -219,12 +273,62 @@
     renderOutcome();
   }
 
+  function renderAccumulateStep(flow, step) {
+    const host = $("#flowContent");
+    const options = CuraTriageEngine.getVisibleOptions(step, state.species);
+    const optsHtml = options
+      .map((opt, idx) => {
+        const label = escapeHtml(opt.label);
+        return `<button type="button" class="btn option" data-opt-index="${idx}">${label}</button>`;
+      })
+      .join("");
+    const sectionHtml = step.section
+      ? `<p class="intake-meta"><span class="intake-section">${escapeHtml(step.section)}</span> · <span class="intake-progress">${escapeHtml(
+          step.progress || ""
+        )}</span></p>`
+      : "";
+    const sub = flow.subtitle ? `<p class="muted intake-sub">${escapeHtml(flow.subtitle)}</p>` : "";
+    host.innerHTML = `
+      <header class="flow-head">
+        <p class="badge">${escapeHtml(flow.title)}</p>
+        ${sub}
+        ${sectionHtml}
+        <p class="flow-q">${escapeHtml(step.text)}</p>
+      </header>
+      <div class="option-grid">${optsHtml}</div>
+    `;
+    $$(".option", host).forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const idx = Number(btn.getAttribute("data-opt-index"));
+        const opt = options[idx];
+        (opt.flags || []).forEach((f) => state.intakeFlags.add(f));
+        if (opt.criticalOutcome) {
+          const out = CuraIntakeEval.finalizeCritical(opt.criticalOutcome, state.intakeFlags);
+          state.lastOutcome = out;
+          renderOutcome();
+          return;
+        }
+        if (opt.next === "END") {
+          state.lastOutcome = CuraIntakeEval.evaluateIntake(state.species, state.intakeFlags);
+          renderOutcome();
+          return;
+        }
+        state.stepId = opt.next;
+        renderStep();
+      });
+    });
+  }
+
   function renderStep() {
     const flow = state.knowledge.triageFlows[state.flowKey];
     const step = CuraTriageEngine.getStep(flow, state.stepId);
     const host = $("#flowContent");
     if (!step) {
       host.innerHTML = `<p class="error">步骤缺失</p>`;
+      return;
+    }
+    if (flow.flowType === "accumulate") {
+      renderAccumulateStep(flow, step);
       return;
     }
     if (step.multi) {
@@ -410,6 +514,8 @@
     $("#startSkin").addEventListener("click", () => startFlow("skin"));
     $("#startToxic").addEventListener("click", () => startFlow("toxic"));
     $("#startBehavior").addEventListener("click", () => startFlow("behavior"));
+    $("#startCatIntake").addEventListener("click", () => startFlow("catIntake"));
+    $("#startDogIntake").addEventListener("click", () => startFlow("dogIntake"));
   }
 
   async function boot() {

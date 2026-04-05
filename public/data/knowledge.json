@@ -30,7 +30,8 @@
     {"id": "bsava-behavior", "category": "行为", "title": "BSAVA 行为医学手册", "role": "行为问题与训练原则"},
     {"id": "low-stress", "category": "行为", "title": "低应激保定与行为（Yin）", "role": "减少紧张与就诊体验"},
     {"id": "plumb", "category": "药物", "title": "兽药手册（Plumb）", "role": "用药须兽医处方"},
-    {"id": "wsava-aafp", "category": "指南", "title": "WSAVA / AAFP 公开指南", "role": "疼痛与护理标准"}
+    {"id": "wsava-aafp", "category": "指南", "title": "WSAVA / AAFP 公开指南", "role": "疼痛与护理标准"},
+    {"id": "aaha", "category": "指南", "title": "AAHA 美国动物医院协会相关标准与流程", "role": "门诊、急诊与护理流程参考"}
   ],
   "emergencyRedLines": [
     {

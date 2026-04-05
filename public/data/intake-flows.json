@@ -1,0 +1,327 @@
+{
+  "triageFlows": {
+    "catIntake": {
+      "title": "猫咪 · 标准化健康采集",
+      "subtitle": "依据猫科临床采集结构（Signalment / 生命体征 / 各系统线索）",
+      "species": ["cat"],
+      "flowType": "accumulate",
+      "outcomeKicker": "采集结论（非诊断）",
+      "start": "ci_age",
+      "steps": {
+        "ci_age": {
+          "section": "① 基础信息",
+          "progress": "1 / 16",
+          "text": "猫咪年龄阶段？（影响代谢、免疫与老年病风险）",
+          "options": [
+            {"label": "幼猫（<12 月龄）", "next": "ci_sex", "flags": ["age_kitten"]},
+            {"label": "成年猫", "next": "ci_sex", "flags": ["age_adult"]},
+            {"label": "老年猫（≥11 岁）", "next": "ci_sex", "flags": ["age_senior"]}
+          ]
+        },
+        "ci_sex": {
+          "section": "① 基础信息",
+          "progress": "2 / 16",
+          "text": "性别与绝育状态？（泌尿/行为风险与手术史相关）",
+          "options": [
+            {"label": "公猫，已绝育", "next": "ci_breed", "flags": ["sex_m_neutered"]},
+            {"label": "公猫，未绝育", "next": "ci_breed", "flags": ["sex_m_intact"]},
+            {"label": "母猫，已绝育", "next": "ci_breed", "flags": ["sex_f_neutered"]},
+            {"label": "母猫，未绝育", "next": "ci_breed", "flags": ["sex_f_intact"]}
+          ]
+        },
+        "ci_breed": {
+          "section": "① 基础信息",
+          "progress": "3 / 16",
+          "text": "品种背景？（部分品种需关注遗传倾向，仅作线索）",
+          "options": [
+            {"label": "混血/家猫（不详）", "next": "ci_wt", "flags": ["breed_dsh"]},
+            {"label": "布偶、英短、美短等（关注心脏/代谢等品种线索）", "next": "ci_wt", "flags": ["breed_risk"]},
+            {"label": "折耳或折耳相关血统", "next": "ci_wt", "flags": ["breed_fold"]},
+            {"label": "其他登记品种", "next": "ci_wt", "flags": ["breed_other"]}
+          ]
+        },
+        "ci_wt": {
+          "section": "① 基础信息",
+          "progress": "4 / 16",
+          "text": "近几周体重/体况变化？",
+          "options": [
+            {"label": "稳定", "next": "ci_bar", "flags": ["wt_stable"]},
+            {"label": "明显下降", "next": "ci_bar", "flags": ["wt_loss"]},
+            {"label": "明显发胖", "next": "ci_bar", "flags": ["wt_gain"]}
+          ]
+        },
+        "ci_bar": {
+          "section": "② 核心生命体征 · 精神",
+          "progress": "5 / 16",
+          "text": "整体精神状态（BAR 分级思路）？",
+          "options": [
+            {"label": "A：活泼、警觉、反应好", "next": "ci_appetite", "flags": ["bar_a"]},
+            {"label": "B：沉郁、爱躲藏（疼痛/应激常见）", "next": "ci_appetite", "flags": ["bar_b"]},
+            {"label": "C：嗜睡、反应差", "next": "ci_appetite", "flags": ["bar_c"]}
+          ]
+        },
+        "ci_appetite": {
+          "section": "② 食欲",
+          "progress": "6 / 16",
+          "text": "食欲如何？",
+          "options": [
+            {"label": "正常", "next": "ci_water", "flags": ["appetite_ok"]},
+            {"label": "亢进", "next": "ci_water", "flags": ["appetite_up"]},
+            {"label": "减退", "next": "ci_water", "flags": ["appetite_down"]},
+            {"label": "废绝（几乎不吃）", "next": "ci_water", "flags": ["appetite_absent"]}
+          ]
+        },
+        "ci_water": {
+          "section": "② 饮水",
+          "progress": "7 / 16",
+          "text": "饮水量变化？（多饮常见于内分泌、肾脏等线索）",
+          "options": [
+            {"label": "正常", "next": "ci_temp", "flags": ["water_ok"]},
+            {"label": "明显增多（聚渴）", "next": "ci_temp", "flags": ["water_poly"]},
+            {"label": "明显减少", "next": "ci_temp", "flags": ["water_low"]}
+          ]
+        },
+        "ci_temp": {
+          "section": "② 体温估计",
+          "progress": "8 / 16",
+          "text": "体表温度主观感受？（直肠温 38.0–39.2℃ 为参考，此处仅为家长估计）",
+          "options": [
+            {"label": "耳朵/肉垫发烫", "next": "ci_vomit", "flags": ["temp_hot"]},
+            {"label": "与平时差不多", "next": "ci_vomit", "flags": ["temp_ok"]},
+            {"label": "发凉", "next": "ci_vomit", "flags": ["temp_cold"]}
+          ]
+        },
+        "ci_vomit": {
+          "section": "③ 消化",
+          "progress": "9 / 16",
+          "text": "呕吐情况？",
+          "options": [
+            {"label": "无呕吐", "next": "ci_stool", "flags": ["vomit_none"]},
+            {"label": "偶尔（≤3 次/日）", "next": "ci_stool", "flags": ["vomit_occ"]},
+            {"label": "频繁（>3 次/日）", "next": "ci_stool", "flags": ["vomit_freq"]},
+            {"label": "毛球或未消化食物为主", "next": "ci_stool", "flags": ["vomit_occ", "vomit_hair"]},
+            {"label": "黄绿色/胆汁样", "next": "ci_stool", "flags": ["vomit_bile"]},
+            {"label": "带血或咖啡渣样", "next": "ci_stool", "flags": ["vomit_blood"]}
+          ]
+        },
+        "ci_stool": {
+          "section": "③ 排便",
+          "progress": "10 / 16",
+          "text": "粪便性状与颜色？",
+          "options": [
+            {"label": "成形、颜色棕黄正常", "next": "ci_abd", "flags": ["stool_ok"]},
+            {"label": "软便", "next": "ci_abd", "flags": ["stool_soft"]},
+            {"label": "稀/水样", "next": "ci_abd", "flags": ["stool_watery"]},
+            {"label": "便秘/羊粪球", "next": "ci_abd", "flags": ["stool_constipated"]},
+            {"label": "黑便/柏油样", "next": "ci_abd", "flags": ["stool_melena"]},
+            {"label": "带鲜血", "next": "ci_abd", "flags": ["stool_hematochezia"]}
+          ]
+        },
+        "ci_abd": {
+          "section": "③ 腹部",
+          "progress": "11 / 16",
+          "text": "腹部触感（轻柔摸）？",
+          "options": [
+            {"label": "柔软，猫不抗拒", "next": "ci_uri", "flags": ["abd_soft"]},
+            {"label": "紧绷/一碰就痛", "next": "ci_uri", "flags": ["abd_tight"]},
+            {"label": "明显胀大", "next": "ci_uri", "flags": ["abd_distended"]}
+          ]
+        },
+        "ci_uri": {
+          "section": "④ 泌尿（猫红线区）",
+          "progress": "12 / 16",
+          "text": "排尿频率与表现？",
+          "options": [
+            {"label": "排尿顺畅，次数观感正常", "next": "ci_urine_color", "flags": ["uri_ok"]},
+            {"label": "尿频、尿少、滴尿", "next": "ci_urine_color", "flags": ["uri_pollakiuria"]},
+            {"label": "无尿或几乎只有几滴（已持续一段时间）", "next": "END", "flags": ["uri_obstruction"], "criticalOutcome": "cat_uro_er"},
+            {"label": "排尿时嚎叫/明显痛", "next": "ci_urine_color", "flags": ["uri_strain"]},
+            {"label": "盆外乱尿（需结合泌尿与行为）", "next": "ci_urine_color", "flags": ["uri_house"]}
+          ]
+        },
+        "ci_urine_color": {
+          "section": "④ 尿液颜色",
+          "progress": "13 / 16",
+          "text": "尿液颜色（能观察到时）？",
+          "options": [
+            {"label": "淡黄清亮", "next": "ci_resp", "flags": ["urine_clear"]},
+            {"label": "深茶色", "next": "ci_resp", "flags": ["urine_dark"]},
+            {"label": "洗肉水样/血尿", "next": "ci_resp", "flags": ["urine_blood"]},
+            {"label": "暂不清楚", "next": "ci_resp", "flags": []}
+          ]
+        },
+        "ci_resp": {
+          "section": "⑤ 呼吸与循环",
+          "progress": "14 / 16",
+          "text": "静息时呼吸与姿势？（猫安静时张口呼吸多为异常）",
+          "options": [
+            {"label": "平静，呼吸次数观感正常", "next": "ci_mm", "flags": ["resp_ok"]},
+            {"label": "静息时明显偏快或费力", "next": "ci_mm", "flags": ["resp_fast"]},
+            {"label": "张口呼吸", "next": "ci_mm", "flags": ["resp_open_mouth"]},
+            {"label": "明显腹式呼吸", "next": "ci_mm", "flags": ["resp_abdominal"]}
+          ]
+        },
+        "ci_mm": {
+          "section": "⑤ 粘膜颜色",
+          "progress": "15 / 16",
+          "text": "牙龈/可视粘膜颜色（能安全翻开看时）？",
+          "options": [
+            {"label": "粉红", "next": "ci_beh", "flags": ["mm_pink"]},
+            {"label": "苍白", "next": "ci_beh", "flags": ["mm_pale"]},
+            {"label": "发绀（紫）", "next": "ci_beh", "flags": ["mm_cyanotic"]},
+            {"label": "黄染", "next": "ci_beh", "flags": ["mm_icteric"]},
+            {"label": "未观察", "next": "ci_beh", "flags": []}
+          ]
+        },
+        "ci_beh": {
+          "section": "⑥ 行为与活动",
+          "progress": "16 / 16",
+          "text": "躲藏、步态与理毛？",
+          "options": [
+            {"label": "未见明显躲藏，步态正常，理毛正常", "next": "ci_env", "flags": ["hide_no", "gait_ok", "groom_ok"]},
+            {"label": "躲藏阴暗处", "next": "ci_env", "flags": ["hide_yes"]},
+            {"label": "跛行", "next": "ci_env", "flags": ["gait_lame"]},
+            {"label": "后肢无力/拖行", "next": "ci_env", "flags": ["gait_paresis"]},
+            {"label": "过度舔舐某处", "next": "ci_env", "flags": ["groom_excess"]},
+            {"label": "毛发凌乱、不理毛", "next": "ci_env", "flags": ["groom_unkempt"]}
+          ]
+        },
+        "ci_env": {
+          "section": "⑦ 环境",
+          "progress": "完成",
+          "text": "近期环境是否有较大变化？",
+          "options": [
+            {"label": "有：搬家、新宠物、换粮、装修等", "next": "END", "flags": ["env_change"]},
+            {"label": "无明显变化", "next": "END", "flags": ["env_stable"]}
+          ]
+        }
+      }
+    },
+    "dogIntake": {
+      "title": "犬 · 标准化健康采集",
+      "subtitle": "结合急诊常见风险（GDV、中暑、毒物、神经等）结构化线索",
+      "species": ["dog"],
+      "flowType": "accumulate",
+      "outcomeKicker": "采集结论（非诊断）",
+      "start": "di_age",
+      "steps": {
+        "di_age": {
+          "section": "① 基础信息",
+          "progress": "1 / 12",
+          "text": "年龄阶段？",
+          "options": [
+            {"label": "幼年", "next": "di_sex", "flags": ["d_age_pup"]},
+            {"label": "成年", "next": "di_sex", "flags": ["d_age_adult"]},
+            {"label": "老年", "next": "di_sex", "flags": ["d_age_senior"]}
+          ]
+        },
+        "di_sex": {
+          "section": "① 性别与体型",
+          "progress": "2 / 12",
+          "text": "性别与绝育？",
+          "options": [
+            {"label": "公，已绝育", "next": "di_size", "flags": ["d_sex_m_n"]},
+            {"label": "公，未绝育", "next": "di_size", "flags": ["d_sex_m_i"]},
+            {"label": "母，已绝育", "next": "di_size", "flags": ["d_sex_f_n"]},
+            {"label": "母，未绝育", "next": "di_size", "flags": ["d_sex_f_i"]}
+          ]
+        },
+        "di_size": {
+          "section": "① 体型",
+          "progress": "3 / 12",
+          "text": "体型（与胃扩张-扭转等风险线索相关）？",
+          "options": [
+            {"label": "小型", "next": "di_bar", "flags": ["d_size_s"]},
+            {"label": "中型", "next": "di_bar", "flags": ["d_size_m"]},
+            {"label": "大型/深胸犬", "next": "di_bar", "flags": ["d_size_l"]}
+          ]
+        },
+        "di_bar": {
+          "section": "② 精神与食欲",
+          "progress": "4 / 12",
+          "text": "精神与食欲？",
+          "options": [
+            {"label": "精神好", "next": "di_water", "flags": ["d_bar_a"]},
+            {"label": "蔫、躲藏", "next": "di_water", "flags": ["d_bar_b"]},
+            {"label": "昏睡、几乎无反应", "next": "di_water", "flags": ["d_bar_c"]}
+          ]
+        },
+        "di_water": {
+          "section": "② 饮水",
+          "progress": "5 / 12",
+          "text": "饮水？",
+          "options": [
+            {"label": "正常", "next": "di_gdv", "flags": ["d_water_ok"]},
+            {"label": "明显增多", "next": "di_gdv", "flags": ["d_water_poly"]}
+          ]
+        },
+        "di_gdv": {
+          "section": "③ 腹胀与干呕（急诊线索）",
+          "progress": "6 / 12",
+          "text": "是否出现「肚子胀 + 干呕或呕不出」这一组合？",
+          "options": [
+            {"label": "没有", "next": "di_gi", "flags": ["d_gdv_no"]},
+            {"label": "有，或高度怀疑", "next": "END", "flags": ["d_gdv_yes"], "criticalOutcome": "dog_gdv_er"}
+          ]
+        },
+        "di_gi": {
+          "section": "③ 呕吐与腹泻",
+          "progress": "7 / 12",
+          "text": "呕吐与腹泻？",
+          "options": [
+            {"label": "无呕吐无腹泻", "next": "di_neuro", "flags": ["d_vomit_none", "d_diarrhea_none"]},
+            {"label": "有呕吐", "next": "di_neuro", "flags": ["d_vomit_some"]},
+            {"label": "有腹泻", "next": "di_neuro", "flags": ["d_diarrhea_yes"]},
+            {"label": "呕吐+腹泻", "next": "di_neuro", "flags": ["d_vomit_some", "d_diarrhea_yes"]},
+            {"label": "便血或黑便", "next": "di_neuro", "flags": ["d_stool_blood"]}
+          ]
+        },
+        "di_neuro": {
+          "section": "④ 神经",
+          "progress": "8 / 12",
+          "text": "抽搐、瘫痪、意识异常？",
+          "options": [
+            {"label": "无", "next": "di_resp", "flags": ["d_neuro_ok"]},
+            {"label": "有", "next": "END", "flags": ["d_neuro_bad"], "criticalOutcome": "dog_neuro_er"}
+          ]
+        },
+        "di_resp": {
+          "section": "④ 呼吸",
+          "progress": "9 / 12",
+          "text": "呼吸是否费力、张口喘或粘膜发紫？",
+          "options": [
+            {"label": "大致正常", "next": "di_lame", "flags": ["d_resp_ok"]},
+            {"label": "明显异常", "next": "END", "flags": ["d_resp_bad"], "criticalOutcome": "dog_resp_er"}
+          ]
+        },
+        "di_lame": {
+          "section": "⑤ 运动",
+          "progress": "10 / 12",
+          "text": "跛行？",
+          "options": [
+            {"label": "无", "next": "di_toxin", "flags": ["d_lame_no"]},
+            {"label": "有", "next": "di_toxin", "flags": ["d_lame_yes"]}
+          ]
+        },
+        "di_toxin": {
+          "section": "⑥ 毒物与中暑",
+          "progress": "11 / 12",
+          "text": "可疑毒物或高温环境？",
+          "options": [
+            {"label": "无可疑毒物", "next": "di_heat", "flags": ["d_toxin_no"]},
+            {"label": "可疑误食/投毒/药物/巧克力/葡萄等", "next": "di_heat", "flags": ["d_toxin_yes"]}
+          ]
+        },
+        "di_heat": {
+          "section": "⑥ 中暑",
+          "progress": "12 / 12",
+          "text": "高温暴晒或闷热车内史？",
+          "options": [
+            {"label": "无", "next": "END", "flags": ["d_heat_no"]},
+            {"label": "有，且精神很差", "next": "END", "flags": ["d_heat_yes", "d_bar_c"]}
+          ]
+        }
+      }
+    }
+  }
+}
