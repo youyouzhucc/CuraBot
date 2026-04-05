@@ -57,7 +57,7 @@ a {
 }
 
 .warm-banner {
-  height: min(28vh, 220px);
+  height: min(18vh, 148px);
   border-bottom-left-radius: 32px;
   border-bottom-right-radius: 32px;
   background: linear-gradient(168deg, #faf6f2 0%, #f3ebe6 45%, #faf6f2 100%);
@@ -72,8 +72,8 @@ a {
 
 .wrap {
   max-width: 920px;
-  margin: -58px auto 0;
-  padding: 0.35rem var(--space-page-x) max(2.75rem, env(safe-area-inset-bottom));
+  margin: -44px auto 0;
+  padding: 0.15rem var(--space-page-x) max(2.75rem, env(safe-area-inset-bottom));
   padding-left: max(var(--space-page-x), env(safe-area-inset-left));
   padding-right: max(var(--space-page-x), env(safe-area-inset-right));
   position: relative;
@@ -84,8 +84,8 @@ a {
   align-items: center;
   justify-content: flex-start;
   gap: 1.25rem;
-  margin-bottom: 1.35rem;
-  margin-top: -0.35rem;
+  margin-bottom: 1.1rem;
+  margin-top: 0;
   padding: 0.35rem 0.15rem 0.35rem;
   min-height: 3.25rem;
   position: relative;
@@ -305,10 +305,13 @@ a {
 .btn-enter {
   width: 100%;
   max-width: min(100%, 340px);
-  margin-top: 0.5rem;
+  margin-top: 2.15rem;
   margin-left: auto;
   margin-right: auto;
   display: block;
+  padding-top: 0.95rem;
+  padding-bottom: 0.95rem;
+  min-height: 3rem;
 }
 
 .btn-inline {
@@ -1031,12 +1034,12 @@ footer.site {
 
 @media (max-width: 560px) {
   .warm-banner {
-    height: 160px;
+    height: 112px;
     border-radius: 0 0 24px 24px;
   }
 
   .wrap {
-    margin-top: -44px;
+    margin-top: -34px;
   }
 
   .species-photo {
