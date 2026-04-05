@@ -20,6 +20,10 @@
   /** 服务端持久化返回的会话 id */
   let persistedHealthSessionId = null;
 
+  const MAX_CHAT_IMAGES = 9;
+  /** 待发送的图片（在输入框旁预览，与文字一并发送） */
+  let pendingChatImages = [];
+
   function syncProfileToWindow() {
     if (typeof window !== "undefined") {
       window.__healthChatProfile = chatProfile;
@@ -183,10 +187,54 @@
     return "unclear";
   }
 
-  function updateUploadBarVisibility() {
-    const bar = document.getElementById("healthChatUploadBar");
-    if (!bar) return;
-    bar.hidden = !(guidedComplete && !treePhaseActive);
+  function updateHealthImageControlsVisibility() {
+    const btn = document.getElementById("btnHealthChatImage");
+    const pending = document.getElementById("healthChatPending");
+    const on = guidedComplete && !treePhaseActive;
+    if (btn) {
+      btn.hidden = !on;
+      btn.disabled = !on;
+    }
+    if (pending) {
+      if (!pendingChatImages.length) pending.hidden = true;
+      else pending.hidden = !on;
+    }
+  }
+
+  function addPendingChatFiles(fileList) {
+    if (!guidedComplete || treePhaseActive) return;
+    const arr = Array.from(fileList || []).filter((f) => f.type && f.type.indexOf("image/") === 0);
+    for (let i = 0; i < arr.length && pendingChatImages.length < MAX_CHAT_IMAGES; i++) {
+      pendingChatImages.push(arr[i]);
+    }
+    renderPendingChatPreviews();
+  }
+
+  function renderPendingChatPreviews() {
+    const wrap = document.getElementById("healthChatPending");
+    if (!wrap) return;
+    updateHealthImageControlsVisibility();
+    if (!pendingChatImages.length) {
+      wrap.innerHTML = "";
+      wrap.hidden = true;
+      return;
+    }
+    wrap.hidden = !(guidedComplete && !treePhaseActive);
+    wrap.innerHTML = pendingChatImages
+      .map(
+        (f, i) =>
+          `<span class="health-chat-pending-chip"><img src="${URL.createObjectURL(f)}" alt="" class="health-chat-pending-thumb" loading="lazy"/><button type="button" class="health-chat-pending-remove" data-remove-pending="${i}" aria-label="移除">×</button></span>`
+      )
+      .join("");
+    wrap.querySelectorAll("[data-remove-pending]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const i = Number(btn.getAttribute("data-remove-pending"));
+        if (i >= 0) {
+          pendingChatImages.splice(i, 1);
+          renderPendingChatPreviews();
+        }
+      });
+    });
   }
 
   async function postHealthSessionSnapshot(getKnowledge, getSpecies) {
@@ -222,47 +270,77 @@
     }
   }
 
-  async function handleHealthImageUpload(file, getKnowledge, getSpecies) {
-    if (!guidedComplete || treePhaseActive) return;
-    setLoading(true);
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const r = await fetch(apiUrl("/api/health-upload"), { method: "POST", body: fd });
-      const j = await r.json();
-      if (!r.ok || !j.url) throw new Error(j.error || "上传失败");
-      const species = getChatSpecies(getSpecies);
-      const vr = await fetch(apiUrl("/api/vision/analyze"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          imageUrl: j.url,
-          species,
-          context: lastUserPlainInput || "",
-        }),
-      });
-      const vj = await vr.json();
-      const text = (vj && vj.text) || "（无分析文本）";
-      appendBubble("user", "[已上传图片]", "");
-      history.push({ role: "user", content: "[图片] " + j.url });
-      history.push({ role: "assistant", content: text });
-      appendBubble("bot", "**视觉辅助参考（非诊断）**\n\n" + text, "", { severity: "unclear" });
-      await postHealthSessionSnapshot(getKnowledge, getSpecies);
-    } catch (e) {
-      appendBubble("bot", "上传或分析失败：" + (e.message || e), "", { severity: "unclear" });
+  async function uploadHealthImageGetUrl(file) {
+    const fd = new FormData();
+    fd.append("file", file);
+    const r = await fetch(apiUrl("/api/health-upload"), { method: "POST", body: fd });
+    const j = await r.json();
+    if (!r.ok || !j.url) throw new Error(j.error || "上传失败");
+    return j.url;
+  }
+
+  async function analyzeHealthImageUrl(imageUrl, species) {
+    const vr = await fetch(apiUrl("/api/vision/analyze"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        imageUrl,
+        species,
+        context: lastUserPlainInput || "",
+      }),
+    });
+    const vj = await vr.json();
+    return (vj && vj.text) || "（无分析文本）";
+  }
+
+  /**
+   * 批量处理图片：合并视觉说明（需 API）。
+   * @param {{ skipUserBubble?: boolean }} opts 与文字同发时跳过第二条用户气泡，仅追加附图与助手说明
+   */
+  async function processChatImageFiles(files, getKnowledge, getSpecies, opts) {
+    if (!files || !files.length) return;
+    const optsIn = opts || {};
+    const skipUserBubble = !!optsIn.skipUserBubble;
+    const species = getChatSpecies(getSpecies);
+    const n = files.length;
+    if (!skipUserBubble) {
+      appendBubble("user", "📷 已发送 " + n + " 张图片", "");
     }
-    setLoading(false);
+    const blocks = [];
+    const urls = [];
+    for (let i = 0; i < files.length; i++) {
+      try {
+        const url = await uploadHealthImageGetUrl(files[i]);
+        urls.push(url);
+        const text = await analyzeHealthImageUrl(url, species);
+        blocks.push("**图片 " + (i + 1) + " / " + n + "**\n" + text);
+      } catch (e) {
+        blocks.push("**图片 " + (i + 1) + " / " + n + "**\n处理失败：" + (e.message || e));
+      }
+    }
+    history.push({
+      role: "user",
+      content: "[附图 " + n + " 张]" + (urls.length ? " " + urls.join(" ") : ""),
+    });
+    const body = "**视觉辅助参考（非诊断）**\n\n" + blocks.join("\n\n---\n\n");
+    history.push({ role: "assistant", content: blocks.join("\n---\n") });
+    appendBubble("bot", body, "", { severity: "unclear" });
+    await postHealthSessionSnapshot(getKnowledge, getSpecies);
     scrollLog();
   }
 
   function updateChatInputState() {
     const { input } = getEls();
     if (!input) return;
+    if (!guidedComplete) {
+      pendingChatImages = [];
+      renderPendingChatPreviews();
+    }
     input.disabled = !guidedComplete;
     input.placeholder = guidedComplete
       ? "例如：猫一天没尿了、精神很差…"
       : "请先完成上方的选项，再在此描述症状…";
-    updateUploadBarVisibility();
+    updateHealthImageControlsVisibility();
   }
 
   function appendBubble(role, text, extraHtml, bubbleOpts) {
@@ -282,8 +360,11 @@
     div.className = `health-msg health-msg--${role === "user" ? "user" : "bot"}${tierClass}`;
     div.setAttribute("role", "listitem");
     if (role === "bot") {
+      const showDisclaimer = opts.showDisclaimer !== false;
       const main = stripDisclaimerFromBody(text);
-      const disclaimerHtml = `<p class="health-msg-disclaimer" role="note">${escapeHtml(BOT_DISCLAIMER_LINE)}</p>`;
+      const disclaimerHtml = showDisclaimer
+        ? `<p class="health-msg-disclaimer" role="note">${escapeHtml(BOT_DISCLAIMER_LINE)}</p>`
+        : "";
       const tierBadge =
         tier && tierLabels[tier]
           ? `<p class="health-tier-badge health-tier-badge--${tier}" role="status"><span class="health-tier-badge-inner">${escapeHtml(
@@ -314,9 +395,7 @@
           )}" data-label="${escapeHtml(o.label)}">${escapeHtml(o.label)}</button>`
       )
       .join("");
-    wrap.innerHTML = `<div class="health-msg-inner">${formatRich(quiz.prompt)}</div><p class="health-msg-disclaimer" role="note">${escapeHtml(
-      BOT_DISCLAIMER_LINE
-    )}</p><div class="health-guided-options">${btns}</div>`;
+    wrap.innerHTML = `<div class="health-msg-inner">${formatRich(quiz.prompt)}</div><div class="health-guided-options">${btns}</div>`;
     log.appendChild(wrap);
     scrollLog();
   }
@@ -335,9 +414,7 @@
           )}" data-value="${escapeHtml(o.value)}" data-label="${escapeHtml(o.label)}">${escapeHtml(o.label)}</button>`
       )
       .join("");
-    wrap.innerHTML = `<div class="health-msg-inner">${formatRich(displayStep.prompt)}</div><p class="health-msg-disclaimer" role="note">${escapeHtml(
-      BOT_DISCLAIMER_LINE
-    )}</p><div class="health-guided-options">${btns}</div>`;
+    wrap.innerHTML = `<div class="health-msg-inner">${formatRich(displayStep.prompt)}</div><div class="health-guided-options">${btns}</div>`;
     log.appendChild(wrap);
     scrollLog();
   }
@@ -355,6 +432,8 @@
     if (input && guidedComplete) input.disabled = on;
     const btn = form && form.querySelector('button[type="submit"]');
     if (btn) btn.disabled = on;
+    const imgBtn = document.getElementById("btnHealthChatImage");
+    if (imgBtn && guidedComplete && !treePhaseActive) imgBtn.disabled = on;
   }
 
   async function fetchLlmReply(message, species) {
@@ -465,7 +544,7 @@
       if (localMeta.followUpQuiz) appendFollowUpQuiz(localMeta.followUpQuiz);
       postHealthSessionSnapshot(getKnowledge, getSpecies);
     } catch (e) {
-      appendBubble("bot", "处理补充信息时出错，请再试一次。", "", { severity: "unclear" });
+      appendBubble("bot", "处理补充信息时出错，请再试一次。", "", { severity: "unclear", showDisclaimer: false });
     }
     setLoading(false);
     scrollLog();
@@ -492,32 +571,42 @@
   }
 
   async function sendMessage(getSpecies, getKnowledge, opts) {
-    const { input, log } = getEls();
+    const { input } = getEls();
     if (!input) return;
     if (treePhaseActive) {
-      appendBubble("bot", "请先完成当前筛查选择题。", "", { severity: "unclear" });
+      appendBubble("bot", "请先完成当前筛查选择题。", "", { severity: "unclear", showDisclaimer: false });
       return;
     }
     if (!guidedComplete) {
-      appendBubble("bot", "请先点选上方的选项，完成基本信息后再描述症状。", "", { severity: "unclear" });
+      appendBubble("bot", "请先点选上方的选项，完成基本信息后再描述症状。", "", {
+        severity: "unclear",
+        showDisclaimer: false,
+      });
       return;
     }
     const raw = input.value.trim();
-    if (!raw) return;
+    const files = pendingChatImages.slice();
+    if (!raw && !files.length) return;
     input.value = "";
-    lastUserPlainInput = raw;
+    pendingChatImages = [];
+    renderPendingChatPreviews();
 
     const knowledge = getKnowledge();
     const steps = getGuidedSteps(knowledge);
     const prefix = formatProfilePrefix(chatProfile, steps);
-    const composed = prefix ? prefix + raw : raw;
-
-    appendBubble("user", raw, "");
-    history.push({ role: "user", content: composed });
-    const thinkingEl = showThinkingIndicator();
-    setLoading(true);
-
     const species = getChatSpecies(getSpecies);
+
+    let composedForLlm = "";
+    if (raw) {
+      lastUserPlainInput = raw;
+      composedForLlm = prefix ? prefix + raw : raw;
+      const udisplay = files.length ? raw + " · 「附图 " + files.length + " 张」" : raw;
+      appendBubble("user", udisplay, "");
+      history.push({ role: "user", content: composedForLlm });
+    }
+
+    const thinkingEl = raw ? showThinkingIndicator() : null;
+    setLoading(true);
 
     let metaHtml = "";
     let replyText = "";
@@ -525,67 +614,75 @@
     let fromLlm = false;
 
     try {
-      try {
-        const fr = await fetchLlmReply(composed, species);
-        if (fr.llm) {
-          replyText = fr.llm.text;
-          fromLlm = true;
-          metaHtml = "";
-        } else {
+      if (raw) {
+        try {
+          const fr = await fetchLlmReply(composedForLlm, species);
+          if (fr.llm) {
+            replyText = fr.llm.text;
+            fromLlm = true;
+            metaHtml = "";
+          } else {
+            try {
+              localMeta = CuraHealthBotLocal.reply({
+                message: composedForLlm,
+                species,
+                knowledge,
+                answeredQuizIds,
+              });
+            } catch (e2) {
+              localMeta = {
+                text: "本地知识库暂时无法生成回复，请稍后再试或使用首页分诊流程。",
+                severity: "unclear",
+              };
+            }
+            replyText = localMeta.text;
+            const reason = fr.apiHint ? escapeHtml(fr.apiHint) : "未返回大模型内容";
+            metaHtml = `<p class="health-msg-source muted">已用本地知识库回答（原因：${reason}）</p>`;
+          }
+        } catch (e) {
           try {
             localMeta = CuraHealthBotLocal.reply({
-              message: composed,
+              message: composedForLlm,
               species,
               knowledge,
               answeredQuizIds,
             });
+            replyText = localMeta.text;
           } catch (e2) {
-            localMeta = {
-              text: "本地知识库暂时无法生成回复，请稍后再试或使用首页分诊流程。",
-              severity: "unclear",
-            };
+            replyText = "对话出错，请刷新页面后重试。";
+            localMeta = { text: replyText, severity: "unclear" };
           }
-          replyText = localMeta.text;
-          const reason = fr.apiHint ? escapeHtml(fr.apiHint) : "未返回大模型内容";
-          metaHtml = `<p class="health-msg-source muted">已用本地知识库回答（原因：${reason}）</p>`;
+          metaHtml = `<p class="health-msg-source muted">已使用本地知识库（${escapeHtml(e.message || "请求异常")}）</p>`;
         }
-      } catch (e) {
-        try {
-          localMeta = CuraHealthBotLocal.reply({
-            message: composed,
-            species,
-            knowledge,
-            answeredQuizIds,
-          });
-          replyText = localMeta.text;
-        } catch (e2) {
-          replyText = "对话出错，请刷新页面后重试。";
-          localMeta = { text: replyText, severity: "unclear" };
+
+        if (!fromLlm && localMeta) {
+          metaHtml += buildActionMetaHtml(localMeta, opts);
         }
-        metaHtml = `<p class="health-msg-source muted">已使用本地知识库（${escapeHtml(e.message || "请求异常")}）</p>`;
+
+        let displayText = replyText;
+        let tier = "unclear";
+        if (fromLlm) {
+          const ex = extractTierFromText(replyText);
+          displayText = ex.clean;
+          tier = ex.tier || heuristicTierFromLlmText(displayText);
+        } else if (localMeta) {
+          tier = localMeta.severity || "unclear";
+        }
+
+        history.push({ role: "assistant", content: displayText });
+        appendBubble("bot", displayText, metaHtml, { severity: tier });
+        if (!fromLlm && localMeta && localMeta.followUpQuiz) {
+          appendFollowUpQuiz(localMeta.followUpQuiz);
+        }
+
+        if (!files.length) {
+          postHealthSessionSnapshot(getKnowledge, getSpecies);
+        }
       }
 
-      if (!fromLlm && localMeta) {
-        metaHtml += buildActionMetaHtml(localMeta, opts);
+      if (files.length) {
+        await processChatImageFiles(files, getKnowledge, getSpecies, { skipUserBubble: !!raw });
       }
-
-      let displayText = replyText;
-      let tier = "unclear";
-      if (fromLlm) {
-        const ex = extractTierFromText(replyText);
-        displayText = ex.clean;
-        tier = ex.tier || heuristicTierFromLlmText(displayText);
-      } else if (localMeta) {
-        tier = localMeta.severity || "unclear";
-      }
-
-      history.push({ role: "assistant", content: displayText });
-      appendBubble("bot", displayText, metaHtml, { severity: tier });
-      if (!fromLlm && localMeta && localMeta.followUpQuiz) {
-        appendFollowUpQuiz(localMeta.followUpQuiz);
-      }
-
-      postHealthSessionSnapshot(getKnowledge, getSpecies);
     } finally {
       removeThinkingIndicator(thinkingEl);
       setLoading(false);
@@ -746,9 +843,7 @@
           )}" data-label="${escapeHtml(o.label)}">${escapeHtml(o.label)}</button>`
       )
       .join("");
-    wrap.innerHTML = `<div class="health-msg-inner">${formatRich(node.prompt)}${ill}</div>${support}${media}<p class="health-msg-disclaimer" role="note">${escapeHtml(
-      BOT_DISCLAIMER_LINE
-    )}</p><div class="health-guided-options">${btns}</div>`;
+    wrap.innerHTML = `<div class="health-msg-inner">${formatRich(node.prompt)}${ill}</div>${support}${media}<div class="health-guided-options">${btns}</div>`;
     log.appendChild(wrap);
     scrollLog();
   }
@@ -862,6 +957,8 @@
     decisionSession = null;
     treePhaseActive = false;
     persistedHealthSessionId = null;
+    pendingChatImages = [];
+    renderPendingChatPreviews();
     syncProfileToWindow();
     syncDecisionSessionWindow();
     setEmergencyBannerVisible(false, "");
@@ -973,15 +1070,30 @@
       btnSoap.addEventListener("click", () => handleGenerateSoapReport(getKnowledge));
     }
     const fileIn = document.getElementById("healthChatFileInput");
-    const btnUp = document.getElementById("btnHealthChatUpload");
-    if (btnUp && fileIn) {
-      btnUp.addEventListener("click", () => fileIn.click());
+    const btnImg = document.getElementById("btnHealthChatImage");
+    const chatInput = document.getElementById("healthChatInput");
+    if (btnImg && fileIn) {
+      btnImg.addEventListener("click", () => fileIn.click());
       fileIn.addEventListener("change", () => {
-        const f = fileIn.files && fileIn.files[0];
+        if (fileIn.files && fileIn.files.length) addPendingChatFiles(fileIn.files);
         fileIn.value = "";
-        if (f) handleHealthImageUpload(f, getKnowledge, getSpecies);
       });
     }
+    const bindPaste = (el) => {
+      if (!el) return;
+      el.addEventListener("paste", (e) => {
+        const f = e.clipboardData && e.clipboardData.files;
+        if (!f || !f.length) return;
+        const imgs = Array.from(f).filter((x) => x.type && x.type.indexOf("image/") === 0);
+        if (imgs.length) {
+          e.preventDefault();
+          addPendingChatFiles(imgs);
+        }
+      });
+    };
+    bindPaste(chatInput);
+    const formEl = document.getElementById("healthChatForm");
+    if (formEl) bindPaste(formEl);
 
     global.CuraHealthChat = {
       open: (presetProfile) => openView(getKnowledge, getSpecies, opts, presetProfile),

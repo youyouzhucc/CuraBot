@@ -101,7 +101,6 @@
           <div class="home-section-label" id="label-daily-knowledge">日常知识</div>
           <div class="hero home-hero home-hero--merged home-hero--daily-knowledge">
             <div class="daily-knowledge-toolbar" id="dailyKnowledgeToolbar">
-              <span class="daily-knowledge-toolbar-label" id="dailyKnowledgeToolbarLabel">当前浏览</span>
               <div class="daily-knowledge-tabs" role="tablist" aria-label="按猫或狗筛选日常知识">
                 <button
                   type="button"
@@ -244,15 +243,42 @@
           </div>
           <div id="healthChatMessages" class="health-chat-log" role="log" aria-live="polite"></div>
           <form id="healthChatForm" class="health-chat-form" autocomplete="off">
-            <label class="visually-hidden" for="healthChatInput">输入消息</label>
-            <input
-              type="text"
-              class="health-chat-input"
-              id="healthChatInput"
-              name="healthChatInput"
-              placeholder="例如：猫一天没尿了、精神很差…"
-              maxlength="2000"
-            />
+            <div class="health-chat-composer" id="healthChatComposer">
+              <div class="health-chat-pending" id="healthChatPending" hidden aria-live="polite"></div>
+              <div class="health-chat-input-row">
+                <input
+                  type="file"
+                  id="healthChatFileInput"
+                  class="visually-hidden"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  multiple
+                  tabindex="-1"
+                />
+                <button
+                  type="button"
+                  class="health-chat-image-btn"
+                  id="btnHealthChatImage"
+                  aria-label="添加图片"
+                  title="上传或粘贴图片，最多 9 张（视觉分析需本机 npm start 与 API）"
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path
+                      fill="currentColor"
+                      d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4.86 8.86l-3 3.87L9 13.14 6 17h12l-3.86-5.14z"
+                    />
+                  </svg>
+                </button>
+                <label class="visually-hidden" for="healthChatInput">输入消息</label>
+                <input
+                  type="text"
+                  class="health-chat-input"
+                  id="healthChatInput"
+                  name="healthChatInput"
+                  placeholder="例如：猫一天没尿了、精神很差…"
+                  maxlength="2000"
+                />
+              </div>
+            </div>
             <div class="health-chat-form-actions">
               <button type="submit" class="btn">发送</button>
               <button
@@ -263,18 +289,6 @@
               >
                 导出就诊简报
               </button>
-            </div>
-            <div class="health-chat-upload-bar" id="healthChatUploadBar" hidden>
-              <input
-                type="file"
-                id="healthChatFileInput"
-                class="visually-hidden"
-                accept="image/jpeg,image/png,image/webp,image/gif"
-              />
-              <button type="button" class="btn secondary" id="btnHealthChatUpload">
-                上传照片/截图
-              </button>
-              <span class="muted small health-chat-upload-hint">便便、呕吐物、皮肤、眼睛等（需本机 npm start 与 API 密钥以启用视觉分析）</span>
             </div>
           </form>
           <div class="hero-actions hero-actions--bottom">
