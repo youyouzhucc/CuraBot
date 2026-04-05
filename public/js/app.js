@@ -196,9 +196,6 @@
       dog.classList.toggle("is-active", sp === "dog");
       dog.setAttribute("aria-selected", sp === "dog" ? "true" : "false");
     }
-    $$(".js-daily-knowledge-species").forEach((el) => {
-      el.textContent = sp === "dog" ? "狗狗" : "猫猫";
-    });
   }
 
   function topicMatchesSpecies(topic, species) {
@@ -337,29 +334,14 @@
             }
           )
           .join("");
-        const summary = mod.summary
-          ? `<p class="daily-mod-summary muted">${escapeHtml(mod.summary)}</p>`
-          : "";
         return `<section class="daily-mod" data-daily-module="${escapeHtml(mod.id)}">
         <h3 class="daily-mod-title">${escapeHtml(mod.title)}</h3>
-        ${summary}
         <div class="daily-topic-list">${topicRows}</div>
       </section>`;
       })
       .filter(Boolean)
       .join("");
     host.innerHTML = mods;
-    const introEl = $("#homeDailyKnowledgeIntro");
-    if (introEl) {
-      const intro = dk.intro && String(dk.intro).trim();
-      if (intro) {
-        introEl.textContent = intro;
-        introEl.hidden = false;
-      } else {
-        introEl.textContent = "";
-        introEl.hidden = true;
-      }
-    }
     $$("[data-daily-topic]", host).forEach((btn) => {
       btn.addEventListener("click", () => {
         const id = btn.getAttribute("data-daily-topic");
