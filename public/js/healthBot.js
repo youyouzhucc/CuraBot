@@ -458,12 +458,24 @@
     advanceGuided(getKnowledge, getSpecies, opts);
   }
 
-  function resetConversation(getKnowledge, getSpecies) {
+  function resetConversation(getKnowledge, getSpecies, presetProfile) {
     history.length = 0;
-    chatProfile = {};
+    chatProfile = presetProfile && typeof presetProfile === "object" ? { ...presetProfile } : {};
     guidedStepIndex = 0;
     guidedComplete = false;
     syncProfileToWindow();
+
+    const knowledge = getKnowledge();
+    const steps = getGuidedSteps(knowledge);
+    while (guidedStepIndex < steps.length) {
+      const sid = steps[guidedStepIndex].id;
+      const v = chatProfile[sid];
+      if (v == null || v === "") break;
+      guidedStepIndex += 1;
+    }
+    if (guidedStepIndex >= steps.length) {
+      guidedComplete = true;
+    }
 
     const { log } = getEls();
     if (log) log.innerHTML = "";
@@ -473,9 +485,9 @@
     scrollLog();
   }
 
-  function openView(getKnowledge, getSpecies, opts) {
+  function openView(getKnowledge, getSpecies, opts, presetProfile) {
     global.__healthChatOpts = opts || {};
-    resetConversation(getKnowledge, getSpecies);
+    resetConversation(getKnowledge, getSpecies, presetProfile);
   }
 
   function init(options) {
@@ -552,8 +564,8 @@
     }
 
     global.CuraHealthChat = {
-      open: () => openView(getKnowledge, getSpecies, opts),
-      reset: () => resetConversation(getKnowledge, getSpecies),
+      open: (presetProfile) => openView(getKnowledge, getSpecies, opts, presetProfile),
+      reset: () => resetConversation(getKnowledge, getSpecies, undefined),
       syncSpecies: function () {
         /* 与首页物种解耦，不再同步 */
       },

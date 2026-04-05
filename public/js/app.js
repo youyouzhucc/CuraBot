@@ -107,7 +107,7 @@
 
   function speciesLabel(sp) {
     if (sp === "dog") return "狗狗";
-    if (sp === "cat") return "猫咪";
+    if (sp === "cat") return "猫猫";
     return "猫/狗";
   }
 
@@ -119,7 +119,7 @@
     const banner = $("#warmBanner");
     if (cat && k.uiImages.heroCat) {
       cat.src = k.uiImages.heroCat;
-      cat.alt = "猫咪照片";
+      cat.alt = "猫猫照片";
     }
     if (dog && k.uiImages.heroDog) {
       dog.src = k.uiImages.heroDog;
@@ -197,7 +197,7 @@
       dog.setAttribute("aria-selected", sp === "dog" ? "true" : "false");
     }
     $$(".js-daily-knowledge-species").forEach((el) => {
-      el.textContent = sp === "dog" ? "狗狗" : "猫咪";
+      el.textContent = sp === "dog" ? "狗狗" : "猫猫";
     });
   }
 
@@ -451,7 +451,7 @@
     if (!flow) return;
     if (flow.flowType === "accumulate") {
       if (key === "catIntake" && state.species !== "cat") {
-        alert("该清单专为猫咪设计，请先在首页选择「猫咪」。");
+        alert("该清单专为猫猫设计，请先在首页选择「猫猫」。");
         return;
       }
       if (key === "dogIntake" && state.species !== "dog") {
@@ -975,18 +975,48 @@
   }
 
   function bindNav() {
+    if (typeof CuraHealthChatInit === "function") {
+      CuraHealthChatInit({
+        getSpecies: () => {
+          if (state.species === "cat" || state.species === "dog") return state.species;
+          const p =
+            typeof window !== "undefined" && window.__healthChatProfile && window.__healthChatProfile.species;
+          if (p === "cat" || p === "dog") return p;
+          return "cat";
+        },
+        getKnowledge: () => state.knowledge,
+        onOpenEmergency: () => {
+          renderEmergencyList();
+          showView("emergency");
+        },
+        onOpenTriage: () => {
+          showView("triageMenu");
+        },
+        onOpenDailyTopic: (topicId) => {
+          renderDailyTopicPage(topicId);
+          showView("dailyTopic");
+        },
+      });
+    }
+
     $("#btnDisclaimer").addEventListener("click", () => showView("disclaimer"));
     $("#pickCat").addEventListener("click", () => {
       state.species = "cat";
       updateSpeciesLabels();
       updateSpeciesCards();
-      showView("triageMenu");
+      showView("healthChat");
+      if (typeof CuraHealthChat !== "undefined" && CuraHealthChat) {
+        CuraHealthChat.open({ species: "cat" });
+      }
     });
     $("#pickDog").addEventListener("click", () => {
       state.species = "dog";
       updateSpeciesLabels();
       updateSpeciesCards();
-      showView("triageMenu");
+      showView("healthChat");
+      if (typeof CuraHealthChat !== "undefined" && CuraHealthChat) {
+        CuraHealthChat.open({ species: "dog" });
+      }
     });
     const dailyCat = $("#dailyFilterCat");
     const dailyDog = $("#dailyFilterDog");
@@ -1038,33 +1068,6 @@
     $("#startBehavior").addEventListener("click", () => startFlow("behavior"));
     $("#startCatIntake").addEventListener("click", () => startFlow("catIntake"));
     $("#startDogIntake").addEventListener("click", () => startFlow("dogIntake"));
-
-    const openHc = $("#openHealthChat");
-    if (openHc && typeof CuraHealthChatInit === "function") {
-      CuraHealthChatInit({
-        getSpecies: () =>
-          (typeof window !== "undefined" && window.__healthChatProfile && window.__healthChatProfile.species) ||
-          "cat",
-        getKnowledge: () => state.knowledge,
-        onOpenEmergency: () => {
-          renderEmergencyList();
-          showView("emergency");
-        },
-        onOpenTriage: () => {
-          showView("triageMenu");
-        },
-        onOpenDailyTopic: (topicId) => {
-          renderDailyTopicPage(topicId);
-          showView("dailyTopic");
-        },
-      });
-      openHc.addEventListener("click", () => {
-        if (typeof CuraHealthChat !== "undefined" && CuraHealthChat) {
-          CuraHealthChat.open();
-        }
-        showView("healthChat");
-      });
-    }
   }
 
   async function boot() {

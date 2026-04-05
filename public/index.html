@@ -43,29 +43,29 @@
           <div class="home-section-label" id="label-health">健康问题</div>
           <div class="hero home-hero home-hero--health">
             <div class="home-health-title-row">
-              <h1 class="home-health-title-text">和curabot聊聊毛孩子的健康</h1>
-              <button
-                type="button"
-                class="home-bot-icon-btn"
-                id="openHealthChat"
-                aria-label="打开猫狗健康机器人对话"
-              >
-                <span class="home-bot-icon-circle" aria-hidden="true">
-                  <img
-                    src="/images/brand-logo.png"
-                    alt=""
-                    width="48"
-                    height="48"
-                    loading="eager"
-                    decoding="async"
-                  />
+              <h1 class="home-health-title-text">
+                <span class="curabot-title-inline" id="homeHealthTitleInline">
+                  <span class="curabot-title-prefix">和</span>
+                  <span class="curabot-title-logo-wrap" aria-hidden="true">
+                    <img
+                      class="curabot-title-logo"
+                      src="/images/brand-logo.png"
+                      alt=""
+                      width="44"
+                      height="44"
+                      loading="eager"
+                      decoding="async"
+                    />
+                  </span>
+                  <span class="curabot-title-brand">curabot</span>
+                  <span class="curabot-title-rest">聊聊毛孩子的健康</span>
                 </span>
-                <span class="home-bot-icon-word">curabot</span>
-              </button>
+              </h1>
             </div>
             <div class="home-health-actions">
               <p class="muted home-health-intro">
-                标准化临床采集清单、急事先筛、按症状追问——把情况说清楚，方便判断要不要尽快去医院（非诊断）。请先点选下方<strong>猫咪</strong>或<strong>狗狗</strong>，直接进入分诊与采集。
+                标准化临床采集清单、急事先筛、按症状追问——把情况说清楚，方便判断要不要尽快去医院（非诊断）。请点选下方<strong>猫猫</strong>或<strong>狗狗</strong>卡片，直接进入
+                <strong>curabot</strong> 健康咨询；分诊与标准化采集可从对话内或首页其他入口进入。
               </p>
               <div class="species-grid">
                 <button
@@ -74,14 +74,24 @@
                   data-species="cat"
                   id="pickCat"
                   aria-pressed="false"
+                  aria-label="进入猫猫健康咨询"
                 >
                   <img id="heroCatImg" class="species-photo" src="" alt="" width="140" height="140" loading="lazy" />
-                  <span class="species-name">猫咪</span>
+                  <span class="species-name">猫猫</span>
+                  <span class="species-card-sub muted">呕吐、排尿异常、皮肤问题等</span>
                   <span class="species-pill" aria-hidden="true">✓ 已选</span>
                 </button>
-                <button type="button" class="species-card" data-species="dog" id="pickDog" aria-pressed="false">
+                <button
+                  type="button"
+                  class="species-card"
+                  data-species="dog"
+                  id="pickDog"
+                  aria-pressed="false"
+                  aria-label="进入狗狗健康咨询"
+                >
                   <img id="heroDogImg" class="species-photo" src="" alt="" width="140" height="140" loading="lazy" />
                   <span class="species-name">狗狗</span>
+                  <span class="species-card-sub muted">拉稀、扭伤、行为与训练等</span>
                   <span class="species-pill" aria-hidden="true">✓ 已选</span>
                 </button>
               </div>
@@ -91,7 +101,7 @@
           <div class="home-section-label" id="label-daily-knowledge">日常知识</div>
           <div class="hero home-hero home-hero--merged">
             <p class="home-daily-lead">
-              四大模块：<strong>健康问题 · 训练教学 · 老年护理 · 饮食健康</strong>。点选下方 <strong>猫猫</strong> 或 <strong>狗狗</strong> 切换浏览范围；当前展示与 <strong class="js-daily-knowledge-species">猫咪</strong> 相关的科普卡片。点卡片看详情（科普，不代替就诊）。
+              四大模块：<strong>健康问题 · 训练教学 · 老年护理 · 饮食健康</strong>。点选下方 <strong>猫猫</strong> 或 <strong>狗狗</strong> 切换浏览范围；当前展示与 <strong class="js-daily-knowledge-species">猫猫</strong> 相关的科普卡片。点卡片看详情（科普，不代替就诊）。
             </p>
             <div class="daily-knowledge-toolbar" id="dailyKnowledgeToolbar">
               <span class="daily-knowledge-toolbar-label" id="dailyKnowledgeToolbarLabel">当前浏览</span>
@@ -210,7 +220,24 @@
       <section data-view="healthChat" hidden>
         <div class="hero flow-sheet health-chat-hero">
           <header class="flow-head health-chat-head">
-            <h2 class="health-chat-title-pill">和curabot聊聊毛孩子的健康</h2>
+            <h2 class="health-chat-title-pill health-chat-title-with-logo">
+              <span class="curabot-title-inline">
+                <span class="curabot-title-prefix">和</span>
+                <span class="curabot-title-logo-wrap" aria-hidden="true">
+                  <img
+                    class="curabot-title-logo"
+                    src="/images/brand-logo.png"
+                    alt=""
+                    width="36"
+                    height="36"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </span>
+                <span class="curabot-title-brand">curabot</span>
+                <span class="curabot-title-rest">聊聊毛孩子的健康</span>
+              </span>
+            </h2>
           </header>
           <div id="healthChatMessages" class="health-chat-log" role="log" aria-live="polite"></div>
           <form id="healthChatForm" class="health-chat-form" autocomplete="off">
@@ -269,7 +296,7 @@
             需要更<strong>专业、可对照兽医</strong>的表述时，优先用下方「标准化采集」；信息越结构化，越利于判读紧急程度（非诊断）。
           </p>
           <div class="option-grid triage-picks triage-picks-intake">
-            <button type="button" class="btn option option-intake" id="startCatIntake">猫咪 · 标准化临床采集清单</button>
+            <button type="button" class="btn option option-intake" id="startCatIntake">猫猫 · 标准化临床采集清单</button>
             <button type="button" class="btn option option-intake" id="startDogIntake" hidden>
               狗狗 · 标准化临床采集清单
             </button>
