@@ -91,7 +91,23 @@ app.get("/api/capabilities", (_req, res) => {
   res.json({
     name: "CuraBot",
     apiChat: true,
-    routes: ["GET /api/meta", "GET /api/capabilities", "GET /api/chat/status", "POST /api/chat"],
+    routes: [
+      "GET /api/meta",
+      "GET /api/capabilities",
+      "GET /api/chat/status",
+      "POST /api/chat",
+      "POST /api/health-session/snapshot",
+    ],
+  });
+});
+
+/** 预留：HealthCheckSession 持久化 / 多端同步（当前前端为内存会话） */
+app.post("/api/health-session/snapshot", (req, res) => {
+  res.json({
+    ok: true,
+    mode: "client_only",
+    note: "会话快照已接收；可在此接入数据库或用户体系。当前 CuraBot 决策树在浏览器内运行。",
+    keys: req.body && typeof req.body === "object" ? Object.keys(req.body).slice(0, 20) : [],
   });
 });
 

@@ -1,0 +1,287 @@
+{
+  "version": 1,
+  "description": "JSON 决策流：节点 + 边上跳转；标签写入四维（base/chief/accompanying/temporal）",
+  "entryBySpecies": {
+    "cat": "n_chief_cat",
+    "dog": "n_chief_dog"
+  },
+  "nodes": {
+    "n_chief_cat": {
+      "id": "n_chief_cat",
+      "uiType": "single",
+      "prompt": "目前猫猫最让你担心的是哪一类情况？",
+      "supportMessage": "别慌，先选最接近的一项，我们再一起把细节问清楚。",
+      "options": [
+        {
+          "value": "gi",
+          "label": "呕吐 / 腹泻 / 胃口差",
+          "next": "n_gi_time",
+          "tags": { "chief": { "system": "消化", "sign": "呕吐或腹泻或食欲下降" } }
+        },
+        {
+          "value": "uro",
+          "label": "排尿费力、尿少、尿血",
+          "next": "n_emergency_uro_cat",
+          "emergencyTrigger": true,
+          "emergencyMessage": "猫咪排尿困难、少尿或无尿、血尿，可能涉及下泌尿道急症（含梗阻风险）。请尽快联系或前往动物医院，不要在家等待观察。",
+          "tags": { "chief": { "system": "泌尿", "sign": "排尿异常" } }
+        },
+        {
+          "value": "resp",
+          "label": "呼吸急、张口呼吸、发绀",
+          "next": "n_emergency_resp",
+          "emergencyTrigger": true,
+          "emergencyMessage": "呼吸窘迫属于高风险表现，请尽快急诊或立即就医。",
+          "tags": { "chief": { "system": "呼吸", "sign": "呼吸窘迫" } }
+        },
+        {
+          "value": "skin",
+          "label": "瘙痒、掉毛、皮疹",
+          "next": "n_skin_duration",
+          "tags": { "chief": { "system": "皮肤", "sign": "瘙痒或脱毛或皮疹" } }
+        },
+        {
+          "value": "other",
+          "label": "其他 / 说不清",
+          "next": "n_other_duration",
+          "tags": { "chief": { "system": "待分诊", "sign": "主诉不明确" } }
+        }
+      ]
+    },
+    "n_chief_dog": {
+      "id": "n_chief_dog",
+      "uiType": "single",
+      "prompt": "目前狗狗最让你担心的是哪一类情况？",
+      "supportMessage": "我理解你现在很担心它，我们先对齐方向，再问细节。",
+      "options": [
+        {
+          "value": "gi",
+          "label": "呕吐 / 腹泻 / 胃口差",
+          "next": "n_gi_time",
+          "tags": { "chief": { "system": "消化", "sign": "呕吐或腹泻或食欲下降" } }
+        },
+        {
+          "value": "gdv_suspect",
+          "label": "肚子胀、干呕、精神极差（大型犬更警惕）",
+          "next": "n_emergency_gdv",
+          "emergencyTrigger": true,
+          "emergencyMessage": "腹胀伴干呕、精神差需警惕胃扩张-扭转等急症，请立即就医，不要喂食喂水。",
+          "tags": { "chief": { "system": "消化急症风险", "sign": "腹胀干呕" } }
+        },
+        {
+          "value": "neuro",
+          "label": "抽搐、站不稳、突然瘫痪",
+          "next": "n_emergency_neuro",
+          "emergencyTrigger": true,
+          "emergencyMessage": "神经系统急性症状应尽快急诊，避免延误。",
+          "tags": { "chief": { "system": "神经", "sign": "抽搐或运动障碍" } }
+        },
+        {
+          "value": "skin",
+          "label": "瘙痒、掉毛、皮疹",
+          "next": "n_skin_duration",
+          "tags": { "chief": { "system": "皮肤", "sign": "瘙痒或脱毛或皮疹" } }
+        },
+        {
+          "value": "other",
+          "label": "其他 / 说不清",
+          "next": "n_other_duration",
+          "tags": { "chief": { "system": "待分诊", "sign": "主诉不明确" } }
+        }
+      ]
+    },
+    "n_gi_time": {
+      "id": "n_gi_time",
+      "uiType": "single",
+      "prompt": "这类情况大概从什么时候开始的？",
+      "supportMessage": "时间线能帮助判断脱水和急迫程度。",
+      "options": [
+        {
+          "value": "today",
+          "label": "今天内",
+          "next": "n_gi_appetite",
+          "tags": { "temporal": { "onset": "今天内" } }
+        },
+        {
+          "value": "1_2d",
+          "label": "1～2 天",
+          "next": "n_gi_appetite",
+          "tags": { "temporal": { "onset": "1～2天" } }
+        },
+        {
+          "value": "3d_plus",
+          "label": "3 天以上",
+          "next": "n_gi_appetite",
+          "tags": { "temporal": { "onset": "3天以上" } }
+        },
+        {
+          "value": "unknown",
+          "label": "说不清楚",
+          "next": "n_gi_appetite",
+          "tags": { "temporal": { "onset": "不明" } }
+        }
+      ]
+    },
+    "n_gi_appetite": {
+      "id": "n_gi_appetite",
+      "uiType": "single",
+      "prompt": "现在食欲和精神状态怎么样？",
+      "options": [
+        {
+          "value": "poor",
+          "label": "几乎不吃 / 精神很差",
+          "next": "n_gi_stool",
+          "tags": { "accompanying": { "appetite_spirit": "差" } }
+        },
+        {
+          "value": "ok",
+          "label": "还能吃一点，精神一般",
+          "next": "n_gi_stool",
+          "tags": { "accompanying": { "appetite_spirit": "中等" } }
+        },
+        {
+          "value": "normal",
+          "label": "吃喝尚可，精神尚可",
+          "next": "n_gi_stool",
+          "tags": { "accompanying": { "appetite_spirit": "尚可" } }
+        }
+      ]
+    },
+    "n_gi_stool": {
+      "id": "n_gi_stool",
+      "uiType": "single",
+      "prompt": "大小便情况更接近哪一种？",
+      "options": [
+        {
+          "value": "vomit",
+          "label": "以呕吐为主",
+          "next": "n_visual_hint_gi",
+          "tags": { "accompanying": { "elimination": "呕吐为主" } }
+        },
+        {
+          "value": "diarrhea",
+          "label": "以拉稀/软便为主",
+          "next": "n_visual_hint_gi",
+          "tags": { "accompanying": { "elimination": "腹泻/软便为主" } }
+        },
+        {
+          "value": "both",
+          "label": "吐和拉都有",
+          "next": "n_visual_hint_gi",
+          "tags": { "accompanying": { "elimination": "吐泻兼有" } }
+        },
+        {
+          "value": "unknown",
+          "label": "暂不清楚",
+          "next": "n_visual_hint_gi",
+          "tags": { "accompanying": { "elimination": "未观察" } }
+        }
+      ]
+    },
+    "n_visual_hint_gi": {
+      "id": "n_visual_hint_gi",
+      "uiType": "single",
+      "prompt": "若方便，可拍一张呕吐物或便便照片（后续将支持上传）；现在用文字也可以：有无血便/黑便/异物？",
+      "mediaHint": "文字描述不够时，照片能帮助医生更快判断；本版为占位提示，上传功能将接入多模态模型。",
+      "options": [
+        {
+          "value": "no_blood",
+          "label": "未见血 / 非黑色便",
+          "next": "END",
+          "tags": { "accompanying": { "blood_stool": "未见血便/非黑便" } }
+        },
+        {
+          "value": "blood",
+          "label": "有血便或呕血可能",
+          "next": "n_emergency_bleed",
+          "emergencyTrigger": true,
+          "emergencyMessage": "明显出血需尽快就医评估，请勿自行用药掩盖症状。",
+          "tags": { "accompanying": { "blood_stool": "出血可能" } }
+        },
+        {
+          "value": "black",
+          "label": "黑便/柏油样",
+          "next": "n_emergency_bleed",
+          "emergencyTrigger": true,
+          "emergencyMessage": "黑便可能提示上消化道出血等，请尽快就诊。",
+          "tags": { "accompanying": { "blood_stool": "黑便" } }
+        },
+        {
+          "value": "skip",
+          "label": "暂不确定",
+          "next": "END",
+          "tags": {}
+        }
+      ]
+    },
+    "n_skin_duration": {
+      "id": "n_skin_duration",
+      "uiType": "single",
+      "prompt": "皮肤问题持续多久了？",
+      "options": [
+        {
+          "value": "acute",
+          "label": "最近几天内突然加重",
+          "next": "END",
+          "tags": { "temporal": { "skin_course": "急性加重" } }
+        },
+        {
+          "value": "chronic",
+          "label": "反复发作 / 较久",
+          "next": "END",
+          "tags": { "temporal": { "skin_course": "慢性或反复" } }
+        }
+      ]
+    },
+    "n_other_duration": {
+      "id": "n_other_duration",
+      "uiType": "single",
+      "prompt": "从什么时候起注意到不对劲？",
+      "options": [
+        {
+          "value": "today",
+          "label": "今天",
+          "next": "END",
+          "tags": { "temporal": { "onset": "今天" } }
+        },
+        {
+          "value": "few_days",
+          "label": "这几天",
+          "next": "END",
+          "tags": { "temporal": { "onset": "数日" } }
+        },
+        {
+          "value": "long",
+          "label": "更久 / 说不清",
+          "next": "END",
+          "tags": { "temporal": { "onset": "不明或较久" } }
+        }
+      ]
+    },
+    "n_emergency_uro_cat": {
+      "id": "n_emergency_uro_cat",
+      "terminal": true,
+      "prompt": "（已触发泌尿急诊提示，流程结束本段筛查）"
+    },
+    "n_emergency_resp": {
+      "id": "n_emergency_resp",
+      "terminal": true,
+      "prompt": "（已触发呼吸急症提示）"
+    },
+    "n_emergency_gdv": {
+      "id": "n_emergency_gdv",
+      "terminal": true,
+      "prompt": "（已触发胃扩张急症风险提示）"
+    },
+    "n_emergency_neuro": {
+      "id": "n_emergency_neuro",
+      "terminal": true,
+      "prompt": "（已触发神经急症提示）"
+    },
+    "n_emergency_bleed": {
+      "id": "n_emergency_bleed",
+      "terminal": true,
+      "prompt": "（已触发出血风险提示）"
+    }
+  }
+}

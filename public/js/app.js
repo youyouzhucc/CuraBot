@@ -86,7 +86,7 @@
   }
 
   async function loadKnowledge() {
-    const [k, intake] = await Promise.all([
+    const [k, intake, decisionTree] = await Promise.all([
       fetch("/data/knowledge.json", { cache: "no-store" }).then((r) => {
         if (!r.ok) throw new Error("无法加载内容");
         return r.json();
@@ -95,8 +95,12 @@
         if (!r.ok) throw new Error("无法加载采集清单");
         return r.json();
       }),
+      fetch("/data/health-decision-tree.json", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)),
     ]);
     state.knowledge = k;
+    if (decisionTree && decisionTree.version) {
+      k.healthDecisionTree = decisionTree;
+    }
     Object.assign(k.triageFlows || {}, intake.triageFlows || {});
     const apiBase = k.meta && k.meta.apiBase;
     if (apiBase != null && String(apiBase).trim() !== "") {

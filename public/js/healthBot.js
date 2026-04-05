@@ -13,11 +13,29 @@
   let lastUserPlainInput = "";
   /** 已在会话中回答过的症状追问 id，避免重复弹出同一题 */
   let answeredQuizIds = [];
+  /** JSON 决策树会话（HealthCheckSession 结构由 healthDecisionEngine 创建） */
+  let decisionSession = null;
+  /** 是否处于决策树选择题阶段（此时仍锁定自由输入） */
+  let treePhaseActive = false;
 
   function syncProfileToWindow() {
     if (typeof window !== "undefined") {
       window.__healthChatProfile = chatProfile;
     }
+  }
+
+  function syncDecisionSessionWindow() {
+    if (typeof window !== "undefined") {
+      window.__healthDecisionSession = decisionSession;
+    }
+  }
+
+  function setEmergencyBannerVisible(show, message) {
+    const el = document.getElementById("healthEmergencyBanner");
+    if (!el) return;
+    el.hidden = !show;
+    const t = el.querySelector(".health-emergency-banner-text");
+    if (t && message) t.textContent = message;
   }
 
   function stripDisclaimerFromBody(text) {
@@ -546,9 +564,10 @@
     });
   }
 
-  function appendVisitRecordBubble(fullText, copyOk) {
+  function appendVisitRecordBubble(fullText, copyOk, recordTitle) {
     const { log } = getEls();
     if (!log) return;
+    const title = recordTitle || "就诊记录";
     const div = document.createElement("div");
     div.className = "health-msg health-msg--bot health-msg--visit-record";
     div.setAttribute("role", "listitem");
@@ -556,7 +575,7 @@
       ? '<p class="muted health-visit-record-note">已复制到剪贴板，可直接粘贴给医生。</p>'
       : '<p class="muted health-visit-record-note">请使用下方「复制全文」。</p>';
     div.innerHTML = `<div class="health-msg-inner health-visit-record-inner">
-      <p class="health-visit-record-title"><strong>就诊记录</strong></p>
+      <p class="health-visit-record-title"><strong>${escapeHtml(title)}</strong></p>
       ${note}
       <pre class="health-visit-record-pre">${escapeHtml(fullText)}</pre>
       <button type="button" class="btn secondary soft health-visit-record-copy" data-copy-visit-record="1">复制全文</button>
@@ -568,31 +587,148 @@
   function handleGenerateVisitRecord(getKnowledge) {
     const text = buildVisitRecordText(getKnowledge);
     copyTextToClipboard(text).then(
-      () => appendVisitRecordBubble(text, true),
-      () => appendVisitRecordBubble(text, false)
+      () => appendVisitRecordBubble(text, true, "对话纪要"),
+      () => appendVisitRecordBubble(text, false, "对话纪要")
     );
+  }
+
+  function handleGenerateSoapReport(getKnowledge) {
+    const Eng = global.CuraHealthDecisionEngine;
+    if (!Eng || !decisionSession) {
+      alert("请先完成档案与症状筛查（决策树选择题），再生成 SOAP 简报。");
+      return;
+    }
+    const gloss = Eng.glossForOwnerPhrase(lastUserPlainInput);
+    const extra = gloss ? ["口语与可能医学提示（非诊断）：" + gloss + ""] : [];
+    const text = Eng.generateSOAP(decisionSession, chatProfile, extra);
+    copyTextToClipboard(text).then(
+      () => appendVisitRecordBubble(text, true, "SOAP 简报"),
+      () => appendVisitRecordBubble(text, false, "SOAP 简报")
+    );
+  }
+
+  function finalizeGuidedOpenInput(knowledge) {
+    guidedComplete = true;
+    treePhaseActive = false;
+    updateChatInputState();
+    const hc = (knowledge && knowledge.healthChat) || {};
+    const done =
+      hc.guidedDonePrompt ||
+      "好的，已记录你的选择与筛查路径。请用自然语言补充细节（不能代替兽医诊断）。";
+    const calm =
+      "我理解你会担心——把下面当作「就诊前预演」就好；若需拍便便/皮肤照片，可稍后由产品接入上传。";
+    appendBubble("bot", done + "\n\n" + calm, "", { severity: "normal" });
+    try {
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem("curabot_followup_hint_at", String(Date.now() + 12 * 60 * 60 * 1000));
+      }
+    } catch (e) {
+      /* ignore */
+    }
+    const { input } = getEls();
+    if (input) setTimeout(() => input.focus(), 120);
+  }
+
+  function appendDecisionTreeNode(node) {
+    const Eng = global.CuraHealthDecisionEngine;
+    if (!node || !Eng) return;
+    const { log } = getEls();
+    if (!log) return;
+    const wrap = document.createElement("div");
+    wrap.className = "health-msg health-msg--bot health-decision-tree-wrap";
+    wrap.setAttribute("data-node-id", node.id || "");
+    const support = node.supportMessage
+      ? `<p class="health-decision-support muted">${escapeHtml(node.supportMessage)}</p>`
+      : "";
+    const media = node.mediaHint
+      ? `<p class="health-decision-media muted small-intro">${escapeHtml(node.mediaHint)}</p>`
+      : "";
+    const btns = (node.options || [])
+      .map(
+        (o) =>
+          `<button type="button" class="btn secondary soft" data-decision-tree-option="1" data-value="${escapeHtml(
+            o.value
+          )}" data-label="${escapeHtml(o.label)}">${escapeHtml(o.label)}</button>`
+      )
+      .join("");
+    wrap.innerHTML = `<div class="health-msg-inner">${formatRich(node.prompt)}</div>${support}${media}<p class="health-msg-disclaimer" role="note">${escapeHtml(
+      BOT_DISCLAIMER_LINE
+    )}</p><div class="health-guided-options">${btns}</div>`;
+    log.appendChild(wrap);
+    scrollLog();
+  }
+
+  function startDecisionTreeIfNeeded(getKnowledge, getSpecies, opts) {
+    const knowledge = getKnowledge();
+    const Eng = global.CuraHealthDecisionEngine;
+    const tree = knowledge && knowledge.healthDecisionTree;
+    const sp = getChatSpecies(getSpecies);
+    if (!Eng || !tree || !tree.nodes || !tree.entryBySpecies || !tree.entryBySpecies[sp]) {
+      finalizeGuidedOpenInput(knowledge);
+      return;
+    }
+    decisionSession = Eng.createSession(sp, tree, chatProfile);
+    syncDecisionSessionWindow();
+    treePhaseActive = true;
+    guidedComplete = false;
+    updateChatInputState();
+    const node = Eng.getCurrentNode(decisionSession);
+    if (node) appendDecisionTreeNode(node);
+    else finalizeGuidedOpenInput(knowledge);
+  }
+
+  function onDecisionTreeOptionClick(btn, getKnowledge, getSpecies, opts) {
+    if (!decisionSession || !treePhaseActive) return;
+    const Eng = global.CuraHealthDecisionEngine;
+    const wrap = btn.closest && btn.closest(".health-decision-tree-wrap");
+    if (!wrap || !Eng) return;
+    const nodeId = wrap.getAttribute("data-node-id");
+    const value = btn.getAttribute("data-value");
+    const tree = getKnowledge().healthDecisionTree;
+    const node = tree && tree.nodes && tree.nodes[nodeId];
+    if (!node || !node.options) return;
+    const opt = node.options.find((o) => o.value === value);
+    if (!opt) return;
+    wrap.querySelectorAll("[data-decision-tree-option]").forEach((b) => {
+      b.disabled = true;
+    });
+    const label = btn.getAttribute("data-label") || value;
+    appendBubble("user", label, "");
+    history.push({ role: "user", content: label });
+    const result = Eng.applyOption(decisionSession, opt);
+    syncDecisionSessionWindow();
+    const knowledge = getKnowledge();
+
+    if (result.kind === "emergency") {
+      setEmergencyBannerVisible(true, result.message);
+      appendBubble("bot", "**急诊提示**\n\n" + result.message, "", { severity: "emergency" });
+      treePhaseActive = false;
+      finalizeGuidedOpenInput(knowledge);
+      return;
+    }
+    if (result.kind === "done") {
+      if (result.closingNote) appendBubble("bot", result.closingNote, "", { severity: "unclear" });
+      treePhaseActive = false;
+      finalizeGuidedOpenInput(knowledge);
+      return;
+    }
+    if (result.kind === "continue" && result.node) {
+      appendDecisionTreeNode(result.node);
+    }
   }
 
   function advanceGuided(getKnowledge, getSpecies, opts) {
     const knowledge = getKnowledge();
     const steps = getGuidedSteps(knowledge);
     if (guidedStepIndex >= steps.length) {
-      guidedComplete = true;
-      updateChatInputState();
-      const hc = (knowledge && knowledge.healthChat) || {};
-      const done =
-        hc.guidedDonePrompt ||
-        "好的，已记录你的选择。请用自然语言描述最近最担心的症状或变化（不能代替兽医诊断）。";
-      appendBubble("bot", done, "");
-      const { input } = getEls();
-      if (input) setTimeout(() => input.focus(), 120);
+      startDecisionTreeIfNeeded(getKnowledge, getSpecies, opts);
       return;
     }
     appendGuidedStep(steps[guidedStepIndex]);
   }
 
   function onGuidedOptionClick(btn, getKnowledge, getSpecies, opts) {
-    if (guidedComplete) return;
+    if (guidedComplete || treePhaseActive) return;
     const stepId = btn.getAttribute("data-step-id");
     const value = btn.getAttribute("data-value");
     const label = btn.getAttribute("data-label") || value;
@@ -619,7 +755,11 @@
     guidedComplete = false;
     lastUserPlainInput = "";
     answeredQuizIds = [];
+    decisionSession = null;
+    treePhaseActive = false;
     syncProfileToWindow();
+    syncDecisionSessionWindow();
+    setEmergencyBannerVisible(false, "");
 
     const knowledge = getKnowledge();
     const steps = getGuidedSteps(knowledge);
@@ -628,9 +768,6 @@
       const v = chatProfile[sid];
       if (v == null || v === "") break;
       guidedStepIndex += 1;
-    }
-    if (guidedStepIndex >= steps.length) {
-      guidedComplete = true;
     }
 
     const { log } = getEls();
@@ -679,8 +816,14 @@
           }
           return;
         }
+        const dTreeBtn = e.target && e.target.closest && e.target.closest("[data-decision-tree-option]");
+        if (dTreeBtn && treePhaseActive) {
+          e.preventDefault();
+          onDecisionTreeOptionClick(dTreeBtn, getKnowledge, getSpecies, opts);
+          return;
+        }
         const gBtn = e.target && e.target.closest && e.target.closest("[data-guided-option]");
-        if (gBtn && !guidedComplete) {
+        if (gBtn && !guidedComplete && !treePhaseActive) {
           e.preventDefault();
           onGuidedOptionClick(gBtn, getKnowledge, getSpecies, opts);
           return;
@@ -723,6 +866,10 @@
     const btnVisit = document.getElementById("btnVisitRecord");
     if (btnVisit) {
       btnVisit.addEventListener("click", () => handleGenerateVisitRecord(getKnowledge));
+    }
+    const btnSoap = document.getElementById("btnSoapReport");
+    if (btnSoap) {
+      btnSoap.addEventListener("click", () => handleGenerateSoapReport(getKnowledge));
     }
 
     global.CuraHealthChat = {
