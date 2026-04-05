@@ -320,6 +320,105 @@
 
   function refreshChatStatus() {}
 
+  function cleanUserLineForRecord(content) {
+    let s = String(content || "");
+    if (s.indexOf("【用户已选档案】") === 0) {
+      const cut = s.indexOf("\n\n");
+      if (cut !== -1) s = s.slice(cut + 2);
+    }
+    return s.trim();
+  }
+
+  function buildVisitRecordText(getKnowledge) {
+    const knowledge = getKnowledge && getKnowledge();
+    const steps = getGuidedSteps(knowledge || {});
+    const p =
+      chatProfile && Object.keys(chatProfile).length
+        ? chatProfile
+        : (typeof window !== "undefined" && window.__healthChatProfile) || {};
+    const lines = [];
+    lines.push("【就诊信息摘要】（由 CuraBot 整理，供线下就医沟通参考，不能代替诊断）");
+    lines.push("");
+    lines.push("一、宠物基本情况");
+    let any = false;
+    steps.forEach((s) => {
+      const v = p[s.id];
+      if (v == null || v === "") return;
+      any = true;
+      const opt = (s.options || []).find((o) => o.value === v);
+      const lab = opt ? opt.label : v;
+      const title = String(s.prompt || "").replace(/？$/, "");
+      lines.push(`· ${title}：${lab}`);
+    });
+    if (!any) lines.push("· （尚未完成上方选择题，或档案为空）");
+    lines.push("");
+    lines.push("二、症状与健康表现（对话纪要）");
+    if (!history.length) {
+      lines.push("（暂无对话内容）");
+    } else {
+      history.forEach((h) => {
+        const role = h.role === "user" ? "家长" : "助手";
+        let c = String(h.content || "");
+        if (h.role === "user") c = cleanUserLineForRecord(c);
+        if (!c) return;
+        lines.push(`${role}：${c.replace(/\s+/g, " ").trim()}`);
+      });
+    }
+    lines.push("");
+    lines.push("三、提示");
+    lines.push("上述内容仅供就诊时向医生说明情况使用；急症请优先去医院。用药与处置须以执业兽医意见为准。");
+    return lines.join("\n");
+  }
+
+  function copyTextToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text);
+    }
+    return new Promise((resolve, reject) => {
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.setAttribute("aria-hidden", "true");
+        ta.style.position = "fixed";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        resolve();
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
+
+  function appendVisitRecordBubble(fullText, copyOk) {
+    const { log } = getEls();
+    if (!log) return;
+    const div = document.createElement("div");
+    div.className = "health-msg health-msg--bot health-msg--visit-record";
+    div.setAttribute("role", "listitem");
+    const note = copyOk
+      ? '<p class="muted health-visit-record-note">已复制到剪贴板，可直接粘贴给医生。</p>'
+      : '<p class="muted health-visit-record-note">请使用下方「复制全文」。</p>';
+    div.innerHTML = `<div class="health-msg-inner health-visit-record-inner">
+      <p class="health-visit-record-title"><strong>就诊记录</strong></p>
+      ${note}
+      <pre class="health-visit-record-pre">${escapeHtml(fullText)}</pre>
+      <button type="button" class="btn secondary soft health-visit-record-copy" data-copy-visit-record="1">复制全文</button>
+    </div><p class="health-msg-disclaimer" role="note">${escapeHtml(BOT_DISCLAIMER_LINE)}</p>`;
+    log.appendChild(div);
+    scrollLog();
+  }
+
+  function handleGenerateVisitRecord(getKnowledge) {
+    const text = buildVisitRecordText(getKnowledge);
+    copyTextToClipboard(text).then(
+      () => appendVisitRecordBubble(text, true),
+      () => appendVisitRecordBubble(text, false)
+    );
+  }
+
   function advanceGuided(getKnowledge, getSpecies, opts) {
     const knowledge = getKnowledge();
     const steps = getGuidedSteps(knowledge);
@@ -393,6 +492,25 @@
     if (log && !log.dataset.delegateBound) {
       log.dataset.delegateBound = "1";
       log.addEventListener("click", (e) => {
+        const copyRec = e.target && e.target.closest && e.target.closest("[data-copy-visit-record]");
+        if (copyRec) {
+          const wrap = copyRec.closest(".health-msg--visit-record");
+          const pre = wrap && wrap.querySelector(".health-visit-record-pre");
+          if (pre && pre.textContent) {
+            copyTextToClipboard(pre.textContent).then(null, function () {
+              try {
+                const range = document.createRange();
+                range.selectNodeContents(pre);
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+              } catch (err) {
+                /* ignore */
+              }
+            });
+          }
+          return;
+        }
         const gBtn = e.target && e.target.closest && e.target.closest("[data-guided-option]");
         if (gBtn && !guidedComplete) {
           e.preventDefault();
@@ -426,6 +544,11 @@
           sendMessage(getSpecies, getKnowledge, opts);
         }
       });
+    }
+
+    const btnVisit = document.getElementById("btnVisitRecord");
+    if (btnVisit) {
+      btnVisit.addEventListener("click", () => handleGenerateVisitRecord(getKnowledge));
     }
 
     global.CuraHealthChat = {

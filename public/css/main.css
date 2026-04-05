@@ -1824,19 +1824,66 @@ footer.site {
 
 .health-chat-form {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   align-items: stretch;
   margin-bottom: 0.35rem;
 }
 
-.health-chat-form input {
-  flex: 1;
+.health-chat-form .health-chat-input {
+  flex: 1 1 12rem;
   min-width: 0;
   padding: 0.65rem 0.85rem;
   border-radius: 10px;
   border: 1px solid var(--border-warm-strong);
   font: inherit;
   background: #fff;
+}
+
+.health-chat-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: stretch;
+  flex-shrink: 0;
+}
+
+.health-chat-form-actions .btn {
+  white-space: nowrap;
+}
+
+.health-visit-record-inner {
+  width: 100%;
+  max-width: 100%;
+}
+
+.health-visit-record-title {
+  margin: 0 0 0.4rem;
+  font-size: 0.92rem;
+}
+
+.health-visit-record-note {
+  margin: 0 0 0.45rem;
+  font-size: 0.82rem;
+}
+
+.health-visit-record-pre {
+  margin: 0 0 0.5rem;
+  padding: 0.55rem 0.65rem;
+  max-height: min(40vh, 280px);
+  overflow: auto;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: var(--blush);
+  border: 1px solid var(--border-warm);
+  border-radius: 8px;
+  color: #44403c;
+}
+
+.health-visit-record-copy {
+  margin-top: 0.15rem;
 }
 
 .health-msg-source {

@@ -191,12 +191,18 @@
             <label class="visually-hidden" for="healthChatInput">输入消息</label>
             <input
               type="text"
+              class="health-chat-input"
               id="healthChatInput"
               name="healthChatInput"
               placeholder="例如：猫一天没尿了、精神很差…"
               maxlength="2000"
             />
-            <button type="submit" class="btn">发送</button>
+            <div class="health-chat-form-actions">
+              <button type="submit" class="btn">发送</button>
+              <button type="button" class="btn secondary" id="btnVisitRecord">
+                生成就诊记录
+              </button>
+            </div>
           </form>
           <div class="hero-actions hero-actions--bottom">
             <button type="button" class="btn secondary js-back-home">← 返回首页</button>
