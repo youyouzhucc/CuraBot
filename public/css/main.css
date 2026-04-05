@@ -247,6 +247,18 @@ section[data-view="disclaimer"] > .hero {
   gap: clamp(1.25rem, 3vw, 2rem);
 }
 
+.home-health-intro {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+.home-health-intro strong {
+  color: #57534e;
+  font-weight: 600;
+}
+
 .home-health-actions .species-grid {
   width: 100%;
 }

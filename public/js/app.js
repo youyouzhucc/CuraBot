@@ -1,7 +1,8 @@
 (function () {
   const state = {
     knowledge: null,
-    species: "cat",
+    /** @type {"cat"|"dog"|null} 首页默认未选；点猫/狗后进入分诊 */
+    species: null,
     view: "home",
     flowKey: null,
     stepId: null,
@@ -103,7 +104,9 @@
   }
 
   function speciesLabel(sp) {
-    return sp === "dog" ? "狗狗" : "猫咪";
+    if (sp === "dog") return "狗狗";
+    if (sp === "cat") return "猫咪";
+    return "猫/狗";
   }
 
   function applyHeroImages() {
@@ -182,11 +185,13 @@
   }
 
   function topicMatchesSpecies(topic, species) {
+    if (!species) return true;
     if (!topic.species || topic.species.length === 0) return true;
     return topic.species.indexOf(species) !== -1;
   }
 
   function clusterMatchesSpecies(cluster, species) {
+    if (!species) return true;
     if (!cluster.species || cluster.species.length === 0) return true;
     return cluster.species.indexOf(species) !== -1;
   }
@@ -282,9 +287,14 @@
     const cat = $("#homeDailyRefLinksCat");
     const dog = $("#homeDailyRefLinksDog");
     if (!cat || !dog) return;
+    if (!state.species) {
+      cat.hidden = false;
+      dog.hidden = false;
+      return;
+    }
     const isCat = state.species === "cat";
     cat.hidden = !isCat;
-    dog.hidden = !isCat;
+    dog.hidden = isCat;
   }
 
   function renderDailyKnowledgeHome() {
@@ -364,6 +374,7 @@
     state.flowStepHistory = [];
     state.outcomeReturnStepId = null;
     state.intakeFlags = null;
+    state.species = null;
     updateSpeciesLabels();
     updateSpeciesCards();
     showView("home");
@@ -748,7 +759,11 @@
   function renderEmergencyList() {
     const list = state.knowledge.emergencyRedLines || [];
     const filtered = list.filter(
-      (item) => !item.species || item.species.indexOf(state.species) !== -1
+      (item) =>
+        !state.species ||
+        !item.species ||
+        item.species.length === 0 ||
+        item.species.indexOf(state.species) !== -1
     );
     const host = $("#emergencyList");
     host.innerHTML = filtered
@@ -769,6 +784,7 @@
   function renderBehavior() {
     const tips = (state.knowledge.behaviorTips || []).filter(
       (t) =>
+        !state.species ||
         !t.species ||
         !t.species.length ||
         t.species.indexOf(state.species) !== -1
@@ -929,13 +945,10 @@
       state.species = "cat";
       updateSpeciesLabels();
       updateSpeciesCards();
+      showView("triageMenu");
     });
     $("#pickDog").addEventListener("click", () => {
       state.species = "dog";
-      updateSpeciesLabels();
-      updateSpeciesCards();
-    });
-    $("#enterApp").addEventListener("click", () => {
       updateSpeciesLabels();
       updateSpeciesCards();
       showView("triageMenu");
@@ -980,7 +993,7 @@
     const openHc = $("#openHealthChat");
     if (openHc && typeof CuraHealthChatInit === "function") {
       CuraHealthChatInit({
-        getSpecies: () => state.species,
+        getSpecies: () => state.species || "cat",
         getKnowledge: () => state.knowledge,
         onOpenEmergency: () => {
           renderEmergencyList();

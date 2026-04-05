@@ -64,13 +64,16 @@
               </button>
             </div>
             <div class="home-health-actions">
+              <p class="muted home-health-intro">
+                标准化临床采集清单、急事先筛、按症状追问——把情况说清楚，方便判断要不要尽快去医院（非诊断）。请先点选下方<strong>猫咪</strong>或<strong>狗狗</strong>，直接进入分诊与采集。
+              </p>
               <div class="species-grid">
                 <button
                   type="button"
-                  class="species-card is-selected"
+                  class="species-card"
                   data-species="cat"
                   id="pickCat"
-                  aria-pressed="true"
+                  aria-pressed="false"
                 >
                   <img id="heroCatImg" class="species-photo" src="" alt="" width="140" height="140" loading="lazy" />
                   <span class="species-name">猫咪</span>
@@ -82,49 +85,13 @@
                   <span class="species-pill" aria-hidden="true">✓ 已选</span>
                 </button>
               </div>
-
-              <div class="home-start-block">
-                <button type="button" class="menu-card menu-card--core home-start-cta" id="enterApp">
-                  <span class="home-start-cta-main">
-                    <span class="menu-core-eyebrow">从这里开始</span>
-                    <span class="menu-core-title">聊聊你的毛孩子怎么了</span>
-                    <span class="menu-core-desc">
-                      标准化临床采集清单、急事先筛、按症状追问——把情况说清楚，方便判断要不要尽快去医院（非诊断）。
-                    </span>
-                  </span>
-                  <span class="home-start-cta-arrow" aria-hidden="true">
-                    <svg
-                      class="home-start-cta-arrow-svg"
-                      viewBox="0 0 72 72"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <!-- 圆角粗线条「卡通」指向右，带小圆点增加活泼感 -->
-                      <path
-                        d="M10 36h34"
-                        stroke="currentColor"
-                        stroke-width="4.5"
-                        stroke-linecap="round"
-                      />
-                      <path
-                        d="M38 20l16 16-16 16"
-                        stroke="currentColor"
-                        stroke-width="4.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                      <circle cx="12" cy="36" r="3.5" fill="currentColor" opacity="0.22" />
-                    </svg>
-                  </span>
-                </button>
-              </div>
             </div>
           </div>
 
           <div class="home-section-label" id="label-daily-knowledge">日常知识</div>
           <div class="hero home-hero home-hero--merged">
             <p class="home-daily-lead">
-              四大模块：<strong>健康问题 · 训练教学 · 老年护理 · 饮食健康</strong>。条目随 <strong class="js-species-label">猫咪</strong> 筛选；点卡片看详情（科普，不代替就诊）。
+              四大模块：<strong>健康问题 · 训练教学 · 老年护理 · 饮食健康</strong>。条目随 <strong class="js-species-label">猫/狗</strong> 筛选；点卡片看详情（科普，不代替就诊）。
             </p>
             <div id="homeDailyKnowledge" class="daily-knowledge-root" aria-live="polite"></div>
             <details class="home-merge-details home-merge-details--refs daily-knowledge-more">
