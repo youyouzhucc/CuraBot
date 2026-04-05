@@ -237,10 +237,8 @@
     if (log) log.innerHTML = "";
     const k = getKnowledge();
     const hc = (k && k.healthChat) || {};
-    const welcome =
-      hc.welcome ||
-      "你好，我是 CuraBot 健康机器人。告诉我毛孩子的情况，我会帮你尽可能识别问题，有紧急问题请赶紧送ta去医院就诊哦~";
-    appendBubble("bot", welcome, "");
+    const welcome = hc.welcome != null ? String(hc.welcome).trim() : "";
+    if (welcome) appendBubble("bot", welcome, "");
     const chips = hc.quickChips || ["猫尿很少怎么办", "狗吃了巧克力", "急症有哪些"];
     const sp = getSpecies();
     const chipRow = chips
