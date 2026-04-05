@@ -233,7 +233,7 @@
 
   function resetConversation(getKnowledge, getSpecies) {
     history.length = 0;
-    const { log, hint } = getEls();
+    const { log } = getEls();
     if (log) log.innerHTML = "";
     const k = getKnowledge();
     const hc = (k && k.healthChat) || {};
