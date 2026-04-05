@@ -110,9 +110,9 @@
     });
   }
 
-  function updateHomeFitnessPanels() {
-    const cat = $("#homeFitnessCat");
-    const dog = $("#homeFitnessDog");
+  function updateHomeMergedPanels() {
+    const cat = $("#homeMergedCat");
+    const dog = $("#homeMergedDog");
     if (!cat || !dog) return;
     const isCat = state.species === "cat";
     cat.hidden = !isCat;
@@ -126,7 +126,7 @@
       card.setAttribute("aria-pressed", sp === state.species ? "true" : "false");
     });
     updateTriageIntakeVisibility();
-    updateHomeFitnessPanels();
+    updateHomeMergedPanels();
   }
 
   /** 分诊页「标准化采集」只展示当前首页所选物种对应的入口 */
@@ -659,25 +659,26 @@
     $("#linkHome").addEventListener("click", () => renderHome());
 
     $("#menuTriage").addEventListener("click", () => showView("triageMenu"));
-    $("#menuRed").addEventListener("click", () => {
-      renderEmergencyList();
-      showView("emergency");
-    });
-    $("#menuBehavior").addEventListener("click", () => {
-      renderBehavior();
-      showView("behavior");
-    });
-    $("#menuBody").addEventListener("click", () => {
-      renderBodyMap();
-      showView("bodymap");
-    });
-    $("#menuRefs").addEventListener("click", () => {
-      renderReferencesPage();
-      showView("refs");
-    });
-    $("#menuZoonosis").addEventListener("click", () => {
-      renderZoonosis();
-      showView("zoonosis");
+    $$("[data-home-nav]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const nav = btn.getAttribute("data-home-nav");
+        if (nav === "emergency") {
+          renderEmergencyList();
+          showView("emergency");
+        } else if (nav === "behavior") {
+          renderBehavior();
+          showView("behavior");
+        } else if (nav === "bodymap") {
+          renderBodyMap();
+          showView("bodymap");
+        } else if (nav === "zoonosis") {
+          renderZoonosis();
+          showView("zoonosis");
+        } else if (nav === "refs") {
+          renderReferencesPage();
+          showView("refs");
+        }
+      });
     });
 
     $("#startScreen").addEventListener("click", () => startFlow("screen"));

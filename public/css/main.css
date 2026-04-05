@@ -230,47 +230,147 @@ a {
   color: #57534e;
 }
 
-.home-fitness-panel[hidden] {
+.home-merged-panel[hidden] {
   display: none !important;
 }
 
-.home-fitness-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 0.85rem;
-  margin-bottom: 1rem;
+.home-hero--merged {
+  padding-bottom: calc(var(--hero-pad-y) + 0.35rem);
 }
 
-.home-fitness-card {
-  margin: 0;
-  padding: 0.95rem 1rem 1.05rem;
-  border-radius: var(--radius);
-  border: 1px solid var(--border-warm);
-  background: linear-gradient(165deg, #fffdfa 0%, #f5f0eb 100%);
-  box-shadow: 0 2px 10px rgba(62, 48, 40, 0.04);
-}
-
-.home-fitness-card h4 {
-  margin: 0 0 0.45rem;
-  font-size: 0.95rem;
+.home-merge-group-title {
+  margin: 1.25rem 0 0.65rem;
+  font-size: 0.82rem;
   font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--tips-muted);
+  text-transform: uppercase;
+}
+
+.home-merge-group-title:first-child {
+  margin-top: 0;
+}
+
+.home-merge-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.home-merge-details {
+  border: 1px solid var(--border-warm);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, #fffdfa 0%, #faf6f2 100%);
+  overflow: hidden;
+}
+
+.home-merge-details > summary {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #44403c;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.home-merge-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.home-merge-details > summary::after {
+  content: "＋";
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.home-merge-details[open] > summary::after {
+  content: "－";
+}
+
+.home-merge-body {
+  padding: 0 1rem 1rem;
+  border-top: 1px dashed rgba(232, 212, 204, 0.9);
+}
+
+.home-merge-body p {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  color: #57534e;
+  line-height: 1.6;
+}
+
+.home-merge-body p:last-child {
+  margin-bottom: 0;
+}
+
+.home-merge-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.home-merge-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border-warm-strong);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, #f2eeea 0%, #e8e2dc 100%);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.home-merge-row:hover {
+  border-color: rgba(166, 124, 114, 0.45);
+  box-shadow: 0 4px 14px rgba(62, 48, 40, 0.07);
+}
+
+.home-merge-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.home-merge-row-text strong {
+  font-size: 0.95rem;
   color: #44403c;
   line-height: 1.35;
 }
 
-.home-fitness-card p {
-  margin: 0;
-  font-size: 0.86rem;
-  color: var(--muted);
-  line-height: 1.55;
-}
-
-.home-ref-note {
-  margin: 0.75rem 0 0.5rem;
+.home-merge-row-sub {
   font-size: 0.82rem;
+  color: var(--muted);
+  font-weight: 500;
 }
 
-.home-ref-links {
+.home-merge-row-go {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent-dark);
+  white-space: nowrap;
+}
+
+.home-merge-details--refs {
+  margin-top: 1rem;
+}
+
+.home-merge-details--refs .home-ref-links {
   margin: 0;
   padding: 0 0 0 1.1rem;
   font-size: 0.82rem;
@@ -278,16 +378,8 @@ a {
   line-height: 1.75;
 }
 
-.home-ref-links a {
+.home-merge-details--refs .home-ref-links a {
   word-break: break-all;
-}
-
-.home-hero--tipsref {
-  padding-bottom: calc(var(--hero-pad-y) + 0.25rem);
-}
-
-.home-hero--tipsref .menu-tips-lead {
-  margin-top: 0;
 }
 
 .hero h1,
