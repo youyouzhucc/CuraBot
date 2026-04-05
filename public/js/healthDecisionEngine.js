@@ -89,7 +89,8 @@
     if (!next || next === "END") {
       session.currentId = null;
       session.closedReason = "complete";
-      return { kind: "done" };
+      const closingNote = typeof option.closingNote === "string" && option.closingNote.trim() ? option.closingNote.trim() : undefined;
+      return closingNote ? { kind: "done", closingNote } : { kind: "done" };
     }
 
     session.currentId = next;

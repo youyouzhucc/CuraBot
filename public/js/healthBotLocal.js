@@ -36,8 +36,15 @@
     const shortOf = (row) => (row.action || "").slice(0, 220);
 
     if (sp === "cat" && /(尿不|尿不出|尿闭|无尿|几滴|蹲盆|尿血)/.test(msg) && !/(狗|犬)/.test(msg)) {
-      const u = rows.find((r) => r.id === "uro-cat");
-      if (u) return { row: u, short: shortOf(u) };
+      const compact = msg.replace(/\s/g, "");
+      const onlyVagueAnuria =
+        compact.length < 42 &&
+        /没尿|不尿|无尿/.test(compact) &&
+        !/(血|呕|吐|疼|痛|盆|滴|频|红|粉红)/.test(msg);
+      if (!onlyVagueAnuria) {
+        const u = rows.find((r) => r.id === "uro-cat");
+        if (u) return { row: u, short: shortOf(u) };
+      }
     }
     if (sp === "dog" && /(肚子胀|腹胀|鼓|干呕|呕不出|胃扭转|GDV)/i.test(msg)) {
       const g = rows.find((r) => r.id === "gdv-dog");
@@ -76,6 +83,23 @@
     if (severityPreempt === "emergency") return null;
 
     const nick = petNickname(sp);
+
+    if (
+      sp === "cat" &&
+      asked.indexOf("cat_uro") === -1 &&
+      /(没尿|无尿|不尿|尿不出|尿团|排尿|尿频|尿血)/.test(msg)
+    ) {
+      return {
+        id: "cat_uro",
+        prompt: "关于排尿，需要先对齐现象：目前更接近哪一种？",
+        options: [
+          { value: "strain", label: "总去猫砂盆但只能滴尿或几乎挤不出" },
+          { value: "anuria", label: "很久没看到排尿或几乎没有尿团" },
+          { value: "blood", label: "尿量少、颜色深或见粉红/血色" },
+          { value: "unclear", label: "还不确定，主要心里着急" },
+        ],
+      };
+    }
 
     if (
       asked.indexOf("onset") === -1 &&

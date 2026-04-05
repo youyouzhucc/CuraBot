@@ -1849,14 +1849,14 @@ footer.site {
   white-space: nowrap;
 }
 
-/* 急诊置顶条（EmergencyTrigger 可视化） */
+/* 急诊置顶条（EmergencyTrigger 可视化）·莫兰迪暖色 */
 .health-emergency-banner {
   margin: 0 0 0.65rem;
   padding: 0.65rem 0.85rem;
   border-radius: var(--radius);
-  border: 2px solid #dc2626;
-  background: linear-gradient(180deg, #fef2f2 0%, #fee2e2 100%);
-  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.15);
+  border: 1px solid rgba(150, 108, 98, 0.42);
+  background: linear-gradient(180deg, #faf3f1 0%, #f1e3df 100%);
+  box-shadow: 0 6px 20px rgba(90, 62, 56, 0.08);
 }
 
 .health-emergency-banner[hidden] {
@@ -1874,7 +1874,7 @@ footer.site {
   margin: 0 0 0.35rem;
   font-size: 0.95rem;
   font-weight: 700;
-  color: #991b1b;
+  color: #6b453c;
   line-height: 1.45;
 }
 
@@ -2019,58 +2019,58 @@ footer.site {
 }
 
 .health-tier-badge--emergency .health-tier-badge-inner {
-  background: linear-gradient(180deg, #fee2e2 0%, #fecaca 100%);
-  color: #991b1b;
-  border: 1px solid rgba(185, 28, 28, 0.45);
+  background: linear-gradient(180deg, #f0ddd8 0%, #e8c9c2 100%);
+  color: #6b3d38;
+  border: 1px solid rgba(139, 90, 82, 0.38);
 }
 
 .health-tier-badge--moderate .health-tier-badge-inner {
-  background: linear-gradient(180deg, #fef3c7 0%, #fde68a 100%);
-  color: #92400e;
-  border: 1px solid rgba(217, 119, 6, 0.4);
+  background: linear-gradient(180deg, #efe5d8 0%, #e5d8c8 100%);
+  color: #6a5238;
+  border: 1px solid rgba(138, 115, 88, 0.38);
 }
 
 .health-tier-badge--normal .health-tier-badge-inner {
-  background: linear-gradient(180deg, #d1fae5 0%, #a7f3d0 100%);
-  color: #065f46;
-  border: 1px solid rgba(5, 150, 105, 0.35);
+  background: linear-gradient(180deg, #e2e9dc 0%, #d4dfcf 100%);
+  color: #4a5a46;
+  border: 1px solid rgba(110, 128, 104, 0.38);
 }
 
 .health-tier-badge--unclear .health-tier-badge-inner {
-  background: linear-gradient(180deg, #f3f4f6 0%, #e5e7eb 100%);
-  color: #374151;
-  border: 1px solid rgba(107, 114, 128, 0.35);
+  background: linear-gradient(180deg, #ebe6e0 0%, #ddd6cd 100%);
+  color: #5c534a;
+  border: 1px solid rgba(120, 110, 100, 0.35);
 }
 
 .health-msg--tier-emergency .health-msg-inner {
-  border-left: 4px solid #dc2626;
-  background: linear-gradient(90deg, rgba(254, 226, 226, 0.55) 0%, #fff 42%);
+  border-left: 4px solid #b87a72;
+  background: linear-gradient(90deg, rgba(240, 221, 216, 0.65) 0%, #fffdfa 46%);
 }
 
 .health-msg--tier-moderate .health-msg-inner {
-  border-left: 4px solid #d97706;
-  background: linear-gradient(90deg, rgba(254, 243, 199, 0.55) 0%, #fff 42%);
+  border-left: 4px solid #b8956a;
+  background: linear-gradient(90deg, rgba(239, 229, 216, 0.65) 0%, #fffdfa 46%);
 }
 
 .health-msg--tier-normal .health-msg-inner {
-  border-left: 4px solid #059669;
-  background: linear-gradient(90deg, rgba(209, 250, 229, 0.5) 0%, #fff 42%);
+  border-left: 4px solid #7a9e86;
+  background: linear-gradient(90deg, rgba(226, 233, 220, 0.65) 0%, #fffdfa 46%);
 }
 
 .health-msg--tier-unclear .health-msg-inner {
-  border-left: 4px solid #9ca3af;
-  background: linear-gradient(90deg, rgba(243, 244, 246, 0.75) 0%, #fff 42%);
+  border-left: 4px solid #a89b8f;
+  background: linear-gradient(90deg, rgba(235, 230, 224, 0.75) 0%, #fffdfa 46%);
 }
 
 .health-msg--thinking .health-msg-inner {
-  border-left: 4px solid #8b5cf6;
-  background: linear-gradient(90deg, rgba(237, 233, 254, 0.9) 0%, #fff 48%);
+  border-left: 4px solid #8faa8a;
+  background: linear-gradient(90deg, rgba(222, 234, 218, 0.92) 0%, #fffdfa 52%);
 }
 
 .health-thinking-text {
   margin: 0 0 0.35rem;
   font-weight: 600;
-  color: #5b21b6;
+  color: #5a6b52;
 }
 
 .health-thinking-sub {

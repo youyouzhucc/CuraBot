@@ -20,11 +20,9 @@
         },
         {
           "value": "uro",
-          "label": "排尿费力、尿少、尿血",
-          "next": "n_emergency_uro_cat",
-          "emergencyTrigger": true,
-          "emergencyMessage": "猫咪排尿困难、少尿或无尿、血尿，可能涉及下泌尿道急症（含梗阻风险）。请尽快联系或前往动物医院，不要在家等待观察。",
-          "tags": { "chief": { "system": "泌尿", "sign": "排尿异常" } }
+          "label": "排尿相关：费力、尿少、尿血或担心没尿",
+          "next": "n_uro_cat_what",
+          "tags": { "chief": { "system": "泌尿", "sign": "排尿相关" } }
         },
         {
           "value": "resp",
@@ -263,10 +261,141 @@
         }
       ]
     },
-    "n_emergency_uro_cat": {
-      "id": "n_emergency_uro_cat",
-      "terminal": true,
-      "prompt": "（已触发泌尿急诊提示，流程结束本段筛查）"
+    "n_uro_cat_what": {
+      "id": "n_uro_cat_what",
+      "uiType": "single",
+      "prompt": "目前排尿表现，更接近哪一种？（先对齐现象，再问时间）",
+      "supportMessage": "若还没观察猫砂盆，可以看完再回退一步重选；尽量如实选最接近的一项。",
+      "options": [
+        {
+          "value": "strain_anuria",
+          "label": "总去猫砂盆，但只能滴尿或用力也几乎挤不出",
+          "next": "n_uro_cat_window",
+          "tags": { "chief": { "sign": "排尿相关 · 滴尿/极少尿" }, "accompanying": { "elimination": "排尿费力/尿量极少" } }
+        },
+        {
+          "value": "hematuria_oliguria",
+          "label": "能尿出来，但尿量少、颜色深或见粉红/血色",
+          "next": "n_uro_cat_window",
+          "tags": { "chief": { "sign": "排尿相关 · 少尿或血尿" }, "accompanying": { "elimination": "尿量少/血尿可能" } }
+        },
+        {
+          "value": "painful",
+          "label": "排尿时叫、弓背、频繁舔尿道口，看起来疼痛",
+          "next": "n_uro_cat_window",
+          "tags": { "chief": { "sign": "排尿相关 · 排尿疼痛表现" }, "accompanying": { "elimination": "排尿疼痛" } }
+        },
+        {
+          "value": "unclear",
+          "label": "还没观察清楚，主要担心「今天好像没尿」或不确定尿量",
+          "next": "n_uro_cat_window",
+          "tags": { "chief": { "sign": "排尿相关 · 观察不充分" }, "temporal": { "onset": "家长不确定尿量" } }
+        }
+      ]
+    },
+    "n_uro_cat_window": {
+      "id": "n_uro_cat_window",
+      "uiType": "single",
+      "prompt": "从上次看到比较正常的排尿或成形尿团到现在，大约多久？",
+      "supportMessage": "记不清可以选「说不清」；兽医也会结合触诊与化验判断。",
+      "options": [
+        {
+          "value": "lt12h",
+          "label": "12 小时内",
+          "next": "n_uro_cat_appetite",
+          "tags": { "temporal": { "uro_window": "12小时内" } }
+        },
+        {
+          "value": "12_24h",
+          "label": "约 12～24 小时",
+          "next": "n_uro_cat_appetite",
+          "tags": { "temporal": { "uro_window": "12～24小时" } }
+        },
+        {
+          "value": "gt24h",
+          "label": "超过 24 小时，或几乎完全没看到排尿/尿团",
+          "next": "n_uro_cat_appetite",
+          "tags": { "temporal": { "uro_window": "24小时以上或未见排尿" } }
+        },
+        {
+          "value": "unknown",
+          "label": "说不清 / 刚注意到",
+          "next": "n_uro_cat_appetite",
+          "tags": { "temporal": { "uro_window": "不明" } }
+        }
+      ]
+    },
+    "n_uro_cat_appetite": {
+      "id": "n_uro_cat_appetite",
+      "uiType": "single",
+      "prompt": "现在食欲和整体精神怎么样？",
+      "options": [
+        {
+          "value": "poor",
+          "label": "很差：几乎不吃、蔫、躲藏",
+          "next": "n_uro_cat_vomit",
+          "tags": { "accompanying": { "appetite_spirit": "差" } }
+        },
+        {
+          "value": "okish",
+          "label": "一般：吃一点，精神不太好",
+          "next": "n_uro_cat_vomit",
+          "tags": { "accompanying": { "appetite_spirit": "中等" } }
+        },
+        {
+          "value": "ok",
+          "label": "尚可：吃喝与精神大体正常",
+          "next": "n_uro_cat_vomit",
+          "tags": { "accompanying": { "appetite_spirit": "尚可" } }
+        }
+      ]
+    },
+    "n_uro_cat_vomit": {
+      "id": "n_uro_cat_vomit",
+      "uiType": "single",
+      "prompt": "有没有呕吐？",
+      "options": [
+        {
+          "value": "yes",
+          "label": "有呕吐",
+          "next": "n_uro_cat_outcome",
+          "tags": { "accompanying": { "vomit": "有" } }
+        },
+        {
+          "value": "no",
+          "label": "没有呕吐",
+          "next": "n_uro_cat_outcome",
+          "tags": { "accompanying": { "vomit": "无" } }
+        }
+      ]
+    },
+    "n_uro_cat_outcome": {
+      "id": "n_uro_cat_outcome",
+      "uiType": "single",
+      "prompt": "综合以上选择，哪一条最接近你现在的判断？（用于就医紧迫度分流，不能代替诊断）",
+      "supportMessage": "若实际情况比选项更严重，请直接选第一项或尽快联系急诊兽医。",
+      "options": [
+        {
+          "value": "tier_emergency",
+          "label": "几乎/完全尿不出或仅滴尿较久，或精神很差、已呕吐——担心尿道梗阻或肾损伤等急症",
+          "emergencyTrigger": true,
+          "emergencyMessage": "猫少尿/无尿合并高风险表现时，下泌尿道梗阻与急性肾损伤时间窗紧，请尽快或急诊就医；勿自行大量灌水、勿自行用利尿药，可提前电话动物医院说明路上情况。"
+        },
+        {
+          "value": "tier_urgent",
+          "label": "能排出一定尿量，仍有尿频/血尿/疼痛，但精神尚可或仅轻度不适",
+          "next": "END",
+          "closingNote": "已记录：仍可能有膀胱炎、结晶、结石等情况，建议尽快门诊做体检与尿液检查；若出现无尿、呕吐或精神骤降，请立即就医。",
+          "tags": { "accompanying": { "uro_escalation": "尽快门诊" } }
+        },
+        {
+          "value": "tier_edu",
+          "label": "症状较轻或仍不确定，想先了解何时必须去医院",
+          "next": "END",
+          "closingNote": "已记录：排尿问题建议早日让兽医当面评估。若完全尿不出超过约 12 小时、呕吐、腹部胀或精神极差，请按急诊处理。",
+          "tags": { "accompanying": { "uro_escalation": "观察与教育" } }
+        }
+      ]
     },
     "n_emergency_resp": {
       "id": "n_emergency_resp",
