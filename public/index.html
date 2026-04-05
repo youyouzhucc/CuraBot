@@ -12,16 +12,30 @@
     <div class="wrap">
       <header class="topbar">
         <div class="brand">
-          <img
+          <!-- 内联圆形头像 + 爪印，不请求外链图片 -->
+          <svg
             class="brand-logo"
-            src="/images/curabot-logo.png"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 64 64"
             width="48"
             height="48"
-            alt=""
-            decoding="async"
-            fetchpriority="high"
-            onerror="this.onerror=null;this.src='/images/curabot-logo.svg'"
-          />
+            role="img"
+            aria-label="CuraBot"
+          >
+            <defs>
+              <linearGradient id="cb-av" x1="10" y1="8" x2="54" y2="56" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#fffafd" />
+                <stop offset="1" stop-color="#e9ccd8" />
+              </linearGradient>
+            </defs>
+            <circle cx="32" cy="32" r="30" fill="url(#cb-av)" stroke="#dfc4d2" stroke-width="1.2" />
+            <g fill="#b8889e">
+              <ellipse cx="32" cy="40" rx="11" ry="9.5" opacity="0.95" />
+              <circle cx="21" cy="24" r="5.2" opacity="0.95" />
+              <circle cx="32" cy="19" r="5.2" opacity="0.95" />
+              <circle cx="43" cy="24" r="5.2" opacity="0.95" />
+            </g>
+          </svg>
           <div class="brand-text">
             CuraBot
             <small>温柔分诊 · 安心陪伴</small>
