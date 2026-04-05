@@ -228,11 +228,7 @@
         </div>
         ${refsBlock}
       </div>
-      <nav class="flow-nav flow-nav--bottom">
-        <button type="button" class="btn secondary btn-back-step" id="btnFlowBack">← 上一步</button>
-      </nav>
     `;
-    wireFlowBack(host);
     $("#btnRestartFlow").addEventListener("click", () => startFlow(state.flowKey));
     $("#btnBackTriage").addEventListener("click", () => {
       state.lastOutcome = null;
