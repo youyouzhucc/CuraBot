@@ -35,37 +35,139 @@
 
     <div class="wrap">
       <section data-view="home">
-        <div class="hero home-hero">
-          <h1>今天，先陪你看一看 Ta 怎么了</h1>
-          <p class="lead">
-            用几个<strong>简单问题</strong>，帮你判断要不要<strong>尽快去医院</strong>，再给一些<strong>在家能做的事</strong>。我们不是医生，不能下诊断，但能陪你少慌一点。
-          </p>
+        <div class="home-stack">
+          <div class="home-section-label" id="label-health">健康问题</div>
+          <div class="hero home-hero home-hero--health">
+            <h1>今天，先陪你看一看 Ta 怎么了</h1>
+            <p class="lead">
+              用几个<strong>简单问题</strong>，帮你判断要不要<strong>尽快去医院</strong>，再给一些<strong>在家能做的事</strong>。我们不是医生，不能下诊断，但能陪你少慌一点。
+            </p>
 
-          <p class="pick-title">先选一下：今天主要想帮谁看看？</p>
-          <div class="species-grid">
-            <button
-              type="button"
-              class="species-card is-selected"
-              data-species="cat"
-              id="pickCat"
-              aria-pressed="true"
-            >
-              <img id="heroCatImg" class="species-photo" src="" alt="" width="140" height="140" loading="lazy" />
-              <span class="species-name">猫咪</span>
-              <span class="species-pill" aria-hidden="true">✓ 已选</span>
-            </button>
-            <button type="button" class="species-card" data-species="dog" id="pickDog" aria-pressed="false">
-              <img id="heroDogImg" class="species-photo" src="" alt="" width="140" height="140" loading="lazy" />
-              <span class="species-name">狗狗</span>
-              <span class="species-pill" aria-hidden="true">✓ 已选</span>
-            </button>
+            <p class="pick-title">先选一下：今天主要想帮谁看看？</p>
+            <div class="species-grid">
+              <button
+                type="button"
+                class="species-card is-selected"
+                data-species="cat"
+                id="pickCat"
+                aria-pressed="true"
+              >
+                <img id="heroCatImg" class="species-photo" src="" alt="" width="140" height="140" loading="lazy" />
+                <span class="species-name">猫咪</span>
+                <span class="species-pill" aria-hidden="true">✓ 已选</span>
+              </button>
+              <button type="button" class="species-card" data-species="dog" id="pickDog" aria-pressed="false">
+                <img id="heroDogImg" class="species-photo" src="" alt="" width="140" height="140" loading="lazy" />
+                <span class="species-name">狗狗</span>
+                <span class="species-pill" aria-hidden="true">✓ 已选</span>
+              </button>
+            </div>
+
+            <button type="button" class="btn btn-enter" id="enterApp">进入 · 开始聊聊</button>
+
+            <div class="disclaimer-box">
+              <strong>小提示</strong>：这里不能代替医生当面检查，也不会告诉你具体吃多少药。
+              <button type="button" class="btn secondary btn-inline" id="btnDisclaimer">查看完整说明</button>
+            </div>
           </div>
 
-          <button type="button" class="btn btn-enter" id="enterApp">进入 · 开始聊聊</button>
+          <div class="home-section-label" id="label-daily">运动、体重与日常</div>
+          <div class="hero home-hero home-hero--daily">
+            <p class="home-daily-lead">
+              下面内容随你在上方选择的 <strong class="js-species-label">猫咪</strong> 切换（科普参考，具体方案请与兽医确认）。
+            </p>
+            <div class="home-fitness-panel" id="homeFitnessCat" data-home-panel="cat">
+              <div class="home-fitness-grid">
+                <article class="home-fitness-card">
+                  <h4>室内猫与体重</h4>
+                  <p>体况评分（BCS）、主食与零食管理；肥胖与关节、泌尿风险相关 — 见 AAFP 猫指南与 ISFM 环境管理思路。</p>
+                </article>
+                <article class="home-fitness-card">
+                  <h4>安全游戏与互动玩具</h4>
+                  <p>模拟狩猎、短频互动，避免应激；逗猫棒、漏食玩具等丰容方式。</p>
+                </article>
+                <article class="home-fitness-card">
+                  <h4>每日运动节奏</h4>
+                  <p>短时多次、以猫能接受的强度为准；记录活动与食欲变化供门诊参考。</p>
+                </article>
+                <article class="home-fitness-card">
+                  <h4>老年猫 / 慢病猫</h4>
+                  <p>肾病、关节炎等需在兽医指导下选择低冲击活动；疼痛未控制前勿强行增加运动量。</p>
+                </article>
+                <article class="home-fitness-card">
+                  <h4>饮食 + 运动</h4>
+                  <p>减重与处方粮、运动计划需兽医共同制定，勿自行节食。</p>
+                </article>
+              </div>
+            </div>
+            <div class="home-fitness-panel" id="homeFitnessDog" data-home-panel="dog" hidden>
+              <div class="home-fitness-grid">
+                <article class="home-fitness-card">
+                  <h4>体重管理与评估</h4>
+                  <p>AAHA 指南强调兽医主导的肥胖评估、目标体重与随访；家庭配合记录体况与围度。</p>
+                </article>
+                <article class="home-fitness-card">
+                  <h4>安全运动强度</h4>
+                  <p>按年龄、品种、心肺与关节状态调整；避免酷暑与硬地长时间奔跑。</p>
+                </article>
+                <article class="home-fitness-card">
+                  <h4>每日运动量</h4>
+                  <p>散步、嗅闻、衔取游戏等可拆分多次；深胸犬注意餐后剧烈运动禁忌。</p>
+                </article>
+                <article class="home-fitness-card">
+                  <h4>老年 / 术后 / 慢病</h4>
+                  <p>遵循兽医关于心脏病、骨科、术后恢复的运动限制与禁忌。</p>
+                </article>
+                <article class="home-fitness-card">
+                  <h4>饮食 + 运动方案</h4>
+                  <p>减重需与饲喂计划联动；具体热量与处方粮由兽医决定。</p>
+                </article>
+              </div>
+            </div>
+            <p class="muted home-ref-note">
+              公开资料参考：AAHA 犬猫体重管理指南、AAFP 猫健康指南、ISFM / iCatCare、Merck Veterinary Manual（检索 Canine Fitness、Feline Exercise）。
+            </p>
+            <ul class="home-ref-links">
+              <li>
+                <a href="https://www.aaha.org/guidelines/weight-management-guidelines/" target="_blank" rel="noopener noreferrer">AAHA · Weight Management Guidelines（PDF）</a>
+              </li>
+              <li>
+                <a href="https://catvets.com/guidelines" target="_blank" rel="noopener noreferrer">AAFP · Cat Vets Guidelines</a>
+              </li>
+              <li>
+                <a href="https://icatcare.org/advice" target="_blank" rel="noopener noreferrer">ISFM / iCatCare · Advice</a>
+              </li>
+              <li>
+                <a href="https://www.merckvetmanual.com/" target="_blank" rel="noopener noreferrer">Merck Veterinary Manual（检索 Exercise / Fitness）</a>
+              </li>
+            </ul>
+          </div>
 
-          <div class="disclaimer-box">
-            <strong>小提示</strong>：这里不能代替医生当面检查，也不会告诉你具体吃多少药。
-            <button type="button" class="btn secondary btn-inline" id="btnDisclaimer">查看完整说明</button>
+          <div class="home-section-label" id="label-tips">小提示与参考</div>
+          <div class="hero home-hero home-hero--tipsref">
+            <p class="muted menu-tips-lead">以下为辅助阅读，不是问诊入口。</p>
+            <div class="grid-menu grid-menu--tips">
+              <button type="button" class="menu-card menu-card--tip" id="menuRed">
+                <h3>这些情况要抓紧去医院</h3>
+                <p>一眼看懂：哪些算「别等」</p>
+              </button>
+              <button type="button" class="menu-card menu-card--tip" id="menuBehavior">
+                <h3>让 Ta 放松一点</h3>
+                <p>环境、作息、去医院的小技巧</p>
+              </button>
+              <button type="button" class="menu-card menu-card--tip" id="menuBody">
+                <h3>怎么描述「哪里不舒服」</h3>
+                <p>帮你把部位说清楚（不是诊断）</p>
+              </button>
+              <button type="button" class="menu-card menu-card--tip" id="menuZoonosis">
+                <h3>家里卫生小提示</h3>
+                <p>抓咬、拉肚子时人和宠物怎么注意</p>
+              </button>
+              <button type="button" class="menu-card menu-card--tip" id="menuRefs">
+                <h3>资料目录（给团队用）</h3>
+                <p>参考书与指南列表</p>
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -98,32 +200,9 @@
               标准化临床采集清单、急事先筛、按症状追问——把情况说清楚，方便判断要不要尽快去医院（非诊断）。
             </p>
           </button>
-          <div class="menu-tips">
-            <h3 class="menu-tips-title">小提示与参考</h3>
-            <p class="muted menu-tips-lead">以下为辅助阅读，不是问诊入口。</p>
-            <div class="grid-menu grid-menu--tips">
-              <button type="button" class="menu-card menu-card--tip" id="menuRed">
-                <h3>这些情况要抓紧去医院</h3>
-                <p>一眼看懂：哪些算「别等」</p>
-              </button>
-              <button type="button" class="menu-card menu-card--tip" id="menuBehavior">
-                <h3>让 Ta 放松一点</h3>
-                <p>环境、作息、去医院的小技巧</p>
-              </button>
-              <button type="button" class="menu-card menu-card--tip" id="menuBody">
-                <h3>怎么描述「哪里不舒服」</h3>
-                <p>帮你把部位说清楚（不是诊断）</p>
-              </button>
-              <button type="button" class="menu-card menu-card--tip" id="menuZoonosis">
-                <h3>家里卫生小提示</h3>
-                <p>抓咬、拉肚子时人和宠物怎么注意</p>
-              </button>
-              <button type="button" class="menu-card menu-card--tip" id="menuRefs">
-                <h3>资料目录（给团队用）</h3>
-                <p>参考书与指南列表</p>
-              </button>
-            </div>
-          </div>
+          <p class="muted menu-tips-lead menu-after-core">
+            更多日常小贴士与资料已在首页「运动、体重与日常」「小提示与参考」中查看。
+          </p>
           <div class="hero-actions hero-actions--bottom">
             <button type="button" class="btn secondary js-back-home">← 上一步</button>
           </div>

@@ -1,10 +1,10 @@
 {
   "meta": {
     "name": "CuraBot",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "disclaimer": "这里的内容用来帮你判断「要不要尽快去医院」，不能代替医生当面检查。若宠物很难受或越来越糟，请直接去医院。",
     "noRxNote": "不提供吃药剂量，也不帮开药；用药一定要听执业兽医的。",
-    "educationNote": "科普表述与分诊逻辑对齐以下公开资料体系（非转载受版权保护的全文）：Merck Veterinary Manual（默克兽医手册，含在线版与宠物主人版）、AAHA/AAFP 预防医学与猫健康指南（公开 PDF）、Small Animal Internal Medicine（犬猫内科学体系）、犬猫急诊与重症监护、犬猫营养学等教材中的通用教学与共识；结论仅为非诊断性分诊线索。"
+    "educationNote": "科普表述与分诊逻辑对齐公开资料体系（非转载受版权保护的全文）：Merck Veterinary Manual、AAHA Weight Management Guidelines、AAFP Cat Vets Guidelines、ISFM/iCatCare、Small Animal Internal Medicine、犬猫急诊与重症监护、犬猫营养学等；首页「运动、体重与日常」提供外部指南链接供延伸阅读；结论仅为非诊断性分诊线索。"
   },
   "uiImages": {
     "heroCat": "/images/hero-cat.png",
@@ -36,7 +36,11 @@
     {"id": "low-stress", "category": "行为", "title": "低应激保定与行为（Yin）", "role": "减少紧张与就诊体验"},
     {"id": "plumb", "category": "药物", "title": "兽药手册（Plumb）", "role": "用药须兽医处方"},
     {"id": "wsava-aafp", "category": "指南", "title": "WSAVA / AAFP 公开指南", "role": "疼痛与护理标准"},
-    {"id": "aaha", "category": "指南", "title": "AAHA 美国动物医院协会相关标准与流程", "role": "门诊、急诊与护理流程参考"}
+    {"id": "aaha", "category": "指南", "title": "AAHA 美国动物医院协会相关标准与流程", "role": "门诊、急诊与护理流程参考"},
+    {"id": "aaha-weight-url", "category": "指南", "title": "AAHA Weight Management Guidelines", "role": "犬猫体重管理、运动与安全强度；https://www.aaha.org/guidelines/weight-management-guidelines/"},
+    {"id": "aafp-guidelines-url", "category": "指南", "title": "AAFP Guidelines（catvets.com）", "role": "猫健康、环境与护理；https://catvets.com/guidelines"},
+    {"id": "isfm-icat-url", "category": "指南", "title": "ISFM / iCatCare Advice", "role": "猫健身与环境丰容；https://icatcare.org/advice"},
+    {"id": "mvm-fitness", "category": "手册", "title": "Merck Veterinary Manual · Exercise / Fitness", "role": "检索 Canine Fitness、Feline Exercise；https://www.merckvetmanual.com/"}
   ],
   "emergencyRedLines": [
     {

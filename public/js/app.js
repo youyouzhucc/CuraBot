@@ -110,6 +110,15 @@
     });
   }
 
+  function updateHomeFitnessPanels() {
+    const cat = $("#homeFitnessCat");
+    const dog = $("#homeFitnessDog");
+    if (!cat || !dog) return;
+    const isCat = state.species === "cat";
+    cat.hidden = !isCat;
+    dog.hidden = isCat;
+  }
+
   function updateSpeciesCards() {
     $$(".species-card").forEach((card) => {
       const sp = card.getAttribute("data-species");
@@ -117,6 +126,7 @@
       card.setAttribute("aria-pressed", sp === state.species ? "true" : "false");
     });
     updateTriageIntakeVisibility();
+    updateHomeFitnessPanels();
   }
 
   /** 分诊页「标准化采集」只展示当前首页所选物种对应的入口 */
