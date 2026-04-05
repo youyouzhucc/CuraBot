@@ -13,11 +13,44 @@
     "bannerSoft": null
   },
   "healthChat": {
-    "welcome": "请先简单说说 Ta 的基本情况：例如种类、年龄、是否绝育，以及最近最让你担心的症状或变化，方便我帮你梳理思路（不能代替兽医诊断）。",
-    "chipsLabelCat": "猫咪的常见健康问题分类",
-    "chipsLabelDog": "狗狗的常见健康问题分类",
+    "guidedDonePrompt": "好的，已记录你的选择。请用自然语言描述最近最担心的症状或变化，我会结合这些信息给参考建议（不能代替兽医诊断）。",
     "hint": "急症请优先去医院；机器人回复仅供参考。",
-    "quickChips": ["猫尿很少肚子胀", "狗呕吐一整天了", "急症有哪些", "从哪里开始做分诊"]
+    "guidedSteps": [
+      {
+        "id": "species",
+        "prompt": "你的宠物是？",
+        "options": [
+          { "value": "cat", "label": "猫猫" },
+          { "value": "dog", "label": "狗狗" }
+        ]
+      },
+      {
+        "id": "gender",
+        "prompt": "Ta 的性别是？",
+        "options": [
+          { "value": "male", "label": "男生" },
+          { "value": "female", "label": "女生" }
+        ]
+      },
+      {
+        "id": "neuter",
+        "prompt": "是否已绝育？",
+        "options": [
+          { "value": "yes", "label": "已绝育" },
+          { "value": "no", "label": "未绝育" },
+          { "value": "unknown", "label": "不清楚" }
+        ]
+      },
+      {
+        "id": "ageBand",
+        "prompt": "大致年龄段？",
+        "options": [
+          { "value": "young", "label": "幼年（约 1 岁前）" },
+          { "value": "adult", "label": "成年" },
+          { "value": "senior", "label": "老年" }
+        ]
+      }
+    ]
   },
   "references": [
     {"id": "mvm", "category": "手册", "title": "Merck Veterinary Manual（默克兽医手册，在线版 / 第 12 版体系）", "role": "犬猫疾病概述、急诊与内科：见 https://www.merckvetmanual.com/ ；宠物主人版见 Merck Pet Owner Topics"},

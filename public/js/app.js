@@ -345,9 +345,6 @@
     });
     updateTriageIntakeVisibility();
     updateHomeMergedPanels();
-    if (typeof CuraHealthChat !== "undefined" && CuraHealthChat && CuraHealthChat.syncSpecies) {
-      CuraHealthChat.syncSpecies();
-    }
   }
 
   /** 分诊页「标准化采集」只展示当前首页所选物种对应的入口 */
@@ -993,7 +990,9 @@
     const openHc = $("#openHealthChat");
     if (openHc && typeof CuraHealthChatInit === "function") {
       CuraHealthChatInit({
-        getSpecies: () => state.species || "cat",
+        getSpecies: () =>
+          (typeof window !== "undefined" && window.__healthChatProfile && window.__healthChatProfile.species) ||
+          "cat",
         getKnowledge: () => state.knowledge,
         onOpenEmergency: () => {
           renderEmergencyList();
@@ -1009,7 +1008,6 @@
       });
       openHc.addEventListener("click", () => {
         if (typeof CuraHealthChat !== "undefined" && CuraHealthChat) {
-          CuraHealthChat.syncSpecies();
           CuraHealthChat.open();
         }
         showView("healthChat");

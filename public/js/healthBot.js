@@ -1,12 +1,21 @@
 /**
- * 猫狗健康机器人：优先调用服务端 /api/chat（可选 OpenAI），失败则用 CuraHealthBotLocal。
+ * 猫狗健康机器人：引导选择题收集档案 → 再对话；优先 /api/chat，失败用 CuraHealthBotLocal。
+ * 物种等与首页 state.species 解耦，以对话内选择为准（window.__healthChatProfile）。
  */
 (function (global) {
   const history = [];
-  /** 每条机器人气泡下方单独一行灰色小字提醒（不与正文混排） */
   const BOT_DISCLAIMER_LINE = "建议仅供参考，急症请优先去医院。";
 
-  /** 去掉正文中可能重复的免责句，避免与页脚提醒重复 */
+  let chatProfile = {};
+  let guidedStepIndex = 0;
+  let guidedComplete = false;
+
+  function syncProfileToWindow() {
+    if (typeof window !== "undefined") {
+      window.__healthChatProfile = chatProfile;
+    }
+  }
+
   function stripDisclaimerFromBody(text) {
     let t = String(text || "");
     if (t.includes(BOT_DISCLAIMER_LINE)) {
@@ -15,10 +24,6 @@
     return t;
   }
 
-  /**
-   * 后端 API 根地址（与页面不同端口时必须配置，否则会请求到错误主机导致 404）。
-   * 优先级：window.CURABOT_API_BASE（可在 index.html 里写死）> 本机常见开发端口自动指向 3000 > 空（同域相对路径）。
-   */
   function getApiBase() {
     if (typeof window === "undefined") return "";
     const manual = window.CURABOT_API_BASE;
@@ -69,7 +74,6 @@
       log: document.getElementById("healthChatMessages"),
       form: document.getElementById("healthChatForm"),
       input: document.getElementById("healthChatInput"),
-      badge: document.getElementById("healthChatSpeciesBadge"),
     };
   }
 
@@ -78,12 +82,63 @@
     if (log) log.scrollTop = log.scrollHeight;
   }
 
+  function defaultGuidedSteps() {
+    return [
+      {
+        id: "species",
+        prompt: "你的宠物是？",
+        options: [
+          { value: "cat", label: "猫猫" },
+          { value: "dog", label: "狗狗" },
+        ],
+      },
+      {
+        id: "gender",
+        prompt: "Ta 的性别是？",
+        options: [
+          { value: "male", label: "男生" },
+          { value: "female", label: "女生" },
+        ],
+      },
+    ];
+  }
+
+  function getGuidedSteps(knowledge) {
+    const hc = knowledge && knowledge.healthChat;
+    const steps = hc && hc.guidedSteps;
+    if (Array.isArray(steps) && steps.length) return steps;
+    return defaultGuidedSteps();
+  }
+
+  function formatProfilePrefix(profile, steps) {
+    const parts = [];
+    steps.forEach((s) => {
+      const v = profile[s.id];
+      if (v == null || v === "") return;
+      const opt = (s.options || []).find((o) => o.value === v);
+      const lab = opt ? opt.label : v;
+      const q = String(s.prompt || "").replace(/？$/, "");
+      parts.push(`${q}：${lab}`);
+    });
+    if (!parts.length) return "";
+    return "【用户已选档案】" + parts.join("；") + "。\n\n";
+  }
+
+  function updateChatInputState() {
+    const { input } = getEls();
+    if (!input) return;
+    input.disabled = !guidedComplete;
+    input.placeholder = guidedComplete
+      ? "例如：猫一天没尿了、精神很差…"
+      : "请先完成上方的选项，再在此描述症状…";
+  }
+
   function appendBubble(role, text, extraHtml) {
     const { log } = getEls();
     if (!log) return;
     const div = document.createElement("div");
     div.className = `health-msg health-msg--${role === "user" ? "user" : "bot"}`;
-    div.setAttribute("role", role === "user" ? "listitem" : "listitem");
+    div.setAttribute("role", "listitem");
     if (role === "bot") {
       const main = stripDisclaimerFromBody(text);
       const disclaimerHtml = `<p class="health-msg-disclaimer" role="note">${escapeHtml(BOT_DISCLAIMER_LINE)}</p>`;
@@ -95,9 +150,37 @@
     scrollLog();
   }
 
+  function appendGuidedStep(step) {
+    const { log } = getEls();
+    if (!log || !step) return;
+    const wrap = document.createElement("div");
+    wrap.className = "health-msg health-msg--bot health-guided-wrap";
+    const btns = (step.options || [])
+      .map(
+        (o) =>
+          `<button type="button" class="btn secondary soft" data-guided-option="1" data-step-id="${escapeHtml(
+            step.id
+          )}" data-value="${escapeHtml(o.value)}" data-label="${escapeHtml(o.label)}">${escapeHtml(o.label)}</button>`
+      )
+      .join("");
+    wrap.innerHTML = `<div class="health-msg-inner">${formatRich(step.prompt)}</div><p class="health-msg-disclaimer" role="note">${escapeHtml(
+      BOT_DISCLAIMER_LINE
+    )}</p><div class="health-guided-options">${btns}</div>`;
+    log.appendChild(wrap);
+    scrollLog();
+  }
+
+  function getChatSpecies(getSpecies) {
+    const fromProfile = chatProfile.species;
+    if (fromProfile === "cat" || fromProfile === "dog") return fromProfile;
+    const ext = getSpecies && getSpecies();
+    if (ext === "cat" || ext === "dog") return ext;
+    return "cat";
+  }
+
   function setLoading(on) {
     const { form, input } = getEls();
-    if (input) input.disabled = on;
+    if (input && guidedComplete) input.disabled = on;
     const btn = form && form.querySelector('button[type="submit"]');
     if (btn) btn.disabled = on;
   }
@@ -155,15 +238,24 @@
   async function sendMessage(getSpecies, getKnowledge, opts) {
     const { input, log } = getEls();
     if (!input) return;
+    if (!guidedComplete) {
+      appendBubble("bot", "请先点选上方的选项，完成基本信息后再描述症状。", "");
+      return;
+    }
     const raw = input.value.trim();
     if (!raw) return;
     input.value = "";
+
+    const knowledge = getKnowledge();
+    const steps = getGuidedSteps(knowledge);
+    const prefix = formatProfilePrefix(chatProfile, steps);
+    const composed = prefix ? prefix + raw : raw;
+
     appendBubble("user", raw, "");
-    history.push({ role: "user", content: raw });
+    history.push({ role: "user", content: composed });
     setLoading(true);
 
-    const species = getSpecies();
-    const knowledge = getKnowledge();
+    const species = getChatSpecies(getSpecies);
 
     let metaHtml = "";
     let replyText = "";
@@ -171,14 +263,14 @@
     let fromLlm = false;
 
     try {
-      const fr = await fetchLlmReply(raw, species);
+      const fr = await fetchLlmReply(composed, species);
       if (fr.llm) {
         replyText = fr.llm.text;
         fromLlm = true;
         metaHtml = `<p class="health-msg-source muted">由大模型生成 · 仍不能代替兽医诊断</p>`;
       } else {
         try {
-          localMeta = CuraHealthBotLocal.reply({ message: raw, species, knowledge });
+          localMeta = CuraHealthBotLocal.reply({ message: composed, species, knowledge });
         } catch (e2) {
           localMeta = {
             text: "本地知识库暂时无法生成回复，请稍后再试或使用首页分诊流程。",
@@ -190,7 +282,7 @@
       }
     } catch (e) {
       try {
-        localMeta = CuraHealthBotLocal.reply({ message: raw, species, knowledge });
+        localMeta = CuraHealthBotLocal.reply({ message: composed, species, knowledge });
         replyText = localMeta.text;
       } catch (e2) {
         replyText = "对话出错，请刷新页面后重试。";
@@ -226,62 +318,65 @@
     scrollLog();
   }
 
-  function refreshChatStatus() {
-    /* 已移除页眉云端状态区；若需排查可打开开发者工具查看 /api/chat/status */
+  function refreshChatStatus() {}
+
+  function advanceGuided(getKnowledge, getSpecies, opts) {
+    const knowledge = getKnowledge();
+    const steps = getGuidedSteps(knowledge);
+    if (guidedStepIndex >= steps.length) {
+      guidedComplete = true;
+      updateChatInputState();
+      const hc = (knowledge && knowledge.healthChat) || {};
+      const done =
+        hc.guidedDonePrompt ||
+        "好的，已记录你的选择。请用自然语言描述最近最担心的症状或变化（不能代替兽医诊断）。";
+      appendBubble("bot", done, "");
+      const { input } = getEls();
+      if (input) setTimeout(() => input.focus(), 120);
+      return;
+    }
+    appendGuidedStep(steps[guidedStepIndex]);
   }
 
-  function syncBadge(getSpecies) {
-    const { badge } = getEls();
-    if (badge) {
-      const sp = getSpecies();
-      badge.textContent = sp === "dog" ? "当前：狗狗" : "当前：猫咪";
+  function onGuidedOptionClick(btn, getKnowledge, getSpecies, opts) {
+    if (guidedComplete) return;
+    const stepId = btn.getAttribute("data-step-id");
+    const value = btn.getAttribute("data-value");
+    const label = btn.getAttribute("data-label") || value;
+    const wrap = btn.closest(".health-guided-wrap");
+    if (wrap) {
+      wrap.querySelectorAll("[data-guided-option]").forEach((b) => {
+        b.disabled = true;
+      });
     }
+    if (stepId) chatProfile[stepId] = value;
+    syncProfileToWindow();
+
+    appendBubble("user", label, "");
+    history.push({ role: "user", content: label });
+
+    guidedStepIndex += 1;
+    advanceGuided(getKnowledge, getSpecies, opts);
   }
 
   function resetConversation(getKnowledge, getSpecies) {
     history.length = 0;
+    chatProfile = {};
+    guidedStepIndex = 0;
+    guidedComplete = false;
+    syncProfileToWindow();
+
     const { log } = getEls();
     if (log) log.innerHTML = "";
-    const k = getKnowledge();
-    const hc = (k && k.healthChat) || {};
-    const welcome = hc.welcome != null ? String(hc.welcome).trim() : "";
-    if (welcome) appendBubble("bot", welcome, "");
-    const chips = hc.quickChips || ["猫尿很少怎么办", "狗吃了巧克力", "急症有哪些"];
-    const sp = getSpecies();
-    const chipsLabel =
-      (sp === "dog" ? hc.chipsLabelDog : hc.chipsLabelCat) ||
-      (sp === "dog" ? "狗狗的常见健康问题分类" : "猫咪的常见健康问题分类");
-    const chipRow = chips
-      .map(
-        (c) =>
-          `<button type="button" class="btn secondary soft health-chip" data-chip="${escapeHtml(c)}">${escapeHtml(
-            c
-          )}</button>`
-      )
-      .join("");
-    if (log) {
-      const wrap = document.createElement("div");
-      wrap.className = "health-chips-wrap";
-      wrap.innerHTML = `<p class="muted health-chips-label">${escapeHtml(chipsLabel)}</p><div class="health-chips">${chipRow}</div>`;
-      log.appendChild(wrap);
-      wrap.querySelectorAll("[data-chip]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const { input } = getEls();
-          if (input) input.value = btn.getAttribute("data-chip") || "";
-          sendMessage(getSpecies, getKnowledge, global.__healthChatOpts || {});
-        });
-      });
-    }
+    updateChatInputState();
+    advanceGuided(getKnowledge, getSpecies, global.__healthChatOpts || {});
     refreshChatStatus();
-    syncBadge(getSpecies);
     scrollLog();
   }
 
   function openView(getKnowledge, getSpecies, opts) {
     global.__healthChatOpts = opts || {};
     resetConversation(getKnowledge, getSpecies);
-    const { input } = getEls();
-    if (input) setTimeout(() => input.focus(), 200);
   }
 
   function init(options) {
@@ -298,6 +393,12 @@
     if (log && !log.dataset.delegateBound) {
       log.dataset.delegateBound = "1";
       log.addEventListener("click", (e) => {
+        const gBtn = e.target && e.target.closest && e.target.closest("[data-guided-option]");
+        if (gBtn && !guidedComplete) {
+          e.preventDefault();
+          onGuidedOptionClick(gBtn, getKnowledge, getSpecies, opts);
+          return;
+        }
         const btn = e.target && e.target.closest && e.target.closest("[data-chat-action]");
         if (!btn) return;
         const o = global.__healthChatOpts || {};
@@ -330,7 +431,9 @@
     global.CuraHealthChat = {
       open: () => openView(getKnowledge, getSpecies, opts),
       reset: () => resetConversation(getKnowledge, getSpecies),
-      syncSpecies: () => syncBadge(getSpecies),
+      syncSpecies: function () {
+        /* 与首页物种解耦，不再同步 */
+      },
     };
   }
 
