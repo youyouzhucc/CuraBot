@@ -41,6 +41,8 @@
     const cat = $("#heroCatImg");
     const dog = $("#heroDogImg");
     const banner = $("#warmBanner");
+    const catBanner = $(".warm-banner__photo--cat");
+    const dogBanner = $(".warm-banner__photo--dog");
     if (cat && k.uiImages.heroCat) {
       cat.src = k.uiImages.heroCat;
       cat.alt = "猫咪照片";
@@ -51,9 +53,17 @@
     }
     if (banner) {
       if (k.uiImages.bannerSoft) {
+        banner.classList.add("warm-banner--single");
         banner.style.backgroundImage = `url(${k.uiImages.bannerSoft})`;
       } else {
-        banner.style.backgroundImage = "none";
+        banner.classList.remove("warm-banner--single");
+        banner.style.backgroundImage = "";
+        if (catBanner && k.uiImages.heroCat) {
+          catBanner.style.backgroundImage = `url(${k.uiImages.heroCat})`;
+        }
+        if (dogBanner && k.uiImages.heroDog) {
+          dogBanner.style.backgroundImage = `url(${k.uiImages.heroDog})`;
+        }
       }
     }
   }

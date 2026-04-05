@@ -4,10 +4,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CuraBot · 毛孩子温暖小助手</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="/css/main.css" />
   </head>
   <body>
-    <div class="warm-banner" id="warmBanner" role="img" aria-label="温馨的宠物陪伴氛围图"></div>
+    <div class="warm-banner" id="warmBanner" role="img" aria-label="猫狗照片氛围头图">
+      <div class="warm-banner__photos" aria-hidden="true">
+        <div class="warm-banner__photo warm-banner__photo--cat"></div>
+        <div class="warm-banner__photo warm-banner__photo--dog"></div>
+      </div>
+      <div class="warm-banner__scrim" aria-hidden="true"></div>
+    </div>
 
     <div class="wrap">
       <header class="topbar">
@@ -22,8 +34,8 @@
             decoding="async"
           />
           <div class="brand-text">
-            CuraBot
-            <small>每一份呵护，都有温度</small>
+            <span class="brand-name">CuraBot</span>
+            <small>愿你与毛孩子都被温柔对待</small>
           </div>
         </button>
       </header>
@@ -208,7 +220,7 @@
       </section>
 
       <footer class="site">
-        CuraBot · 愿你与毛孩子都被温柔对待 ·
+        每一份呵护，都有温度 ·
         <a href="https://github.com/youyouzhucc/CuraBot" target="_blank" rel="noopener">GitHub</a>
         <span class="photo-credit">首页猫狗照片仅供界面展示</span>
       </footer>
