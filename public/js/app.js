@@ -3,6 +3,8 @@
     knowledge: null,
     /** @type {"cat"|"dog"|null} 首页默认未选；点猫/狗后进入分诊 */
     species: null,
+    /** 日常知识区块：与首页分诊物种独立，默认猫猫 */
+    dailyKnowledgeFilter: "cat",
     view: "home",
     flowKey: null,
     stepId: null,
@@ -179,8 +181,23 @@
   }
 
   function updateSpeciesLabels() {
-    $$(".js-species-label").forEach((el) => {
-      el.textContent = speciesLabel(state.species);
+    /* 保留占位：首页物种与日常知识筛选已解耦 */
+  }
+
+  function updateDailyKnowledgeTabsUi() {
+    const cat = $("#dailyFilterCat");
+    const dog = $("#dailyFilterDog");
+    const sp = state.dailyKnowledgeFilter === "dog" ? "dog" : "cat";
+    if (cat) {
+      cat.classList.toggle("is-active", sp === "cat");
+      cat.setAttribute("aria-selected", sp === "cat" ? "true" : "false");
+    }
+    if (dog) {
+      dog.classList.toggle("is-active", sp === "dog");
+      dog.setAttribute("aria-selected", sp === "dog" ? "true" : "false");
+    }
+    $$(".js-daily-knowledge-species").forEach((el) => {
+      el.textContent = sp === "dog" ? "狗狗" : "猫咪";
     });
   }
 
@@ -207,16 +224,19 @@
     return null;
   }
 
-  /** 日常知识条目：关联知识图谱中的簇（按当前物种过滤） */
-  function renderGraphClustersForDailyTopic(clusterIds) {
+  /** 日常知识条目：关联知识图谱中的簇（按当前日常知识筛选过滤） */
+  function renderGraphClustersForDailyTopic(clusterIds, speciesForFilter) {
     if (!clusterIds || !clusterIds.length) return "";
+    const sp =
+      speciesForFilter ||
+      (state.dailyKnowledgeFilter === "dog" ? "dog" : "cat");
     const kg = state.knowledge && state.knowledge.knowledgeGraph;
     if (!kg || !kg.clusters) return "";
     const map = Object.fromEntries(kg.clusters.map((c) => [c.id, c]));
     const parts = clusterIds
       .map((id) => map[id])
       .filter(Boolean)
-      .filter((c) => clusterMatchesSpecies(c, state.species));
+      .filter((c) => clusterMatchesSpecies(c, sp));
     if (!parts.length) {
       return `<p class="muted">当前物种下暂无匹配的图谱节点，仍以参考文献与兽医意见为准。</p>`;
     }
@@ -250,16 +270,17 @@
       return;
     }
     const { module, topic } = found;
-    if (!topicMatchesSpecies(topic, state.species)) {
-      host.innerHTML = `<p class="error">当前物种下暂无此条目，请在首页切换猫/狗。</p>`;
+    const filterSp = state.dailyKnowledgeFilter === "dog" ? "dog" : "cat";
+    if (!topicMatchesSpecies(topic, filterSp)) {
+      host.innerHTML = `<p class="error">当前浏览范围下暂无此条目，请返回首页切换「猫猫 / 狗狗」。</p>`;
       return;
     }
     const adviceList = (topic.advice || []).map((a) => `<li>${escapeHtml(a)}</li>`).join("");
-    const graphHtml = renderGraphClustersForDailyTopic(topic.graphClusterIds || []);
+    const graphHtml = renderGraphClustersForDailyTopic(topic.graphClusterIds || [], filterSp);
     const refsHtml = renderRefs(topic.refIds || []);
     host.innerHTML = `
       <header class="flow-head daily-topic-head">
-        <p class="badge">${escapeHtml(module.title)} · ${speciesLabel(state.species)}</p>
+        <p class="badge">${escapeHtml(module.title)} · ${speciesLabel(filterSp)}</p>
         <h2 class="daily-topic-h2">${escapeHtml(topic.title)}</h2>
       </header>
       <section class="daily-science" aria-labelledby="daily-science-h">
@@ -287,12 +308,7 @@
     const cat = $("#homeDailyRefLinksCat");
     const dog = $("#homeDailyRefLinksDog");
     if (!cat || !dog) return;
-    if (!state.species) {
-      cat.hidden = false;
-      dog.hidden = false;
-      return;
-    }
-    const isCat = state.species === "cat";
+    const isCat = state.dailyKnowledgeFilter !== "dog";
     cat.hidden = !isCat;
     dog.hidden = isCat;
   }
@@ -301,28 +317,49 @@
     const host = $("#homeDailyKnowledge");
     const dk = state.knowledge && state.knowledge.dailyKnowledge;
     if (!host || !dk || !dk.modules) return;
+    const filterSp = state.dailyKnowledgeFilter === "dog" ? "dog" : "cat";
     const mods = dk.modules
       .map((mod) => {
-        const topics = (mod.topics || []).filter((t) => topicMatchesSpecies(t, state.species));
+        const topics = (mod.topics || []).filter((t) => topicMatchesSpecies(t, filterSp));
         if (!topics.length) return "";
         const topicRows = topics
           .map(
-            (t) => `
+            (t) => {
+              const teaser = t.teaser
+                ? `<span class="daily-topic-teaser muted">${escapeHtml(t.teaser)}</span>`
+                : "";
+              return `
         <button type="button" class="home-merge-row daily-topic-row" data-daily-topic="${escapeHtml(
           t.id
         )}" aria-label="${escapeHtml("查看：" + t.title)}">
-          <span class="home-merge-row-text daily-topic-title-only"><strong>${escapeHtml(t.title)}</strong></span>
-        </button>`
+          <span class="home-merge-row-text daily-topic-title-only"><strong>${escapeHtml(t.title)}</strong>${teaser}</span>
+        </button>`;
+            }
           )
           .join("");
+        const summary = mod.summary
+          ? `<p class="daily-mod-summary muted">${escapeHtml(mod.summary)}</p>`
+          : "";
         return `<section class="daily-mod" data-daily-module="${escapeHtml(mod.id)}">
         <h3 class="daily-mod-title">${escapeHtml(mod.title)}</h3>
+        ${summary}
         <div class="daily-topic-list">${topicRows}</div>
       </section>`;
       })
       .filter(Boolean)
       .join("");
     host.innerHTML = mods;
+    const introEl = $("#homeDailyKnowledgeIntro");
+    if (introEl) {
+      const intro = dk.intro && String(dk.intro).trim();
+      if (intro) {
+        introEl.textContent = intro;
+        introEl.hidden = false;
+      } else {
+        introEl.textContent = "";
+        introEl.hidden = true;
+      }
+    }
     $$("[data-daily-topic]", host).forEach((btn) => {
       btn.addEventListener("click", () => {
         const id = btn.getAttribute("data-daily-topic");
@@ -372,6 +409,7 @@
     state.outcomeReturnStepId = null;
     state.intakeFlags = null;
     state.species = null;
+    updateDailyKnowledgeTabsUi();
     updateSpeciesLabels();
     updateSpeciesCards();
     showView("home");
@@ -950,6 +988,20 @@
       updateSpeciesCards();
       showView("triageMenu");
     });
+    const dailyCat = $("#dailyFilterCat");
+    const dailyDog = $("#dailyFilterDog");
+    if (dailyCat && dailyDog) {
+      dailyCat.addEventListener("click", () => {
+        state.dailyKnowledgeFilter = "cat";
+        updateDailyKnowledgeTabsUi();
+        updateHomeMergedPanels();
+      });
+      dailyDog.addEventListener("click", () => {
+        state.dailyKnowledgeFilter = "dog";
+        updateDailyKnowledgeTabsUi();
+        updateHomeMergedPanels();
+      });
+    }
     $("#brandHome").addEventListener("click", () => renderHome());
     $$(".js-back-home").forEach((btn) => btn.addEventListener("click", () => renderHome()));
     $("#linkHome").addEventListener("click", () => renderHome());

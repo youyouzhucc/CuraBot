@@ -91,8 +91,34 @@
           <div class="home-section-label" id="label-daily-knowledge">日常知识</div>
           <div class="hero home-hero home-hero--merged">
             <p class="home-daily-lead">
-              四大模块：<strong>健康问题 · 训练教学 · 老年护理 · 饮食健康</strong>。条目随 <strong class="js-species-label">猫/狗</strong> 筛选；点卡片看详情（科普，不代替就诊）。
+              四大模块：<strong>健康问题 · 训练教学 · 老年护理 · 饮食健康</strong>。点选下方 <strong>猫猫</strong> 或 <strong>狗狗</strong> 切换浏览范围；当前展示与 <strong class="js-daily-knowledge-species">猫咪</strong> 相关的科普卡片。点卡片看详情（科普，不代替就诊）。
             </p>
+            <div class="daily-knowledge-toolbar" id="dailyKnowledgeToolbar">
+              <span class="daily-knowledge-toolbar-label" id="dailyKnowledgeToolbarLabel">当前浏览</span>
+              <div class="daily-knowledge-tabs" role="tablist" aria-label="按猫或狗筛选日常知识">
+                <button
+                  type="button"
+                  class="daily-knowledge-tab is-active"
+                  id="dailyFilterCat"
+                  data-daily-filter="cat"
+                  role="tab"
+                  aria-selected="true"
+                >
+                  猫猫
+                </button>
+                <button
+                  type="button"
+                  class="daily-knowledge-tab"
+                  id="dailyFilterDog"
+                  data-daily-filter="dog"
+                  role="tab"
+                  aria-selected="false"
+                >
+                  狗狗
+                </button>
+              </div>
+            </div>
+            <p class="home-daily-knowledge-intro muted small-intro" id="homeDailyKnowledgeIntro" hidden></p>
             <div id="homeDailyKnowledge" class="daily-knowledge-root" aria-live="polite"></div>
             <details class="home-merge-details home-merge-details--refs daily-knowledge-more">
               <summary>更多：急症清单、身体部位描述与公开指南链接</summary>

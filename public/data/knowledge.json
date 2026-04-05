@@ -860,7 +860,7 @@
     ]
   },
   "dailyKnowledge": {
-    "intro": "",
+    "intro": "按模块浏览科普卡片；内容随下方「猫猫 / 狗狗」切换筛选。",
     "modules": [
       {
         "id": "health",
