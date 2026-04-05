@@ -85,6 +85,25 @@
       .replace(/"/g, "&quot;");
   }
 
+  /** 转义后支持 **粗体** 与换行，用于结论正文与建议 */
+  function formatRichText(s) {
+    if (s == null || s === "") return "";
+    return escapeHtml(String(s))
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\n/g, "<br/>");
+  }
+
+  /** 与分诊 level 对应的四色状态：紧急 / 中等 / 低等 / 不明确 */
+  function severityUi(level) {
+    const map = {
+      emergency: { mod: "emergency", label: "紧急" },
+      urgent: { mod: "moderate", label: "中等" },
+      monitor: { mod: "low", label: "低等" },
+      routine: { mod: "unclear", label: "不明确" },
+    };
+    return map[level] || { mod: "unclear", label: "不明确" };
+  }
+
   function updateSpeciesLabels() {
     $$(".js-species-label").forEach((el) => {
       el.textContent = speciesLabel(state.species);
@@ -189,10 +208,13 @@
     const o = state.lastOutcome;
     const host = $("#flowContent");
     const levelClass = `level-${o.level}`;
+    const sev = severityUi(o.level);
+    const diagnosticMod = `outcome-diagnostic--${sev.mod}`;
     const vetBlock = o.vetNeed
-      ? `<div class="vet-banner" role="status"><span class="vet-icon">🏥</span><div class="vet-text">${escapeHtml(
-          o.vetNeed
-        )}</div></div>`
+      ? `<div class="outcome-suggestion" role="status">
+          <span class="outcome-suggestion-icon" aria-hidden="true">🏥</span>
+          <div class="outcome-suggestion-text">${formatRichText(o.vetNeed)}</div>
+        </div>`
       : "";
     const flowMeta = state.knowledge.triageFlows[state.flowKey];
     const kicker =
@@ -217,9 +239,15 @@
       <div class="outcome outcome--split ${levelClass}">
         <div class="outcome-core">
           <p class="outcome-kicker">${escapeHtml(kicker)}</p>
-          <h2 class="outcome-title">${escapeHtml(o.title)}</h2>
-          <div class="outcome-body">${escapeHtml(o.body).replace(/\n/g, "<br/>")}</div>
-          ${vetBlock}
+          <section class="outcome-diagnostic ${diagnosticMod}" aria-label="诊断评估">
+            <div class="outcome-diagnostic-head">
+              <span class="severity-badge severity-badge--${sev.mod}">${escapeHtml(sev.label)}</span>
+              <span class="outcome-diagnostic-label">诊断评估（非诊断）</span>
+            </div>
+            <h2 class="outcome-title">${escapeHtml(o.title)}</h2>
+            ${vetBlock}
+          </section>
+          <div class="outcome-body">${formatRichText(o.body)}</div>
           ${copyBlock || ""}
           <div class="row outcome-actions">
             <button type="button" class="btn secondary" id="btnRestartFlow">再测一次</button>

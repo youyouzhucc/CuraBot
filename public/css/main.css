@@ -712,14 +712,138 @@ a {
   box-shadow: var(--shadow);
 }
 
-.outcome.level-emergency .outcome-core {
-  border-color: rgba(199, 92, 92, 0.4);
-  background: linear-gradient(180deg, #fff8f8 0%, #fff2f0 100%);
+/* 四色诊断评估区：红紧急 / 黄中等 / 绿低等 / 灰不明确 */
+.outcome-diagnostic {
+  margin: 0 0 1.15rem;
+  padding: 1rem 1.1rem 1.05rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--diag-border, var(--core-panel-border));
+  background: var(--diag-bg, var(--core-panel));
+  box-shadow: 0 1px 0 rgba(62, 48, 40, 0.04);
 }
 
-.outcome.level-urgent .outcome-core {
-  border-color: rgba(184, 130, 118, 0.5);
-  background: linear-gradient(180deg, #ffffff 0%, #faf0ec 100%);
+.outcome-diagnostic-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.65rem;
+}
+
+.outcome-diagnostic-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--diag-label, #57534e);
+  letter-spacing: 0.02em;
+}
+
+.severity-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.severity-badge--emergency {
+  background: rgba(185, 28, 28, 0.12);
+  color: #991b1b;
+  border: 1px solid rgba(185, 28, 28, 0.35);
+}
+
+.severity-badge--moderate {
+  background: rgba(180, 83, 9, 0.12);
+  color: #92400e;
+  border: 1px solid rgba(180, 83, 9, 0.32);
+}
+
+.severity-badge--low {
+  background: rgba(22, 101, 52, 0.1);
+  color: #166534;
+  border: 1px solid rgba(22, 101, 52, 0.28);
+}
+
+.severity-badge--unclear {
+  background: rgba(82, 82, 91, 0.1);
+  color: #52525b;
+  border: 1px solid rgba(82, 82, 91, 0.28);
+}
+
+.outcome-diagnostic--emergency {
+  --diag-bg: linear-gradient(165deg, #fff5f5 0%, #ffe8e6 100%);
+  --diag-border: rgba(185, 28, 28, 0.35);
+  --diag-label: #7f1d1d;
+}
+
+.outcome-diagnostic--moderate {
+  --diag-bg: linear-gradient(165deg, #fffbeb 0%, #fef3c7 55%, #fffbeb 100%);
+  --diag-border: rgba(180, 83, 9, 0.28);
+  --diag-label: #78350f;
+}
+
+.outcome-diagnostic--low {
+  --diag-bg: linear-gradient(165deg, #f0fdf4 0%, #dcfce7 55%, #f0fdf4 100%);
+  --diag-border: rgba(22, 101, 52, 0.25);
+  --diag-label: #14532d;
+}
+
+.outcome-diagnostic--unclear {
+  --diag-bg: linear-gradient(165deg, #fafafa 0%, #f4f4f5 100%);
+  --diag-border: rgba(82, 82, 91, 0.22);
+  --diag-label: #3f3f46;
+}
+
+.outcome-diagnostic .outcome-title {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: #292524;
+}
+
+.outcome-suggestion {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  margin: 0;
+  padding: 0.75rem 0.85rem;
+  border-radius: calc(var(--radius) - 2px);
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(62, 48, 40, 0.08);
+}
+
+.outcome-diagnostic--emergency .outcome-suggestion {
+  background: rgba(255, 255, 255, 0.5);
+  border-color: rgba(185, 28, 28, 0.12);
+}
+
+.outcome-diagnostic--moderate .outcome-suggestion {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(180, 83, 9, 0.1);
+}
+
+.outcome-diagnostic--low .outcome-suggestion {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(22, 101, 52, 0.1);
+}
+
+.outcome-diagnostic--unclear .outcome-suggestion {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(82, 82, 91, 0.1);
+}
+
+.outcome-suggestion-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.outcome-suggestion-text {
+  flex: 1;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #44403c;
+  line-height: 1.5;
 }
 
 .outcome.level-emergency {
@@ -732,7 +856,9 @@ a {
 }
 
 .outcome.level-emergency.outcome--split,
-.outcome.level-urgent.outcome--split {
+.outcome.level-urgent.outcome--split,
+.outcome.level-monitor.outcome--split,
+.outcome.level-routine.outcome--split {
   background: transparent;
   border: none;
 }
@@ -779,30 +905,7 @@ a {
 
 .outcome-body {
   color: #57534e;
-  white-space: pre-wrap;
-}
-
-.vet-banner {
-  display: flex;
-  gap: 0.75rem;
-  align-items: flex-start;
-  margin-top: 1.15rem;
-  padding: 1rem 1.15rem;
-  border-radius: var(--radius);
-  background: linear-gradient(135deg, var(--blush), rgba(255, 252, 245, 0.95));
-  border: 1px solid var(--blush-border);
-}
-
-.vet-icon {
-  font-size: 1.35rem;
-  line-height: 1;
-}
-
-.vet-text {
-  flex: 1;
-  font-weight: 600;
-  color: #5c4038;
-  font-size: 0.98rem;
+  line-height: 1.65;
 }
 
 .refs-fold {
