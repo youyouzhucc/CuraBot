@@ -57,31 +57,11 @@ a {
 }
 
 .warm-banner {
-  position: relative;
-  overflow: hidden;
   height: min(28vh, 220px);
   border-bottom-left-radius: 32px;
   border-bottom-right-radius: 32px;
   background: linear-gradient(168deg, #faf6f2 0%, #f3ebe6 45%, #faf6f2 100%);
   box-shadow: inset 0 -20px 44px rgba(255, 255, 255, 0.85);
-}
-
-/* 猫狗小图平铺，整体 30% 透明度（与底色分层，不遮挡下方内容） */
-.warm-banner::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  opacity: 0.3;
-  pointer-events: none;
-  z-index: 0;
-  background-image: url("/images/hero-cat.png"), url("/images/hero-dog.png");
-  background-size: 52px 52px, 52px 52px;
-  background-position: 0 0, 26px 26px;
-  background-repeat: repeat;
-}
-
-.warm-banner.warm-banner--single::before {
-  display: none;
 }
 
 .warm-banner.warm-banner--single {
@@ -230,10 +210,6 @@ a {
   font-weight: 600;
   margin: 0 0 0.85rem;
   color: #57534e;
-}
-
-.pick-hint {
-  margin: 1rem 0 1.5rem;
 }
 
 .species-grid {
