@@ -332,6 +332,90 @@ a {
   color: #57534e;
 }
 
+.hero-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.menu-card--core {
+  width: 100%;
+  margin-top: 1rem;
+  padding: 1.5rem 1.4rem 1.65rem;
+  border-width: 2px;
+  border-color: var(--accent-mid);
+  background: linear-gradient(160deg, #ffffff 0%, #faf6f2 52%, #f0e6e2 100%);
+  box-shadow: 0 14px 36px rgba(120, 82, 74, 0.12);
+  text-align: left;
+}
+
+.menu-core-eyebrow {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--accent-dark);
+  margin-bottom: 0.45rem;
+}
+
+.menu-core-title {
+  margin: 0 0 0.65rem;
+  font-size: 1.38rem;
+  font-weight: 700;
+  color: #44403c;
+  line-height: 1.35;
+}
+
+.menu-core-desc {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+.menu-tips {
+  margin-top: 2rem;
+}
+
+.menu-tips-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: #57534e;
+}
+
+.menu-tips-lead {
+  margin: 0 0 1rem;
+  font-size: 0.88rem;
+}
+
+.grid-menu--tips {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 0;
+}
+
+.menu-card--tip {
+  padding: 1rem 1rem 1.1rem;
+}
+
+.menu-card--tip h3 {
+  font-size: 0.98rem;
+}
+
+.menu-card--tip p {
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.hero-actions--bottom {
+  width: 100%;
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--fill-warm);
+  align-self: stretch;
+}
+
 .grid-menu {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -360,6 +444,10 @@ a {
   margin: 0 0 0.45rem;
   font-size: 1.05rem;
   color: #44403c;
+}
+
+.menu-card--core .menu-core-title {
+  font-size: 1.38rem;
 }
 
 .menu-card p {
@@ -394,11 +482,16 @@ a {
 }
 
 .flow-nav {
-  margin: 0 0 1rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.65rem;
   align-items: center;
+}
+
+.flow-nav--bottom {
+  margin: 1.75rem 0 0;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--fill-warm);
 }
 
 .btn-back-step {

@@ -205,9 +205,6 @@
         <button type="button" class="btn secondary" id="btnCopyIntake">复制全文</button>
       </div>`;
     host.innerHTML = `
-      <nav class="flow-nav">
-        <button type="button" class="btn secondary btn-back-step" id="btnFlowBack">← 上一步</button>
-      </nav>
       <div class="outcome ${levelClass}">
         <p class="outcome-kicker">${escapeHtml(kicker)}</p>
         <h2 class="outcome-title">${escapeHtml(o.title)}</h2>
@@ -220,6 +217,9 @@
           <button type="button" class="btn" id="btnBackTriage">返回分诊</button>
         </div>
       </div>
+      <nav class="flow-nav flow-nav--bottom">
+        <button type="button" class="btn secondary btn-back-step" id="btnFlowBack">← 上一步</button>
+      </nav>
     `;
     wireFlowBack(host);
     $("#btnRestartFlow").addEventListener("click", () => startFlow(state.flowKey));
@@ -276,9 +276,6 @@
       : "";
 
     host.innerHTML = `
-      <nav class="flow-nav">
-        <button type="button" class="btn secondary btn-back-step" id="btnFlowBack">← 上一步</button>
-      </nav>
       <header class="flow-head">
         <p class="badge">${escapeHtml(flow.title)} · ${speciesLabel(state.species)}</p>
         <p class="flow-q">${escapeHtml(step.text).replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")}</p>
@@ -292,6 +289,9 @@
         ${noneNext}
         ${noneOnly}
       </div>
+      <nav class="flow-nav flow-nav--bottom">
+        <button type="button" class="btn secondary btn-back-step" id="btnFlowBack">← 上一步</button>
+      </nav>
     `;
     wireFlowBack(host);
 
@@ -356,9 +356,6 @@
       : "";
     const sub = flow.subtitle ? `<p class="muted intake-sub">${escapeHtml(flow.subtitle)}</p>` : "";
     host.innerHTML = `
-      <nav class="flow-nav">
-        <button type="button" class="btn secondary btn-back-step" id="btnFlowBack">← 上一步</button>
-      </nav>
       <header class="flow-head">
         <p class="badge">${escapeHtml(flow.title)}</p>
         ${sub}
@@ -366,6 +363,9 @@
         <p class="flow-q">${escapeHtml(step.text)}</p>
       </header>
       <div class="option-grid">${optsHtml}</div>
+      <nav class="flow-nav flow-nav--bottom">
+        <button type="button" class="btn secondary btn-back-step" id="btnFlowBack">← 上一步</button>
+      </nav>
     `;
     wireFlowBack(host);
     $$(".option", host).forEach((btn) => {
@@ -418,14 +418,14 @@
       })
       .join("");
     host.innerHTML = `
-      <nav class="flow-nav">
-        <button type="button" class="btn secondary btn-back-step" id="btnFlowBack">← 上一步</button>
-      </nav>
       <header class="flow-head">
         <p class="badge">${escapeHtml(flow.title)} · ${speciesLabel(state.species)}</p>
         <p class="flow-q">${escapeHtml(step.text)}</p>
       </header>
       <div class="option-grid">${optsHtml}</div>
+      <nav class="flow-nav flow-nav--bottom">
+        <button type="button" class="btn secondary btn-back-step" id="btnFlowBack">← 上一步</button>
+      </nav>
     `;
     wireFlowBack(host);
     $$(".option", host).forEach((btn) => {
