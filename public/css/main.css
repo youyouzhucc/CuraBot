@@ -67,7 +67,7 @@ a {
 .topbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 1.25rem;
   margin-bottom: 1.35rem;
   padding: 0.5rem 0.15rem 0.35rem;
@@ -81,6 +81,27 @@ a {
   font-weight: 700;
   letter-spacing: 0.02em;
   min-width: 0;
+}
+
+.brand-home {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+
+.brand-home:hover .brand-text {
+  color: var(--accent-dark);
+}
+
+.brand-home:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 12px;
 }
 
 .brand-text {
@@ -105,12 +126,6 @@ a {
   font-weight: 500;
   color: var(--muted);
   font-size: 0.78rem;
-  margin-top: 0.15rem;
-}
-
-.topbar-menu-btn {
-  flex-shrink: 0;
-  padding: 0.65rem 1.35rem;
   margin-top: 0.15rem;
 }
 
@@ -256,10 +271,10 @@ a {
 }
 
 .btn.secondary {
-  background: #fff;
+  background: linear-gradient(180deg, #ffffff 0%, #fff8f0 100%);
   color: var(--text);
-  border: 1px solid #fed7aa;
-  box-shadow: 0 2px 10px rgba(41, 37, 36, 0.05);
+  border: 1px solid #fdba74;
+  box-shadow: 0 2px 12px rgba(234, 88, 12, 0.08);
 }
 
 .btn-enter {
@@ -322,18 +337,19 @@ a {
 }
 
 .menu-card {
-  background: linear-gradient(180deg, var(--bg) 0%, var(--bg-deep) 100%);
+  background: linear-gradient(145deg, #ffffff 0%, #fffaf5 45%, #fff4e6 100%);
   border-radius: var(--radius);
   padding: 1.35rem 1.3rem;
   box-shadow: var(--shadow);
   text-align: left;
-  border: 1px solid #fed7aa;
+  border: 1px solid #fdba74;
   cursor: pointer;
-  transition: border-color 0.12s ease, transform 0.08s ease;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease, transform 0.08s ease;
 }
 
 .menu-card:hover {
-  border-color: rgba(234, 88, 12, 0.28);
+  border-color: var(--accent-mid);
+  box-shadow: 0 10px 28px var(--accent-glow);
   transform: translateY(-2px);
 }
 
@@ -372,6 +388,20 @@ a {
 
 .flow-sheet {
   padding: var(--hero-pad-y) var(--hero-pad-x);
+}
+
+.flow-nav {
+  margin: 0 0 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.btn-back-step {
+  min-height: 2.5rem;
+  padding: 0.55rem 1.15rem;
+  font-size: 0.95rem;
 }
 
 .option-grid {
@@ -438,11 +468,11 @@ a {
 
 .option-grid .btn.option {
   text-align: left;
-  background: #fffcfa;
+  background: linear-gradient(180deg, #ffffff 0%, #fffaf5 100%);
   color: var(--text);
-  border: 1px solid #ffedd5;
+  border: 1px solid #fdba74;
   border-radius: var(--radius);
-  box-shadow: 0 2px 8px rgba(41, 37, 36, 0.05);
+  box-shadow: 0 2px 10px rgba(234, 88, 12, 0.07);
   font-weight: 500;
   line-height: 1.5;
   padding: 0.95rem 1.15rem;
@@ -450,8 +480,9 @@ a {
 }
 
 .option-grid .btn.option:hover {
-  border-color: var(--accent);
-  background: var(--cream-tint);
+  border-color: var(--accent-mid);
+  background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
+  box-shadow: 0 4px 16px rgba(234, 88, 12, 0.12);
 }
 
 .multi-hint {

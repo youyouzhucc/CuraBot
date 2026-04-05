@@ -7,6 +7,10 @@
     stepId: null,
     lastOutcome: null,
     intakeFlags: null,
+    /** @type {string[]} 分诊流程内已走过的步骤 id，用于「上一步」 */
+    flowStepHistory: [],
+    /** 进入结果页前的一步，用于从结果返回题目 */
+    outcomeReturnStepId: null,
   };
 
   const $ = (sel, root = document) => root.querySelector(sel);
@@ -98,18 +102,50 @@
     $$("[data-view]").forEach((el) => {
       el.hidden = el.getAttribute("data-view") !== name;
     });
-    const topBtn = $("#topMenuBtn");
-    if (topBtn) {
-      const showTop = name !== "home" && name !== "disclaimer";
-      topBtn.hidden = !showTop;
-    }
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function renderHome() {
+    state.flowKey = null;
+    state.stepId = null;
+    state.lastOutcome = null;
+    state.flowStepHistory = [];
+    state.outcomeReturnStepId = null;
+    state.intakeFlags = null;
     updateSpeciesLabels();
     updateSpeciesCards();
     showView("home");
+  }
+
+  function goBackInFlow() {
+    if (state.lastOutcome) {
+      state.lastOutcome = null;
+      if (state.outcomeReturnStepId != null) {
+        state.stepId = state.outcomeReturnStepId;
+        state.outcomeReturnStepId = null;
+        renderStep();
+      } else {
+        state.flowKey = null;
+        state.stepId = null;
+        state.intakeFlags = null;
+        showView("triageMenu");
+      }
+      return;
+    }
+    if (state.flowStepHistory.length > 0) {
+      state.stepId = state.flowStepHistory.pop();
+      renderStep();
+    } else {
+      state.flowKey = null;
+      state.stepId = null;
+      state.intakeFlags = null;
+      showView("triageMenu");
+    }
+  }
+
+  function wireFlowBack(host) {
+    const btn = $("#btnFlowBack", host);
+    if (btn) btn.addEventListener("click", () => goBackInFlow());
   }
 
   function startFlow(key) {
@@ -131,6 +167,8 @@
     state.flowKey = key;
     state.stepId = flow.start;
     state.lastOutcome = null;
+    state.flowStepHistory = [];
+    state.outcomeReturnStepId = null;
     renderStep();
     showView("flow");
   }
@@ -157,6 +195,9 @@
         <button type="button" class="btn secondary" id="btnCopyIntake">复制全文</button>
       </div>`;
     host.innerHTML = `
+      <nav class="flow-nav">
+        <button type="button" class="btn secondary btn-back-step" id="btnFlowBack">← 上一步</button>
+      </nav>
       <div class="outcome ${levelClass}">
         <p class="outcome-kicker">${escapeHtml(kicker)}</p>
         <h2 class="outcome-title">${escapeHtml(o.title)}</h2>
@@ -166,12 +207,21 @@
         ${renderRefs(o.refIds)}
         <div class="row">
           <button type="button" class="btn secondary" id="btnRestartFlow">再测一次</button>
-          <button type="button" class="btn" id="btnBackMenu">回主菜单</button>
+          <button type="button" class="btn" id="btnBackTriage">返回分诊</button>
         </div>
       </div>
     `;
+    wireFlowBack(host);
     $("#btnRestartFlow").addEventListener("click", () => startFlow(state.flowKey));
-    $("#btnBackMenu").addEventListener("click", () => showView("menu"));
+    $("#btnBackTriage").addEventListener("click", () => {
+      state.lastOutcome = null;
+      state.outcomeReturnStepId = null;
+      state.flowStepHistory = [];
+      state.flowKey = null;
+      state.stepId = null;
+      state.intakeFlags = null;
+      showView("triageMenu");
+    });
     const btnCopy = $("#btnCopyIntake");
     if (btnCopy && o.copyBlock) {
       btnCopy.addEventListener("click", async () => {
@@ -216,6 +266,9 @@
       : "";
 
     host.innerHTML = `
+      <nav class="flow-nav">
+        <button type="button" class="btn secondary btn-back-step" id="btnFlowBack">← 上一步</button>
+      </nav>
       <header class="flow-head">
         <p class="badge">${escapeHtml(flow.title)} · ${speciesLabel(state.species)}</p>
         <p class="flow-q">${escapeHtml(step.text).replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")}</p>
@@ -230,6 +283,7 @@
         ${noneOnly}
       </div>
     `;
+    wireFlowBack(host);
 
     $("#btnMultiSubmit").addEventListener("click", () => {
       const checked = $$('input[type="checkbox"]', host).filter((i) => i.checked);
@@ -243,12 +297,14 @@
       }
       const selected = checked.map((c) => options[Number(c.getAttribute("data-opt-index"))]);
       const merged = CuraTriageEngine.mergeMultiOptions(selected, state.species);
+      state.outcomeReturnStepId = state.stepId;
       state.lastOutcome = merged;
       renderOutcome();
     });
 
     if (step.noneNext) {
       $("#btnNoneNext").addEventListener("click", () => {
+        state.flowStepHistory.push(state.stepId);
         state.stepId = step.noneNext;
         renderStep();
       });
@@ -260,6 +316,7 @@
   }
 
   function applyNoneOutcome(raw) {
+    state.outcomeReturnStepId = state.stepId;
     const meta = CuraTriageEngine.LEVEL_META[raw.level] || {};
     let body = raw.body || meta.body || "";
     if (raw.homeCare) body += `\n\n【在家可以这样做】\n${raw.homeCare}`;
@@ -289,6 +346,9 @@
       : "";
     const sub = flow.subtitle ? `<p class="muted intake-sub">${escapeHtml(flow.subtitle)}</p>` : "";
     host.innerHTML = `
+      <nav class="flow-nav">
+        <button type="button" class="btn secondary btn-back-step" id="btnFlowBack">← 上一步</button>
+      </nav>
       <header class="flow-head">
         <p class="badge">${escapeHtml(flow.title)}</p>
         ${sub}
@@ -297,22 +357,26 @@
       </header>
       <div class="option-grid">${optsHtml}</div>
     `;
+    wireFlowBack(host);
     $$(".option", host).forEach((btn) => {
       btn.addEventListener("click", () => {
         const idx = Number(btn.getAttribute("data-opt-index"));
         const opt = options[idx];
         (opt.flags || []).forEach((f) => state.intakeFlags.add(f));
         if (opt.criticalOutcome) {
+          state.outcomeReturnStepId = state.stepId;
           const out = CuraIntakeEval.finalizeCritical(opt.criticalOutcome, state.intakeFlags);
           state.lastOutcome = out;
           renderOutcome();
           return;
         }
         if (opt.next === "END") {
+          state.outcomeReturnStepId = state.stepId;
           state.lastOutcome = CuraIntakeEval.evaluateIntake(state.species, state.intakeFlags);
           renderOutcome();
           return;
         }
+        state.flowStepHistory.push(state.stepId);
         state.stepId = opt.next;
         renderStep();
       });
@@ -344,12 +408,16 @@
       })
       .join("");
     host.innerHTML = `
+      <nav class="flow-nav">
+        <button type="button" class="btn secondary btn-back-step" id="btnFlowBack">← 上一步</button>
+      </nav>
       <header class="flow-head">
         <p class="badge">${escapeHtml(flow.title)} · ${speciesLabel(state.species)}</p>
         <p class="flow-q">${escapeHtml(step.text)}</p>
       </header>
       <div class="option-grid">${optsHtml}</div>
     `;
+    wireFlowBack(host);
     $$(".option", host).forEach((btn) => {
       btn.addEventListener("click", () => {
         const idx = Number(btn.getAttribute("data-opt-index"));
@@ -357,9 +425,11 @@
         const resolved = CuraTriageEngine.resolveOption(chosen, state.species);
         if (resolved.skip) return;
         if (resolved.kind === "step") {
+          state.flowStepHistory.push(state.stepId);
           state.stepId = resolved.stepId;
           renderStep();
         } else if (resolved.kind === "outcome") {
+          state.outcomeReturnStepId = state.stepId;
           state.lastOutcome = resolved.outcome;
           renderOutcome();
         }
@@ -481,8 +551,8 @@
       updateSpeciesLabels();
       showView("menu");
     });
-    $("#topMenuBtn").addEventListener("click", () => showView("menu"));
-    $$(".js-open-menu").forEach((btn) => btn.addEventListener("click", () => showView("menu")));
+    $("#brandHome").addEventListener("click", () => renderHome());
+    $$(".js-back-to-menu").forEach((btn) => btn.addEventListener("click", () => showView("menu")));
     $$(".js-back-home").forEach((btn) => btn.addEventListener("click", () => renderHome()));
     $("#linkHome").addEventListener("click", () => renderHome());
 
