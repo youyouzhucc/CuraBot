@@ -1,19 +1,22 @@
 :root {
-  /* 暖橙 + 奶油 · 与品牌 Logo 一致 */
-  --bg: #fff8f0;
-  --bg-deep: #fff4e6;
-  --surface: #fffcfa;
+  /* 陶土暖灰 · 低饱和治愈感（柔和于品牌亮橙） */
+  --bg: #faf6f2;
+  --bg-deep: #f3ebe6;
+  --surface: #fffdfa;
   --text: #292524;
   --muted: #78716c;
-  --accent: #ea580c;
-  --accent-mid: #fb923c;
-  --accent-dark: #c2410c;
-  --accent-soft: rgba(234, 88, 12, 0.14);
-  --accent-glow: rgba(234, 88, 12, 0.18);
-  --blush: #fffbeb;
-  --blush-border: #fde68a;
-  --cream-tint: #fff7ed;
-  --rose-tint: #fff7ed;
+  --accent: #a67c72;
+  --accent-mid: #c4a399;
+  --accent-dark: #6b453c;
+  --accent-soft: rgba(166, 124, 114, 0.16);
+  --accent-glow: rgba(166, 124, 114, 0.12);
+  --border-warm: #e8d4cc;
+  --border-warm-strong: #d4b8a8;
+  --fill-warm: #efe4df;
+  --blush: #faf8f5;
+  --blush-border: #e5d5c8;
+  --cream-tint: #f7f0ec;
+  --rose-tint: #f7f0ec;
   --danger: #c75c5c;
   --danger-soft: rgba(199, 92, 92, 0.12);
   --radius: 14px;
@@ -38,7 +41,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(120% 90% at 50% -14%, rgba(255, 237, 213, 0.85) 0%, transparent 55%), var(--bg);
+  background: radial-gradient(120% 90% at 50% -14%, rgba(245, 228, 218, 0.75) 0%, transparent 56%), var(--bg);
   color: var(--text);
   line-height: 1.65;
 }
@@ -49,7 +52,7 @@ a {
 
 .warm-banner {
   height: min(28vh, 220px);
-  background: linear-gradient(168deg, #fffbeb 0%, #fff7ed 40%, #fff8f0 100%);
+  background: linear-gradient(168deg, #faf6f2 0%, #f5ebe6 42%, #faf6f2 100%);
   border-bottom-left-radius: 32px;
   border-bottom-right-radius: 32px;
   box-shadow: inset 0 -20px 44px rgba(255, 255, 255, 0.9);
@@ -118,7 +121,7 @@ a {
   border-radius: 12px;
   background: #fff;
   box-shadow: 0 4px 16px rgba(41, 37, 36, 0.08);
-  border: 1px solid rgba(254, 215, 170, 0.65);
+  border: 1px solid rgba(166, 124, 114, 0.22);
 }
 
 .brand small {
@@ -151,7 +154,7 @@ a {
 }
 
 .home-hero {
-  background: linear-gradient(165deg, #fff 0%, #fffaf5 52%, #fff 100%);
+  background: linear-gradient(165deg, #fff 0%, #faf6f2 52%, #fff 100%);
 }
 
 .hero h1,
@@ -195,10 +198,10 @@ a {
 
 .species-card {
   position: relative;
-  border: 2px solid #fed7aa;
+  border: 2px solid var(--border-warm);
   border-radius: var(--radius);
   padding: 1.15rem 0.85rem 1.2rem;
-  background: linear-gradient(180deg, #fffcfa 0%, #fff7ed 100%);
+  background: linear-gradient(180deg, #fffdfa 0%, #f7f0ec 100%);
   cursor: pointer;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
   display: flex;
@@ -210,14 +213,14 @@ a {
 }
 
 .species-card:hover {
-  border-color: rgba(234, 88, 12, 0.35);
+  border-color: rgba(166, 124, 114, 0.38);
   box-shadow: 0 10px 28px var(--accent-glow);
 }
 
 .species-card.is-selected {
   border-color: var(--accent);
-  background: linear-gradient(180deg, #fff 0%, #ffedd5 100%);
-  box-shadow: 0 12px 36px rgba(234, 88, 12, 0.15);
+  background: linear-gradient(180deg, #fffcfa 0%, #f0e6e2 100%);
+  box-shadow: 0 10px 32px rgba(166, 124, 114, 0.14);
   transform: translateY(-2px);
 }
 
@@ -259,11 +262,11 @@ a {
   min-height: 2.85rem;
   font-size: 1rem;
   cursor: pointer;
-  background: linear-gradient(135deg, #ea580c, #fb923c);
-  color: #fff;
+  background: linear-gradient(145deg, #96685c 0%, #b09388 48%, #a67c72 100%);
+  color: #fffefb;
   font-weight: 600;
   transition: transform 0.08s ease, box-shadow 0.12s ease;
-  box-shadow: 0 8px 26px rgba(234, 88, 12, 0.25);
+  box-shadow: 0 8px 22px rgba(120, 82, 74, 0.18);
 }
 
 .btn:hover {
@@ -271,10 +274,10 @@ a {
 }
 
 .btn.secondary {
-  background: linear-gradient(180deg, #ffffff 0%, #fff8f0 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #faf6f2 100%);
   color: var(--text);
-  border: 1px solid #fdba74;
-  box-shadow: 0 2px 12px rgba(234, 88, 12, 0.08);
+  border: 1px solid var(--border-warm-strong);
+  box-shadow: 0 2px 10px rgba(107, 69, 60, 0.06);
 }
 
 .btn-enter {
@@ -305,7 +308,7 @@ a {
 
 .btn.soft {
   background: var(--blush);
-  color: #92400e;
+  color: #5c4038;
   border: 1px solid var(--blush-border);
   box-shadow: none;
 }
@@ -321,7 +324,7 @@ a {
 
 .disclaimer-box {
   background: linear-gradient(135deg, var(--cream-tint), #fff);
-  border: 1px solid #fed7aa;
+  border: 1px solid var(--border-warm);
   border-radius: var(--radius);
   padding: 1.1rem 1.15rem;
   margin-top: 1.5rem;
@@ -337,12 +340,12 @@ a {
 }
 
 .menu-card {
-  background: linear-gradient(145deg, #ffffff 0%, #fffaf5 45%, #fff4e6 100%);
+  background: linear-gradient(145deg, #ffffff 0%, #faf6f2 48%, #f3ebe6 100%);
   border-radius: var(--radius);
   padding: 1.35rem 1.3rem;
   box-shadow: var(--shadow);
   text-align: left;
-  border: 1px solid #fdba74;
+  border: 1px solid var(--border-warm-strong);
   cursor: pointer;
   transition: border-color 0.12s ease, box-shadow 0.12s ease, transform 0.08s ease;
 }
@@ -422,8 +425,8 @@ a {
 
 .option-intake {
   font-weight: 600;
-  border-color: rgba(234, 88, 12, 0.3) !important;
-  background: linear-gradient(90deg, var(--bg), #fff7ed) !important;
+  border-color: rgba(166, 124, 114, 0.35) !important;
+  background: linear-gradient(90deg, var(--bg), var(--cream-tint)) !important;
 }
 
 .intake-meta {
@@ -449,7 +452,7 @@ a {
 .copy-template {
   margin-top: 1.15rem;
   padding-top: 1rem;
-  border-top: 1px dashed #fdba74;
+  border-top: 1px dashed var(--border-warm-strong);
 }
 
 .copy-text {
@@ -459,7 +462,7 @@ a {
   font-size: 0.88rem;
   line-height: 1.55;
   border-radius: 12px;
-  border: 1px solid #ffedd5;
+  border: 1px solid var(--fill-warm);
   background: var(--bg);
   color: var(--text);
   resize: vertical;
@@ -468,11 +471,11 @@ a {
 
 .option-grid .btn.option {
   text-align: left;
-  background: linear-gradient(180deg, #ffffff 0%, #fffaf5 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #faf6f2 100%);
   color: var(--text);
-  border: 1px solid #fdba74;
+  border: 1px solid var(--border-warm-strong);
   border-radius: var(--radius);
-  box-shadow: 0 2px 10px rgba(234, 88, 12, 0.07);
+  box-shadow: 0 2px 10px rgba(107, 69, 60, 0.05);
   font-weight: 500;
   line-height: 1.5;
   padding: 0.95rem 1.15rem;
@@ -481,8 +484,8 @@ a {
 
 .option-grid .btn.option:hover {
   border-color: var(--accent-mid);
-  background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
-  box-shadow: 0 4px 16px rgba(234, 88, 12, 0.12);
+  background: linear-gradient(180deg, #f7f0ec 0%, #efe4df 100%);
+  box-shadow: 0 4px 14px rgba(166, 124, 114, 0.1);
 }
 
 .multi-hint {
@@ -503,7 +506,7 @@ a {
   gap: 0.75rem;
   padding: 1rem 1.1rem;
   border-radius: var(--radius);
-  border: 1px solid #ffedd5;
+  border: 1px solid var(--fill-warm);
   background: #fffcfa;
   cursor: pointer;
   transition: border-color 0.12s ease, background 0.12s ease;
@@ -551,7 +554,7 @@ a {
   border-radius: calc(var(--radius) + 4px);
   padding: var(--hero-pad-y) var(--hero-pad-x);
   box-shadow: var(--shadow);
-  border: 1px solid #fed7aa;
+  border: 1px solid var(--border-warm);
 }
 
 .outcome.level-emergency {
@@ -560,7 +563,7 @@ a {
 }
 
 .outcome.level-urgent {
-  border-color: rgba(234, 88, 12, 0.28);
+  border-color: rgba(166, 124, 114, 0.28);
 }
 
 .outcome-kicker {
@@ -599,14 +602,14 @@ a {
 .vet-text {
   flex: 1;
   font-weight: 600;
-  color: #92400e;
+  color: #5c4038;
   font-size: 0.98rem;
 }
 
 .refs-fold {
   margin-top: 1.15rem;
   padding: 0.65rem 0;
-  border-top: 1px dashed #fdba74;
+  border-top: 1px dashed var(--border-warm-strong);
   font-size: 0.88rem;
   color: var(--muted);
 }
@@ -646,7 +649,7 @@ a {
   background: linear-gradient(180deg, var(--bg) 0%, #fff 100%);
   border-radius: var(--radius);
   padding: 1.3rem 1.25rem;
-  border: 1px solid #fed7aa;
+  border: 1px solid var(--border-warm);
   box-shadow: var(--shadow);
   margin-bottom: 1.15rem;
 }
@@ -701,7 +704,7 @@ a {
 
 .ref-block li {
   padding: 0.65rem 0;
-  border-bottom: 1px solid #ffedd5;
+  border-bottom: 1px solid var(--fill-warm);
 }
 
 .error {
