@@ -470,6 +470,26 @@
     scrollLog();
   }
 
+  function showThinkingIndicator() {
+    const { log } = getEls();
+    if (!log) return null;
+    const div = document.createElement("div");
+    div.className = "health-msg health-msg--bot health-msg--thinking";
+    div.setAttribute("role", "status");
+    div.setAttribute("aria-busy", "true");
+    div.innerHTML = `<div class="health-msg-inner">
+      <p class="health-thinking-text">CuraBot 正在思考中…</p>
+      <p class="muted small health-thinking-sub">请稍候，正在结合你的描述与科普知识整理回复。</p>
+    </div>`;
+    log.appendChild(div);
+    scrollLog();
+    return div;
+  }
+
+  function removeThinkingIndicator(el) {
+    if (el && el.parentNode) el.parentNode.removeChild(el);
+  }
+
   async function sendMessage(getSpecies, getKnowledge, opts) {
     const { input, log } = getEls();
     if (!input) return;
@@ -493,6 +513,7 @@
 
     appendBubble("user", raw, "");
     history.push({ role: "user", content: composed });
+    const thinkingEl = showThinkingIndicator();
     setLoading(true);
 
     const species = getChatSpecies(getSpecies);
@@ -503,12 +524,31 @@
     let fromLlm = false;
 
     try {
-      const fr = await fetchLlmReply(composed, species);
-      if (fr.llm) {
-        replyText = fr.llm.text;
-        fromLlm = true;
-        metaHtml = `<p class="health-msg-source muted">由大模型生成 · 仍不能代替兽医诊断</p>`;
-      } else {
+      try {
+        const fr = await fetchLlmReply(composed, species);
+        if (fr.llm) {
+          replyText = fr.llm.text;
+          fromLlm = true;
+          metaHtml = `<p class="health-msg-source muted">由大模型生成 · 仍不能代替兽医诊断</p>`;
+        } else {
+          try {
+            localMeta = CuraHealthBotLocal.reply({
+              message: composed,
+              species,
+              knowledge,
+              answeredQuizIds,
+            });
+          } catch (e2) {
+            localMeta = {
+              text: "本地知识库暂时无法生成回复，请稍后再试或使用首页分诊流程。",
+              severity: "unclear",
+            };
+          }
+          replyText = localMeta.text;
+          const reason = fr.apiHint ? escapeHtml(fr.apiHint) : "未返回大模型内容";
+          metaHtml = `<p class="health-msg-source muted">已用本地知识库回答（原因：${reason}）</p>`;
+        }
+      } catch (e) {
         try {
           localMeta = CuraHealthBotLocal.reply({
             message: composed,
@@ -516,111 +556,99 @@
             knowledge,
             answeredQuizIds,
           });
+          replyText = localMeta.text;
         } catch (e2) {
-          localMeta = {
-            text: "本地知识库暂时无法生成回复，请稍后再试或使用首页分诊流程。",
-            severity: "unclear",
-          };
+          replyText = "对话出错，请刷新页面后重试。";
+          localMeta = { text: replyText, severity: "unclear" };
         }
-        replyText = localMeta.text;
-        const reason = fr.apiHint ? escapeHtml(fr.apiHint) : "未返回大模型内容";
-        metaHtml = `<p class="health-msg-source muted">已用本地知识库回答（原因：${reason}）</p>`;
+        metaHtml = `<p class="health-msg-source muted">已使用本地知识库（${escapeHtml(e.message || "请求异常")}）</p>`;
       }
-    } catch (e) {
-      try {
-        localMeta = CuraHealthBotLocal.reply({
-          message: composed,
-          species,
-          knowledge,
-          answeredQuizIds,
-        });
-        replyText = localMeta.text;
-      } catch (e2) {
-        replyText = "对话出错，请刷新页面后重试。";
-        localMeta = { text: replyText, severity: "unclear" };
+
+      if (!fromLlm && localMeta) {
+        metaHtml += buildActionMetaHtml(localMeta, opts);
       }
-      metaHtml = `<p class="health-msg-source muted">已使用本地知识库（${escapeHtml(e.message || "请求异常")}）</p>`;
-    }
 
-    if (!fromLlm && localMeta) {
-      metaHtml += buildActionMetaHtml(localMeta, opts);
-    }
+      let displayText = replyText;
+      let tier = "unclear";
+      if (fromLlm) {
+        const ex = extractTierFromText(replyText);
+        displayText = ex.clean;
+        tier = ex.tier || heuristicTierFromLlmText(displayText);
+      } else if (localMeta) {
+        tier = localMeta.severity || "unclear";
+      }
 
-    let displayText = replyText;
-    let tier = "unclear";
-    if (fromLlm) {
-      const ex = extractTierFromText(replyText);
-      displayText = ex.clean;
-      tier = ex.tier || heuristicTierFromLlmText(displayText);
-    } else if (localMeta) {
-      tier = localMeta.severity || "unclear";
-    }
+      history.push({ role: "assistant", content: displayText });
+      appendBubble("bot", displayText, metaHtml, { severity: tier });
+      if (!fromLlm && localMeta && localMeta.followUpQuiz) {
+        appendFollowUpQuiz(localMeta.followUpQuiz);
+      }
 
-    history.push({ role: "assistant", content: displayText });
-    appendBubble("bot", displayText, metaHtml, { severity: tier });
-    if (!fromLlm && localMeta && localMeta.followUpQuiz) {
-      appendFollowUpQuiz(localMeta.followUpQuiz);
+      postHealthSessionSnapshot(getKnowledge, getSpecies);
+    } finally {
+      removeThinkingIndicator(thinkingEl);
+      setLoading(false);
+      scrollLog();
     }
-
-    postHealthSessionSnapshot(getKnowledge, getSpecies);
-    setLoading(false);
-    scrollLog();
   }
 
   function refreshChatStatus() {}
 
-  function cleanUserLineForRecord(content) {
-    let s = String(content || "");
-    if (s.indexOf("【用户已选档案】") === 0) {
-      const cut = s.indexOf("\n\n");
-      if (cut !== -1) s = s.slice(cut + 2);
+  function buildCalmParagraph(isEmergency) {
+    if (isEmergency) {
+      return "若你已出发或在候诊，可在此补充时间线与细节；**急症仍以尽快到达医院为先**。需要时可用下方「上传照片」辅助说明（需本机 npm start 并配置 API）。约 12 小时后会在页面内温和提醒你回访。";
     }
-    return s.trim();
+    return "我理解你会担心——把下面当作「就诊前预演」。需要时可用下方「上传照片」（便便、呕吐物、皮肤等），系统会尝试调用视觉模型生成可见线索（需本机 npm start 并配置 API）。约 12 小时后会在页面内温和提醒你回访。";
   }
 
-  function buildVisitRecordText(getKnowledge) {
-    const knowledge = getKnowledge && getKnowledge();
-    const steps = getGuidedSteps(knowledge || {});
-    const p =
-      chatProfile && Object.keys(chatProfile).length
-        ? chatProfile
-        : (typeof window !== "undefined" && window.__healthChatProfile) || {};
-    const lines = [];
-    lines.push("【就诊信息摘要】（由 CuraBot 整理，供线下就医沟通参考，不能代替诊断）");
-    lines.push("");
-    lines.push("一、宠物基本情况");
-    let any = false;
-    steps.forEach((s) => {
-      const v = p[s.id];
-      if (v == null || v === "") return;
-      any = true;
-      const opt = (s.options || []).find((o) => o.value === v);
-      const lab = opt ? opt.label : v;
-      let title = String(s.prompt || "").replace(/？$/, "");
-      if (s.id === "gender") {
-        if (p.species === "cat") title = "猫猫的性别是";
-        else if (p.species === "dog") title = "狗狗的性别是";
-      }
-      lines.push(`· ${title}：${lab}`);
-    });
-    if (!any) lines.push("· （尚未完成上方选择题，或档案为空）");
-    lines.push("");
-    lines.push("二、症状与健康表现（对话纪要）");
-    if (!history.length) {
-      lines.push("（暂无对话内容）");
-    } else {
-      history.forEach((h) => {
-        const role = h.role === "user" ? "家长" : "助手";
-        let c = String(h.content || "");
-        if (h.role === "user") c = cleanUserLineForRecord(c);
-        if (!c) return;
-        lines.push(`${role}：${c.replace(/\s+/g, " ").trim()}`);
-      });
+  function composeGuidedCompletionBody(knowledge, sessionSnap, options) {
+    const opts = options || {};
+    const Eng = global.CuraHealthDecisionEngine;
+    const plan = Eng && Eng.buildAdvicePlan ? Eng.buildAdvicePlan(sessionSnap, knowledge) : "";
+    const hc = (knowledge && knowledge.healthChat) || {};
+    const calm = buildCalmParagraph(!!opts.isEmergency);
+
+    if (opts.isEmergency) {
+      const em = opts.emergencyMessage || "请尽快就医。";
+      return "**急诊提示**\n\n" + em + "\n\n---\n\n" + plan + "\n\n" + calm;
     }
-    lines.push("");
-    lines.push("三、提示");
-    lines.push("上述内容仅供就诊时向医生说明情况使用；急症请优先去医院。用药与处置须以执业兽医意见为准。");
-    return lines.join("\n");
+
+    const parts = [];
+    if (opts.closingNote && String(opts.closingNote).trim()) {
+      parts.push(String(opts.closingNote).trim());
+    }
+    const done =
+      hc.guidedDonePrompt ||
+      "好的，已记录你的选择。请用自然语言描述最近最担心的症状或变化，我会结合这些信息给参考建议（不能代替兽医诊断）。";
+    parts.push(done);
+    parts.push(plan);
+    parts.push(calm);
+    return parts.join("\n\n");
+  }
+
+  function severityForGuidedCompletion(sessionSnap, options) {
+    const opts = options || {};
+    if (opts.isEmergency) return "emergency";
+    const Eng = global.CuraHealthDecisionEngine;
+    if (Eng && Eng.deriveSeverityFromSession) return Eng.deriveSeverityFromSession(sessionSnap);
+    return "moderate";
+  }
+
+  function completeTreeTransition(knowledge, getKnowledge, getSpecies) {
+    guidedComplete = true;
+    treePhaseActive = false;
+    updateChatInputState();
+    try {
+      if (typeof localStorage !== "undefined") {
+        localStorage.removeItem("curabot_followup_dismissed");
+        localStorage.setItem("curabot_followup_hint_at", String(Date.now() + 12 * 60 * 60 * 1000));
+      }
+    } catch (e) {
+      /* ignore */
+    }
+    postHealthSessionSnapshot(getKnowledge, getSpecies);
+    const { input } = getEls();
+    if (input) setTimeout(() => input.focus(), 120);
   }
 
   function copyTextToClipboard(text) {
@@ -665,51 +693,26 @@
     scrollLog();
   }
 
-  function handleGenerateVisitRecord(getKnowledge) {
-    const text = buildVisitRecordText(getKnowledge);
-    copyTextToClipboard(text).then(
-      () => appendVisitRecordBubble(text, true, "对话纪要"),
-      () => appendVisitRecordBubble(text, false, "对话纪要")
-    );
-  }
-
   function handleGenerateSoapReport(getKnowledge) {
     const Eng = global.CuraHealthDecisionEngine;
     if (!Eng || !decisionSession) {
-      alert("请先完成档案与症状筛查（决策树选择题），再生成 SOAP 简报。");
+      alert("请先完成档案与症状筛查（决策树选择题），再导出就诊简报。");
       return;
     }
     const gloss = Eng.glossForOwnerPhrase(lastUserPlainInput);
     const extra = gloss ? ["口语与可能医学提示（非诊断）：" + gloss + ""] : [];
     const text = Eng.generateSOAP(decisionSession, chatProfile, extra);
     copyTextToClipboard(text).then(
-      () => appendVisitRecordBubble(text, true, "SOAP 简报"),
-      () => appendVisitRecordBubble(text, false, "SOAP 简报")
+      () => appendVisitRecordBubble(text, true, "给兽医的就诊简报"),
+      () => appendVisitRecordBubble(text, false, "给兽医的就诊简报")
     );
   }
 
   function finalizeGuidedOpenInput(knowledge, getKnowledge, getSpecies) {
-    guidedComplete = true;
-    treePhaseActive = false;
-    updateChatInputState();
-    const hc = (knowledge && knowledge.healthChat) || {};
-    const done =
-      hc.guidedDonePrompt ||
-      "好的，已记录你的选择与筛查路径。请用自然语言补充细节（不能代替兽医诊断）。";
-    const calm =
-      "我理解你会担心——把下面当作「就诊前预演」。需要时可用下方「上传照片」（便便、呕吐物、皮肤等），系统会尝试调用视觉模型生成可见线索（需本机 npm start 并配置 API）。约 12 小时后会在页面内温和提醒你回访。";
-    appendBubble("bot", done + "\n\n" + calm, "", { severity: "normal" });
-    try {
-      if (typeof localStorage !== "undefined") {
-        localStorage.removeItem("curabot_followup_dismissed");
-        localStorage.setItem("curabot_followup_hint_at", String(Date.now() + 12 * 60 * 60 * 1000));
-      }
-    } catch (e) {
-      /* ignore */
-    }
-    postHealthSessionSnapshot(getKnowledge, getSpecies);
-    const { input } = getEls();
-    if (input) setTimeout(() => input.focus(), 120);
+    const body = composeGuidedCompletionBody(knowledge, decisionSession, {});
+    const sev = severityForGuidedCompletion(decisionSession, {});
+    appendBubble("bot", body, "", { severity: sev });
+    completeTreeTransition(knowledge, getKnowledge, getSpecies);
   }
 
   function appendDecisionTreeNode(node) {
@@ -792,15 +795,24 @@
 
     if (result.kind === "emergency") {
       setEmergencyBannerVisible(true, result.message);
-      appendBubble("bot", "**急诊提示**\n\n" + result.message, "", { severity: "emergency" });
       treePhaseActive = false;
-      finalizeGuidedOpenInput(knowledge, getKnowledge, getSpecies);
+      const body = composeGuidedCompletionBody(knowledge, decisionSession, {
+        isEmergency: true,
+        emergencyMessage: result.message,
+      });
+      const sev = severityForGuidedCompletion(decisionSession, { isEmergency: true });
+      appendBubble("bot", body, "", { severity: sev });
+      completeTreeTransition(knowledge, getKnowledge, getSpecies);
       return;
     }
     if (result.kind === "done") {
-      if (result.closingNote) appendBubble("bot", result.closingNote, "", { severity: "unclear" });
       treePhaseActive = false;
-      finalizeGuidedOpenInput(knowledge, getKnowledge, getSpecies);
+      const body = composeGuidedCompletionBody(knowledge, decisionSession, {
+        closingNote: result.closingNote,
+      });
+      const sev = severityForGuidedCompletion(decisionSession, {});
+      appendBubble("bot", body, "", { severity: sev });
+      completeTreeTransition(knowledge, getKnowledge, getSpecies);
       return;
     }
     if (result.kind === "continue" && result.node) {
@@ -955,10 +967,6 @@
       });
     }
 
-    const btnVisit = document.getElementById("btnVisitRecord");
-    if (btnVisit) {
-      btnVisit.addEventListener("click", () => handleGenerateVisitRecord(getKnowledge));
-    }
     const btnSoap = document.getElementById("btnSoapReport");
     if (btnSoap) {
       btnSoap.addEventListener("click", () => handleGenerateSoapReport(getKnowledge));

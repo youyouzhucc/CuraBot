@@ -2062,6 +2062,21 @@ footer.site {
   background: linear-gradient(90deg, rgba(243, 244, 246, 0.75) 0%, #fff 42%);
 }
 
+.health-msg--thinking .health-msg-inner {
+  border-left: 4px solid #8b5cf6;
+  background: linear-gradient(90deg, rgba(237, 233, 254, 0.9) 0%, #fff 48%);
+}
+
+.health-thinking-text {
+  margin: 0 0 0.35rem;
+  font-weight: 600;
+  color: #5b21b6;
+}
+
+.health-thinking-sub {
+  margin: 0;
+}
+
 .health-msg--bot .health-msg-disclaimer {
   margin: 0.35rem 0 0;
   padding: 0 0.15rem 0 0.05rem;
