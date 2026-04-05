@@ -12,13 +12,20 @@
     <div class="wrap">
       <header class="topbar">
         <div class="brand">
-          <div class="brand-mark" aria-hidden="true"></div>
-          <div>
+          <img
+            class="brand-logo"
+            src="/images/curabot-logo.svg"
+            width="48"
+            height="48"
+            alt=""
+            decoding="async"
+          />
+          <div class="brand-text">
             CuraBot
             <small>温柔分诊 · 安心陪伴</small>
           </div>
         </div>
-        <button type="button" class="btn secondary" id="topMenuBtn" hidden>主菜单</button>
+        <button type="button" class="btn secondary topbar-menu-btn" id="topMenuBtn" hidden>主菜单</button>
       </header>
 
       <section data-view="home">
@@ -69,7 +76,9 @@
             每只毛孩子都不一样；真的不舒服时，请以<strong>执业兽医</strong>的检查为准。若 Ta 很痛苦、越来越糟，或你心里很不安，请直接去医院。
           </p>
           <p>关于人会不会被传染：这里只给日常卫生小建议，具体风险要问医生和兽医。</p>
-          <button type="button" class="btn secondary" id="linkHome">返回首页</button>
+          <div class="hero-actions">
+            <button type="button" class="btn secondary" id="linkHome">返回首页</button>
+          </div>
         </div>
       </section>
 
@@ -103,7 +112,9 @@
               <p>参考书与指南列表</p>
             </button>
           </div>
-          <button type="button" class="btn secondary js-back-home">← 回首页换人</button>
+          <div class="hero-actions">
+            <button type="button" class="btn secondary js-back-home">← 回首页换人</button>
+          </div>
         </div>
       </section>
 
@@ -119,7 +130,9 @@
             <button type="button" class="btn option" id="startToxic">怕吃了不该吃的</button>
             <button type="button" class="btn option" id="startBehavior">脾气、害怕、乱尿</button>
           </div>
-          <button type="button" class="btn secondary js-open-menu">返回主菜单</button>
+          <div class="hero-actions">
+            <button type="button" class="btn secondary js-open-menu">返回主菜单</button>
+          </div>
         </div>
       </section>
 
@@ -132,7 +145,9 @@
           <h2>这些情况，尽量别在家等</h2>
           <p class="muted">下面是给家长看的「就医提醒」，具体还是要医生检查。</p>
           <div id="emergencyList"></div>
-          <button type="button" class="btn secondary js-open-menu">返回主菜单</button>
+          <div class="hero-actions">
+            <button type="button" class="btn secondary js-open-menu">返回主菜单</button>
+          </div>
         </div>
       </section>
 
@@ -140,7 +155,9 @@
         <div class="hero">
           <h2>让家里更舒服一点</h2>
           <div id="behaviorContent"></div>
-          <button type="button" class="btn secondary js-open-menu">返回主菜单</button>
+          <div class="hero-actions">
+            <button type="button" class="btn secondary js-open-menu">返回主菜单</button>
+          </div>
         </div>
       </section>
 
@@ -148,7 +165,9 @@
         <div class="hero">
           <h2>怎么描述「哪里不对劲」</h2>
           <div id="bodyMapContent"></div>
-          <button type="button" class="btn secondary js-open-menu">返回主菜单</button>
+          <div class="hero-actions">
+            <button type="button" class="btn secondary js-open-menu">返回主菜单</button>
+          </div>
         </div>
       </section>
 
@@ -156,7 +175,9 @@
         <div class="hero">
           <h2>人和毛孩子一起住，卫生小提示</h2>
           <div id="zoonosisContent"></div>
-          <button type="button" class="btn secondary js-open-menu">返回主菜单</button>
+          <div class="hero-actions">
+            <button type="button" class="btn secondary js-open-menu">返回主菜单</button>
+          </div>
         </div>
       </section>
 
@@ -164,7 +185,9 @@
         <div class="hero">
           <h2>资料目录</h2>
           <div id="refsContent"></div>
-          <button type="button" class="btn secondary js-open-menu">返回主菜单</button>
+          <div class="hero-actions">
+            <button type="button" class="btn secondary js-open-menu">返回主菜单</button>
+          </div>
         </div>
       </section>
 
