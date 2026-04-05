@@ -57,11 +57,31 @@ a {
 }
 
 .warm-banner {
+  position: relative;
+  overflow: hidden;
   height: min(28vh, 220px);
   border-bottom-left-radius: 32px;
   border-bottom-right-radius: 32px;
   background: linear-gradient(168deg, #faf6f2 0%, #f3ebe6 45%, #faf6f2 100%);
   box-shadow: inset 0 -20px 44px rgba(255, 255, 255, 0.85);
+}
+
+/* 猫狗小图平铺，整体 30% 透明度（与底色分层，不遮挡下方内容） */
+.warm-banner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: 0;
+  background-image: url("/images/hero-cat.png"), url("/images/hero-dog.png");
+  background-size: 52px 52px, 52px 52px;
+  background-position: 0 0, 26px 26px;
+  background-repeat: repeat;
+}
+
+.warm-banner.warm-banner--single::before {
+  display: none;
 }
 
 .warm-banner.warm-banner--single {
@@ -72,7 +92,7 @@ a {
 
 .wrap {
   max-width: 920px;
-  margin: -48px auto 0;
+  margin: -58px auto 0;
   padding: 0.35rem var(--space-page-x) max(2.75rem, env(safe-area-inset-bottom));
   padding-left: max(var(--space-page-x), env(safe-area-inset-left));
   padding-right: max(var(--space-page-x), env(safe-area-inset-right));
@@ -85,8 +105,11 @@ a {
   justify-content: flex-start;
   gap: 1.25rem;
   margin-bottom: 1.35rem;
-  padding: 0.5rem 0.15rem 0.35rem;
+  margin-top: -0.35rem;
+  padding: 0.35rem 0.15rem 0.35rem;
   min-height: 3.25rem;
+  position: relative;
+  z-index: 1;
 }
 
 .brand {
@@ -934,7 +957,7 @@ footer.site {
   }
 
   .wrap {
-    margin-top: -36px;
+    margin-top: -44px;
   }
 
   .species-photo {
