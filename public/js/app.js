@@ -231,14 +231,14 @@
       o.detailExplain != null && String(o.detailExplain).trim() !== "";
     const detailSection = hasStruct
       ? `<section class="outcome-section" aria-labelledby="outcome-detail-h">
-          <h3 id="outcome-detail-h" class="outcome-section-title">症状与分诊说明</h3>
+          <h3 id="outcome-detail-h" class="outcome-section-title">Ta 大概啥情况</h3>
           <div class="outcome-section-body">${formatRichText(o.detailExplain)}</div>
         </section>`
       : "";
     const homeSection =
       hasStruct && o.homeCare != null && String(o.homeCare).trim() !== ""
         ? `<section class="outcome-section outcome-section--home" aria-labelledby="outcome-home-h">
-          <h3 id="outcome-home-h" class="outcome-section-title">在家可以这样做</h3>
+          <h3 id="outcome-home-h" class="outcome-section-title">在家你可以先这样做</h3>
           <div class="outcome-section-body">${formatRichText(o.homeCare)}</div>
         </section>`
         : "";
@@ -276,10 +276,10 @@
       <div class="outcome outcome--split ${levelClass}">
         <div class="outcome-core">
           <p class="outcome-kicker">${escapeHtml(kicker)}</p>
-          <section class="outcome-diagnostic ${diagnosticMod}" aria-label="诊断评估">
+          <section class="outcome-diagnostic ${diagnosticMod}" aria-label="分诊小结">
             <div class="outcome-diagnostic-head">
               <span class="severity-badge severity-badge--${sev.mod}">${escapeHtml(sev.label)}</span>
-              <span class="outcome-diagnostic-label">诊断评估（非诊断）</span>
+              <span class="outcome-diagnostic-label">先帮你捋一捋（不是诊断哦）</span>
             </div>
             <h2 class="outcome-title">${escapeHtml(o.title)}</h2>
             ${vetBlock}
