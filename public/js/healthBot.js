@@ -4,7 +4,7 @@
  */
 (function (global) {
   const history = [];
-  const BOT_DISCLAIMER_LINE = "建议仅供参考，急症请优先去医院。";
+  const BOT_DISCLAIMER_LINE = "建议由大模型生成，不能代替兽医诊断，急症请优先去就医。";
 
   let chatProfile = {};
   let guidedStepIndex = 0;
@@ -42,10 +42,11 @@
 
   function stripDisclaimerFromBody(text) {
     let t = String(text || "");
-    if (t.includes(BOT_DISCLAIMER_LINE)) {
-      t = t.split(BOT_DISCLAIMER_LINE).join("").replace(/\n{3,}/g, "\n\n").trim();
-    }
-    return t;
+    const legacy = "建议仅供参考，急症请优先去医院。";
+    [BOT_DISCLAIMER_LINE, legacy].forEach((line) => {
+      if (t.includes(line)) t = t.split(line).join("");
+    });
+    return t.replace(/\n{3,}/g, "\n\n").trim();
   }
 
   function getApiBase() {
@@ -529,7 +530,7 @@
         if (fr.llm) {
           replyText = fr.llm.text;
           fromLlm = true;
-          metaHtml = `<p class="health-msg-source muted">由大模型生成 · 仍不能代替兽医诊断</p>`;
+          metaHtml = "";
         } else {
           try {
             localMeta = CuraHealthBotLocal.reply({

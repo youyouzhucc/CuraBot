@@ -8,6 +8,8 @@
 
 ## 本地运行
 
+需要 **Node.js 22.5+**（内置 `node:sqlite`，用于健康会话快照 `data/curabot.db`；首次启动会把旧的 `data/sessions/*.json` 导入库内）。
+
 ```bash
 npm install
 npm start

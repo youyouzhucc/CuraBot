@@ -8,7 +8,7 @@
     "dev": "node server.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22.5.0"
   },
   "dependencies": {
     "dotenv": "^17.4.0",

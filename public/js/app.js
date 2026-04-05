@@ -1100,7 +1100,7 @@
     el.setAttribute("role", "status");
     el.innerHTML = `
       <div class="curabot-followup-inner">
-        <p><strong>CuraBot 回访</strong>：上次聊过的毛孩子，现在好些了吗？今天吃、喝、拉还正常吗？需要可再打开「健康问题」里的健康咨询。</p>
+        <p><strong>CuraBot 回访</strong>：上次聊过的毛孩子，现在好些了吗？今天吃、喝、拉还正常吗？需要可再打开「饮食健康」里的健康咨询。</p>
         <button type="button" class="btn secondary" id="curabotFollowupDismiss">知道了</button>
       </div>`;
     document.body.appendChild(el);

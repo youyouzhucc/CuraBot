@@ -14,7 +14,7 @@
   },
   "healthChat": {
     "guidedDonePrompt": "好的，已记录你的选择。请用自然语言描述最近最担心的症状或变化，我会结合这些信息给参考建议（不能代替兽医诊断）。",
-    "hint": "急症请优先去医院；机器人回复仅供参考。",
+    "hint": "建议由大模型生成时不能代替兽医诊断；急症请优先去就医。",
     "guidedSteps": [
       {
         "id": "species",
@@ -863,90 +863,6 @@
     "intro": "按模块浏览科普卡片；内容随下方「猫猫 / 狗狗」切换筛选。",
     "modules": [
       {
-        "id": "health",
-        "title": "健康问题",
-        "summary": "猫狗常见不适线索与家庭观察要点；加重或拿不准时请就医。",
-        "topics": [
-          {
-            "id": "health-urinary-cat",
-            "title": "排尿费劲、尿频、尿血（猫）",
-            "teaser": "下泌尿道问题在猫较常见，需与梗阻区分。",
-            "species": ["cat"],
-            "science": "猫下泌尿道症状可由炎症、结晶/结石、应激等多种因素参与；公猫尿道更窄，少尿/无尿时需优先排除梗阻。诊断依赖体检、尿液检查与影像，家长可记录排尿频率与尿团大小。",
-            "advice": ["观察是否频繁蹲盆、鸣叫、舔尿道口。", "记录最后一次尿量与精神状态；勿自行灌大量水或喂利尿药。", "若几乎尿不出、腹痛或呕吐，按急诊处理。"],
-            "vetWhen": "完全尿不出、持续腹痛、呕吐或精神极差：尽快急诊。反复尿频尿血也应预约兽医排查。",
-            "graphClusterIds": ["feline-uo", "behavior-masquerade"],
-            "refIds": ["mvm-uo", "isfm", "feline-patient", "mvm"]
-          },
-          {
-            "id": "health-urinary-dog",
-            "title": "排尿异常、尿血（犬）",
-            "teaser": "感染、结石、肿瘤等均可表现类似，需化验鉴别。",
-            "species": ["dog"],
-            "science": "犬排尿困难、血尿可能涉及膀胱、尿道、前列腺（公犬）等；具体病因需尿检、影像甚至采样才能区分。",
-            "advice": ["记录排尿是否疼痛、尿流强弱、是否滴沥。", "收集新鲜尿液（若兽医要求）前勿擅自用药。", "母犬持续尿少或无尿同样要重视。"],
-            "vetWhen": "尿闭迹象、明显疼痛、虚弱或发热：尽快就诊。",
-            "graphClusterIds": ["gi-dehydration"],
-            "refIds": ["ettinger", "mvm", "nelson"]
-          },
-          {
-            "id": "health-vomit",
-            "title": "呕吐",
-            "teaser": "偶发与频繁、是否伴腹泻，意义不同。",
-            "species": ["cat", "dog"],
-            "science": "呕吐原因涵盖胃肠炎、异物、代谢病、胰腺等；幼宠与老年宠更易脱水。家长可区分呕吐物性状与频次，但确诊需兽医。",
-            "advice": ["记录次数、时间与是否进食；拍照呕吐物。", "勿自行长期使用止吐药或人用止痛药。", "短暂禁食是否合适请听兽医。"],
-            "vetWhen": "持续呕吐、呕血、腹胀剧痛、精神极差或怀疑异物：尽快急诊或当日门诊。",
-            "graphClusterIds": ["gi-dehydration"],
-            "refIds": ["ettinger", "mvm", "nelson"]
-          },
-          {
-            "id": "health-diarrhea",
-            "title": "腹泻与软便",
-            "teaser": "急性多与饮食/感染相关；血便需重视。",
-            "species": ["cat", "dog"],
-            "science": "腹泻可由寄生虫、细菌、病毒、食物不耐受、炎症性肠病等引起；便血可能提示出血性胃肠问题或其他严重病因。",
-            "advice": ["观察是否便血、黑便、发热与饮水量。", "勿突然换粮；清洁饮水与食盆。", "幼宠更易脱水，需更积极评估。"],
-            "vetWhen": "大量血便、黑便、持续水样便伴虚弱：尽快就医。",
-            "graphClusterIds": ["gi-dehydration", "toxin"],
-            "refIds": ["ettinger", "mvm"]
-          },
-          {
-            "id": "health-skin",
-            "title": "瘙痒、掉毛、皮屑",
-            "teaser": "寄生虫、过敏、感染需鉴别，勿长期乱用药膏。",
-            "species": ["cat", "dog"],
-            "science": "皮肤病常见外寄生虫、细菌/真菌感染、过敏等；人宠共患风险因因而异。诊断常需皮肤检查、刮片或培养。",
-            "advice": ["定期驱虫按兽医方案。", "避免频繁人用沐浴露刺激皮肤。", "伊丽莎白圈可减少抓挠继发感染。"],
-            "vetWhen": "大面积破溃、全身症状或人也被叮咬瘙痒：尽早就诊。",
-            "graphClusterIds": ["behavior-masquerade"],
-            "refIds": ["muller-derm", "mvm"]
-          },
-          {
-            "id": "health-dental",
-            "title": "口臭、进食困难",
-            "teaser": "牙周病常见且影响全身健康线索。",
-            "species": ["cat", "dog"],
-            "science": "牙结石、龈炎、断齿或口咽疼痛可导致口臭与挑食；严重口腔感染与全身状况相关。",
-            "advice": ["不要强行掰嘴若动物疼痛剧烈。", "观察是否流涎、单侧咀嚼。", "口腔护理产品需兽医推荐。"],
-            "vetWhen": "无法进食、明显肿胀或口臭突然加重：预约口腔检查。",
-            "graphClusterIds": [],
-            "refIds": ["dentistry", "mvm"]
-          },
-          {
-            "id": "health-limp",
-            "title": "瘸腿、不愿走路",
-            "teaser": "扭伤、关节炎、十字韧带、神经问题等均可能。",
-            "species": ["cat", "dog"],
-            "science": "跛行原因从软组织到骨骼关节、椎间盘不等；猫常表现为跳高减少或「坐而不卧」。需兽医查体，部分需影像。",
-            "advice": ["限制剧烈跑跳，记录起病时间与哪条腿。", "勿自行给非甾体抗炎药（很多人用药对猫狗有毒）。"],
-            "vetWhen": "突发瘫痪、剧痛或外伤：尽快就诊。",
-            "graphClusterIds": [],
-            "refIds": ["fossum", "ettinger", "mvm"]
-          }
-        ]
-      },
-      {
         "id": "training",
         "title": "训练教学",
         "summary": "以正向训练与低应激互动为主；行为问题先排除疼痛与疾病。",
@@ -1062,8 +978,85 @@
       {
         "id": "diet",
         "title": "饮食健康",
-        "summary": "体况与长期习惯比单顿食量更关键；禁忌食物与毒物需牢记。",
+        "summary": "体况、饮食与常见不适线索；禁忌食物与毒物需牢记，加重或拿不准时请就医。",
         "topics": [
+          {
+            "id": "health-urinary-cat",
+            "title": "排尿费劲、尿频、尿血（猫）",
+            "teaser": "下泌尿道问题在猫较常见，需与梗阻区分。",
+            "species": ["cat"],
+            "science": "猫下泌尿道症状可由炎症、结晶/结石、应激等多种因素参与；公猫尿道更窄，少尿/无尿时需优先排除梗阻。诊断依赖体检、尿液检查与影像，家长可记录排尿频率与尿团大小。",
+            "advice": ["观察是否频繁蹲盆、鸣叫、舔尿道口。", "记录最后一次尿量与精神状态；勿自行灌大量水或喂利尿药。", "若几乎尿不出、腹痛或呕吐，按急诊处理。"],
+            "vetWhen": "完全尿不出、持续腹痛、呕吐或精神极差：尽快急诊。反复尿频尿血也应预约兽医排查。",
+            "graphClusterIds": ["feline-uo", "behavior-masquerade"],
+            "refIds": ["mvm-uo", "isfm", "feline-patient", "mvm"]
+          },
+          {
+            "id": "health-urinary-dog",
+            "title": "排尿异常、尿血（犬）",
+            "teaser": "感染、结石、肿瘤等均可表现类似，需化验鉴别。",
+            "species": ["dog"],
+            "science": "犬排尿困难、血尿可能涉及膀胱、尿道、前列腺（公犬）等；具体病因需尿检、影像甚至采样才能区分。",
+            "advice": ["记录排尿是否疼痛、尿流强弱、是否滴沥。", "收集新鲜尿液（若兽医要求）前勿擅自用药。", "母犬持续尿少或无尿同样要重视。"],
+            "vetWhen": "尿闭迹象、明显疼痛、虚弱或发热：尽快就诊。",
+            "graphClusterIds": ["gi-dehydration"],
+            "refIds": ["ettinger", "mvm", "nelson"]
+          },
+          {
+            "id": "health-vomit",
+            "title": "呕吐",
+            "teaser": "偶发与频繁、是否伴腹泻，意义不同。",
+            "species": ["cat", "dog"],
+            "science": "呕吐原因涵盖胃肠炎、异物、代谢病、胰腺等；幼宠与老年宠更易脱水。家长可区分呕吐物性状与频次，但确诊需兽医。",
+            "advice": ["记录次数、时间与是否进食；拍照呕吐物。", "勿自行长期使用止吐药或人用止痛药。", "短暂禁食是否合适请听兽医。"],
+            "vetWhen": "持续呕吐、呕血、腹胀剧痛、精神极差或怀疑异物：尽快急诊或当日门诊。",
+            "graphClusterIds": ["gi-dehydration"],
+            "refIds": ["ettinger", "mvm", "nelson"]
+          },
+          {
+            "id": "health-diarrhea",
+            "title": "腹泻与软便",
+            "teaser": "急性多与饮食/感染相关；血便需重视。",
+            "species": ["cat", "dog"],
+            "science": "腹泻可由寄生虫、细菌、病毒、食物不耐受、炎症性肠病等引起；便血可能提示出血性胃肠问题或其他严重病因。",
+            "advice": ["观察是否便血、黑便、发热与饮水量。", "勿突然换粮；清洁饮水与食盆。", "幼宠更易脱水，需更积极评估。"],
+            "vetWhen": "大量血便、黑便、持续水样便伴虚弱：尽快就医。",
+            "graphClusterIds": ["gi-dehydration", "toxin"],
+            "refIds": ["ettinger", "mvm"]
+          },
+          {
+            "id": "health-skin",
+            "title": "瘙痒、掉毛、皮屑",
+            "teaser": "寄生虫、过敏、感染需鉴别，勿长期乱用药膏。",
+            "species": ["cat", "dog"],
+            "science": "皮肤病常见外寄生虫、细菌/真菌感染、过敏等；人宠共患风险因因而异。诊断常需皮肤检查、刮片或培养。",
+            "advice": ["定期驱虫按兽医方案。", "避免频繁人用沐浴露刺激皮肤。", "伊丽莎白圈可减少抓挠继发感染。"],
+            "vetWhen": "大面积破溃、全身症状或人也被叮咬瘙痒：尽早就诊。",
+            "graphClusterIds": ["behavior-masquerade"],
+            "refIds": ["muller-derm", "mvm"]
+          },
+          {
+            "id": "health-dental",
+            "title": "口臭、进食困难",
+            "teaser": "牙周病常见且影响全身健康线索。",
+            "species": ["cat", "dog"],
+            "science": "牙结石、龈炎、断齿或口咽疼痛可导致口臭与挑食；严重口腔感染与全身状况相关。",
+            "advice": ["不要强行掰嘴若动物疼痛剧烈。", "观察是否流涎、单侧咀嚼。", "口腔护理产品需兽医推荐。"],
+            "vetWhen": "无法进食、明显肿胀或口臭突然加重：预约口腔检查。",
+            "graphClusterIds": [],
+            "refIds": ["dentistry", "mvm"]
+          },
+          {
+            "id": "health-limp",
+            "title": "瘸腿、不愿走路",
+            "teaser": "扭伤、关节炎、十字韧带、神经问题等均可能。",
+            "species": ["cat", "dog"],
+            "science": "跛行原因从软组织到骨骼关节、椎间盘不等；猫常表现为跳高减少或「坐而不卧」。需兽医查体，部分需影像。",
+            "advice": ["限制剧烈跑跳，记录起病时间与哪条腿。", "勿自行给非甾体抗炎药（很多人用药对猫狗有毒）。"],
+            "vetWhen": "突发瘫痪、剧痛或外伤：尽快就诊。",
+            "graphClusterIds": [],
+            "refIds": ["fossum", "ettinger", "mvm"]
+          },
           {
             "id": "diet-bcs",
             "title": "体况评分（BCS）怎么看",

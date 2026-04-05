@@ -54,11 +54,51 @@ const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const publicDir = path.join(__dirname, "public");
 const uploadsHealthDir = path.join(publicDir, "uploads", "health");
-const sessionsDir = path.join(__dirname, "data", "sessions");
+const dataDir = path.join(__dirname, "data");
+const legacySessionsDir = path.join(dataDir, "sessions");
 
-[uploadsHealthDir, sessionsDir].forEach((d) => {
-  if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
-});
+if (!fs.existsSync(uploadsHealthDir)) fs.mkdirSync(uploadsHealthDir, { recursive: true });
+if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+
+/** 健康会话快照：SQLite（Node 22.5+ 内置 node:sqlite，替代 data/sessions/*.json） */
+let healthDb = null;
+try {
+  const { DatabaseSync } = require("node:sqlite");
+  const dbPath = path.join(dataDir, "curabot.db");
+  healthDb = new DatabaseSync(dbPath);
+  healthDb.exec(`
+    CREATE TABLE IF NOT EXISTS health_sessions (
+      id TEXT PRIMARY KEY,
+      saved_at TEXT NOT NULL,
+      payload TEXT NOT NULL
+    );
+  `);
+  if (fs.existsSync(legacySessionsDir)) {
+    const files = fs.readdirSync(legacySessionsDir).filter((f) => f.endsWith(".json"));
+    const ins = healthDb.prepare(
+      "INSERT OR IGNORE INTO health_sessions (id, saved_at, payload) VALUES (?, ?, ?)"
+    );
+    files.forEach((f) => {
+      try {
+        const fp = path.join(legacySessionsDir, f);
+        const j = JSON.parse(fs.readFileSync(fp, "utf8"));
+        if (j && j.id) {
+          ins.run(j.id, j.savedAt || new Date().toISOString(), JSON.stringify(j));
+        }
+      } catch (e) {
+        /* skip corrupt */
+      }
+    });
+    if (files.length) {
+      console.log(`[health-session] 已从 data/sessions 导入 ${files.length} 条快照（若未重复）`);
+    }
+  }
+} catch (e) {
+  console.error(
+    "[health-session] SQLite 未初始化（需要 Node.js 22.5+）。请升级 Node 或检查 node:sqlite：",
+    e.message || e
+  );
+}
 
 const storageHealth = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadsHealthDir),
@@ -241,8 +281,11 @@ app.post("/api/vision/analyze", async (req, res) => {
   }
 });
 
-/** HealthCheckSession 快照落盘（JSON 文件，可换数据库） */
+/** HealthCheckSession 快照：SQLite（data/curabot.db） */
 app.post("/api/health-session/snapshot", (req, res) => {
+  if (!healthDb) {
+    return res.status(503).json({ ok: false, error: "sqlite_unavailable", hint: "需要 Node.js 22.5+ 与 node:sqlite" });
+  }
   try {
     const id = crypto.randomUUID();
     const body = req.body && typeof req.body === "object" ? { ...req.body } : {};
@@ -252,8 +295,10 @@ app.post("/api/health-session/snapshot", (req, res) => {
       savedAt: new Date().toISOString(),
       ...body,
     };
-    const fp = path.join(sessionsDir, `${id}.json`);
-    fs.writeFileSync(fp, JSON.stringify(payload, null, 2), "utf8");
+    const stmt = healthDb.prepare(
+      "INSERT INTO health_sessions (id, saved_at, payload) VALUES (?, ?, ?)"
+    );
+    stmt.run(id, payload.savedAt, JSON.stringify(payload));
     return res.json({ ok: true, id, mode: "persisted", path: `/api/health-session/${id}` });
   } catch (e) {
     console.error("[api/health-session/snapshot]", e);
@@ -266,13 +311,27 @@ app.get("/api/health-session/:id", (req, res) => {
   if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(raw)) {
     return res.status(400).json({ error: "invalid_id" });
   }
-  const fp = path.resolve(sessionsDir, `${raw}.json`);
-  if (!fp.startsWith(path.resolve(sessionsDir)) || !fs.existsSync(fp)) {
-    return res.status(404).json({ error: "not_found" });
+  if (!healthDb) {
+    const fp = path.resolve(legacySessionsDir, `${raw}.json`);
+    if (!fp.startsWith(path.resolve(legacySessionsDir)) || !fs.existsSync(fp)) {
+      return res.status(404).json({ error: "not_found" });
+    }
+    try {
+      return res.json(JSON.parse(fs.readFileSync(fp, "utf8")));
+    } catch (e) {
+      return res.status(500).json({ error: "read_failed" });
+    }
   }
   try {
-    const json = JSON.parse(fs.readFileSync(fp, "utf8"));
-    res.json(json);
+    const row = healthDb.prepare("SELECT payload FROM health_sessions WHERE id = ?").get(raw);
+    if (!row || row.payload == null) {
+      const fp = path.resolve(legacySessionsDir, `${raw}.json`);
+      if (fs.existsSync(fp) && fp.startsWith(path.resolve(legacySessionsDir))) {
+        return res.json(JSON.parse(fs.readFileSync(fp, "utf8")));
+      }
+      return res.status(404).json({ error: "not_found" });
+    }
+    res.json(JSON.parse(String(row.payload)));
   } catch (e) {
     res.status(500).json({ error: "read_failed" });
   }
