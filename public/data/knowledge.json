@@ -617,12 +617,14 @@
   "behaviorTips": [
     {
       "id": "cat-env",
+      "species": ["cat"],
       "title": "猫咪：吃喝拉撒分开摆",
       "items": ["水碗、粮碗、砂盆、窝别挤在一条路上，减少冲突。", "猫爬架、纸箱能当安全岛。", "多猫家庭：砂盆数量 = 猫数 + 1 更好记。"],
       "refIds": ["isfm", "low-stress"]
     },
     {
       "id": "dog-routine",
+      "species": ["dog"],
       "title": "狗狗：固定节奏更安心",
       "items": ["散步、吃饭、睡觉时间尽量规律。", "用奖励代替打骂，越怕越容易出问题。"],
       "refIds": ["overall-behavior", "bsava-behavior"]

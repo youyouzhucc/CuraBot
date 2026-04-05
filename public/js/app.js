@@ -95,6 +95,16 @@
       card.classList.toggle("is-selected", sp === state.species);
       card.setAttribute("aria-pressed", sp === state.species ? "true" : "false");
     });
+    updateTriageIntakeVisibility();
+  }
+
+  /** 分诊页「标准化采集」只展示当前首页所选物种对应的入口 */
+  function updateTriageIntakeVisibility() {
+    const catBtn = $("#startCatIntake");
+    const dogBtn = $("#startDogIntake");
+    if (!catBtn || !dogBtn) return;
+    catBtn.hidden = state.species !== "cat";
+    dogBtn.hidden = state.species !== "dog";
   }
 
   function showView(name) {
@@ -459,7 +469,12 @@
   }
 
   function renderBehavior() {
-    const tips = state.knowledge.behaviorTips || [];
+    const tips = (state.knowledge.behaviorTips || []).filter(
+      (t) =>
+        !t.species ||
+        !t.species.length ||
+        t.species.indexOf(state.species) !== -1
+    );
     const host = $("#behaviorContent");
     host.innerHTML = tips
       .map((t) => {
