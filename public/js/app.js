@@ -204,18 +204,27 @@
         <textarea readonly class="copy-text" rows="12" id="intakeCopyArea">${escapeHtml(o.copyBlock)}</textarea>
         <button type="button" class="btn secondary" id="btnCopyIntake">复制全文</button>
       </div>`;
-    host.innerHTML = `
-      <div class="outcome ${levelClass}">
-        <p class="outcome-kicker">${escapeHtml(kicker)}</p>
-        <h2 class="outcome-title">${escapeHtml(o.title)}</h2>
-        <div class="outcome-body">${escapeHtml(o.body).replace(/\n/g, "<br/>")}</div>
-        ${vetBlock}
-        ${copyBlock || ""}
+    const refsBlock =
+      o.refIds && o.refIds.length
+        ? `<div class="outcome-tips" aria-label="延伸阅读">
+        <p class="outcome-tips-label">延伸阅读 · 供了解，非诊断依据</p>
         ${renderRefs(o.refIds)}
-        <div class="row">
-          <button type="button" class="btn secondary" id="btnRestartFlow">再测一次</button>
-          <button type="button" class="btn" id="btnBackTriage">返回分诊</button>
+      </div>`
+        : "";
+    host.innerHTML = `
+      <div class="outcome outcome--split ${levelClass}">
+        <div class="outcome-core">
+          <p class="outcome-kicker">${escapeHtml(kicker)}</p>
+          <h2 class="outcome-title">${escapeHtml(o.title)}</h2>
+          <div class="outcome-body">${escapeHtml(o.body).replace(/\n/g, "<br/>")}</div>
+          ${vetBlock}
+          ${copyBlock || ""}
+          <div class="row outcome-actions">
+            <button type="button" class="btn secondary" id="btnRestartFlow">再测一次</button>
+            <button type="button" class="btn" id="btnBackTriage">返回分诊</button>
+          </div>
         </div>
+        ${refsBlock}
       </div>
       <nav class="flow-nav flow-nav--bottom">
         <button type="button" class="btn secondary btn-back-step" id="btnFlowBack">← 上一步</button>
