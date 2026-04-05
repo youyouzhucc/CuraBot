@@ -1,15 +1,21 @@
 {
   "meta": {
     "name": "CuraBot",
-    "version": "0.3.1",
+    "version": "0.5.0",
     "disclaimer": "这里的内容用来帮你判断「要不要尽快去医院」，不能代替医生当面检查。若宠物很难受或越来越糟，请直接去医院。",
     "noRxNote": "不提供吃药剂量，也不帮开药；用药一定要听执业兽医的。",
-    "educationNote": "科普表述与分诊逻辑对齐公开资料体系（非转载受版权保护的全文）：Merck Veterinary Manual、AAHA Weight Management Guidelines、AAFP Cat Vets Guidelines、ISFM/iCatCare、Small Animal Internal Medicine、犬猫急诊与重症监护、犬猫营养学等；首页「运动、体重与日常」提供外部指南链接供延伸阅读；结论仅为非诊断性分诊线索。"
+    "educationNote": "科普与分诊表述综合公开兽医文献与家长教育资料的思路撰写，不转载受版权保护的全文。急症时间窗、用药与手术方案须以执业兽医与当面检查为准；默克兽医手册等在线章节可作为自学索引（见「资料目录」内知识图谱简表与参考文献）。",
+    "apiBase": null
   },
   "uiImages": {
     "heroCat": "/images/hero-cat.png",
     "heroDog": "/images/hero-dog.png",
     "bannerSoft": null
+  },
+  "healthChat": {
+    "welcome": "你好，我是 CuraBot 健康机器人。可以直接用自然语言描述 Ta 的情况，我会结合科普知识回答（不能诊断）。若服务器已配置 OPENAI_API_KEY，将优先使用大模型；否则由本地知识库兜底。",
+    "hint": "急症请优先去医院；机器人回复仅供参考。",
+    "quickChips": ["猫尿很少肚子胀", "狗呕吐一整天了", "急症有哪些", "从哪里开始做分诊"]
   },
   "references": [
     {"id": "mvm", "category": "手册", "title": "Merck Veterinary Manual（默克兽医手册，在线版 / 第 12 版体系）", "role": "犬猫疾病概述、急诊与内科：见 https://www.merckvetmanual.com/ ；宠物主人版见 Merck Pet Owner Topics"},
@@ -40,24 +46,119 @@
     {"id": "aaha-weight-url", "category": "指南", "title": "AAHA Weight Management Guidelines", "role": "犬猫体重管理、运动与安全强度；https://www.aaha.org/guidelines/weight-management-guidelines/"},
     {"id": "aafp-guidelines-url", "category": "指南", "title": "AAFP Guidelines（catvets.com）", "role": "猫健康、环境与护理；https://catvets.com/guidelines"},
     {"id": "isfm-icat-url", "category": "指南", "title": "ISFM / iCatCare Advice", "role": "猫健身与环境丰容；https://icatcare.org/advice"},
-    {"id": "mvm-fitness", "category": "手册", "title": "Merck Veterinary Manual · Exercise / Fitness", "role": "检索 Canine Fitness、Feline Exercise；https://www.merckvetmanual.com/"}
+    {"id": "mvm-fitness", "category": "手册", "title": "Merck Veterinary Manual · Exercise / Fitness", "role": "检索 Canine Fitness、Feline Exercise；https://www.merckvetmanual.com/"},
+    {"id": "avbt-handouts", "category": "康复", "title": "AVBT · Patient Education（犬体能/康复家长材料）", "role": "美国兽医康复协会公开家长教育页；含体能训练示意等"},
+    {"id": "aaevm-owner", "category": "老年", "title": "AAEVM · Resources for Pet Owners", "role": "老年动物医学相关家长资源入口"},
+    {"id": "aspca-cat-exercise", "category": "行为", "title": "ASPCA · Cat Exercise and Play", "role": "室内猫活动与游戏科普页"},
+    {"id": "cca-free", "category": "训练", "title": "Canine Conditioning Academy · Free Resources", "role": "犬居家体能/训练免费资料入口（站点可能要求注册）"},
+    {"id": "feline-wellness", "category": "猫", "title": "Feline Wellness · Education / Free Guides", "role": "猫健身/游戏类免费指南入口（以网站为准）"},
+    {"id": "mvm-uo", "category": "手册", "title": "Merck Veterinary Manual · Urethral Obstruction in Small Animals", "role": "小动物尿道梗阻：临床表现、诊断与急诊处理思路（在线概述）。", "url": "https://www.merckvetmanual.com/urinary-system/urolithiasis-in-small-animals/urethral-obstruction-in-small-animals"},
+    {"id": "mvm-gdv", "category": "手册", "title": "Merck Veterinary Manual · Gastric Dilation and Volvulus in Small Animals", "role": "胃扩张-扭转：急症与外科原则概述。", "url": "https://www.merckvetmanual.com/digestive-system/diseases-of-the-stomach-and-intestines-in-small-animals/gastric-dilation-and-volvulus-in-small-animals"},
+    {"id": "mvm-toxic-intro", "category": "手册", "title": "Merck Veterinary Manual · General Treatment of Poisoning", "role": "中毒一般处理原则（减少吸收、对症与支持等）；是否催吐等须兽医按毒物决定。", "url": "https://www.merckvetmanual.com/special-pet-topics/poisoning/general-treatment-of-poisoning"},
+    {"id": "aspca-apcc", "category": "毒物", "title": "ASPCA Animal Poison Control Center（美国）", "role": "国际毒物咨询示例；收费与接线方式以官网为准。中国大陆以当地动物医院急诊为准。", "url": "https://www.aspca.org/pet-care/animal-poison-control"}
   ],
+  "ownerFreeGuides": {
+    "intro": "以下为协会与公开网站提供的资料入口，便于自学与就诊沟通。CuraBot 不托管 PDF、不复制原文；下载步骤与是否需要邮箱以各站当前页面为准。若链接变更，请用搜索引擎检索同名指南。",
+    "sections": [
+      {
+        "id": "official-pdf",
+        "title": "一、协会与权威手册（建议优先收藏）",
+        "items": [
+          {
+            "title": "AAHA 犬猫体重管理 + 运动指南",
+            "summary": "肥胖评估（体况评分）、安全运动强度、每日活动量、老年/术后/慢病（关节、肾病、糖尿病等）禁忌与个体化思路、饮食与运动结合、居家活动计划框架等。",
+            "url": "https://www.aaha.org/guidelines/weight-management-guidelines/",
+            "howto": "打开页面后滑到底部，点击「Download the Guidelines (PDF)」保存。",
+            "species": "both"
+          },
+          {
+            "title": "AAFP 猫科指南（含肥胖、环境丰容等主题）",
+            "summary": "在 Guidelines 列表中可检索猫肥胖、环境丰容、疼痛与护理等条目；具体 PDF 以站内为准。",
+            "url": "https://catvets.com/guidelines",
+            "howto": "进入 Guidelines，按关键词检索「Obesity」「Environmental Enrichment」等，按页面提示下载。",
+            "species": "cat"
+          },
+          {
+            "title": "ISFM / iCatCare · 猫运动与玩耍",
+            "summary": "猫运动特点、玩耍与环境丰容、体重与活动关系等；部分资料可能需按页面提示留邮箱获取 PDF。",
+            "url": "https://icatcare.org/advice/exercise-and-play-for-cats",
+            "howto": "阅读页面说明；若有「Download our free guide」等按钮，按提示操作。",
+            "species": "cat"
+          },
+          {
+            "title": "Merck Veterinary Manual · 小动物健康 / 运动相关章节",
+            "summary": "犬猫运动生理、损伤预防、肥胖与活动、部分康复与限制等概述；可配合浏览器「打印→另存为 PDF」自行导出阅读。",
+            "url": "https://www.merckvetmanual.com/small-animal-pet-health",
+            "howto": "站内搜索「Canine Fitness」「Feline Exercise」等关键词进入章节后，可用打印为 PDF 保存。",
+            "species": "both"
+          }
+        ]
+      },
+      {
+        "id": "handbooks",
+        "title": "二、专业机构家长手册与示意图（实操向）",
+        "items": [
+          {
+            "title": "AVBT · Patient Education Handouts（犬康复/体能示意）",
+            "summary": "兽医康复方向家长读物入口；常见含居家平衡、力量、热身放松、关节与术后注意事项等示意（以页面实际文件为准）。",
+            "url": "https://www.avbt.org/resources/patient-education",
+            "howto": "在 Patient Education 中查找带 Conditioning / Exercise 字样的 PDF 链接下载。",
+            "species": "dog"
+          },
+          {
+            "title": "AAEVM · For Pet Owners（老年动物家长资源）",
+            "summary": "老年犬猫护理与活动相关公开资料入口；具体文件名与版本以网站为准。",
+            "url": "https://www.aaevm.org/resources/for-pet-owners",
+            "howto": "在资源列表中查找老年犬运动、低冲击活动等条目并下载。",
+            "species": "dog"
+          },
+          {
+            "title": "ASPCA · Cat Care · Exercise and Play",
+            "summary": "室内猫游戏、活动与安全提示的科普页；若页面提供可下载指南可按提示保存。",
+            "url": "https://www.aspca.org/pet-care/cat-care/exercise-and-play",
+            "howto": "浏览正文与页面底部是否有「Download」类按钮。",
+            "species": "cat"
+          }
+        ]
+      },
+      {
+        "id": "practical",
+        "title": "三、训练图谱 / 免费资源站（可能需注册）",
+        "items": [
+          {
+            "title": "Canine Conditioning Academy · Free Resources",
+            "summary": "犬居家体能训练示意类免费资源；部分需邮箱注册，请以网站说明为准。",
+            "url": "https://www.canineconditioningacademy.com/free-resources",
+            "howto": "进入 Free Downloads 等区域，按站点流程获取。",
+            "species": "dog"
+          },
+          {
+            "title": "Feline Wellness · Education / Free Guides",
+            "summary": "猫游戏与活动类免费指南入口（以网站实际提供为准）。",
+            "url": "https://www.felinewellness.com/education/free-guides",
+            "howto": "按页面直接下载或按说明操作。",
+            "species": "cat"
+          }
+        ]
+      }
+    ]
+  },
   "emergencyRedLines": [
     {
       "id": "gdv-dog",
       "species": ["dog"],
       "title": "狗狗：肚子胀得很快、一直想吐却吐不出来",
       "signs": ["肚子明显鼓起来或摸起来很硬", "干呕、吐不出东西", "特别不安或趴着不动", "口水变多"],
-      "action": "临床上需优先排除胃扩张-扭转（GDV）等外科急腹症：胃充盈扭转可致休克，延误可危及生命。请立即前往具备急诊外科能力的医院，途中勿大量喂食喂水，减少跑动；是否手术由兽医影像与体检决定（参见 Merck Veterinary Manual 犬急腹症与急诊相关章节思路）。",
-      "refIds": ["fossum", "silverstein-ecc", "ecc-pocket"]
+      "action": "临床上需优先排除胃扩张-扭转（GDV）等外科急腹症：胃扩张伴扭转可致循环与休克风险，延误可危及生命。请立即前往具备急诊外科能力的医院，途中勿大量喂食喂水，减少跑动；是否手术由兽医影像与体检决定（参见默克兽医手册 GDV 章节思路）。",
+      "refIds": ["mvm-gdv", "fossum", "silverstein-ecc", "ecc-pocket"]
     },
     {
       "id": "uro-cat",
       "species": ["cat"],
       "title": "猫咪：老是去猫砂盆，却几乎尿不出",
       "signs": ["频繁蹲盆，只有几滴尿或没有尿", "肚子一碰就疼、会叫", "精神差、呕吐（公猫更危险）"],
-      "action": "猫下泌尿道梗阻可迅速继发急性肾损伤与高钾血症等，属时间敏感急症。请立刻前往急诊，不要强行灌水或使用利尿药；导尿、镇痛与补液方案须由兽医决定（与 FLUTD/梗阻处置的常规兽医原则一致，参见默克兽医手册猫泌尿疾病概述）。",
-      "refIds": ["feline-patient", "isfm", "silverstein-ecc"]
+      "action": "猫下泌尿道梗阻可迅速继发急性肾损伤与高钾血症等，属时间敏感急症；完全梗阻若在较长时间内未解除，全身状况可明显恶化。请立刻前往急诊，不要强行灌水或使用利尿药；导尿、镇痛与补液方案须由兽医决定（参见默克兽医手册小动物尿道梗阻章节思路）。",
+      "refIds": ["mvm-uo", "feline-patient", "isfm", "silverstein-ecc"]
     },
     {
       "id": "resp-distress",
@@ -88,8 +189,8 @@
       "species": ["cat", "dog"],
       "title": "可能吃了毒药、老鼠药、防冻液或大量人用药",
       "signs": ["吃完后很快不对劲：流口水、呕吐、抽抽、走路不稳", "明确或高度怀疑吃了上面这些东西"],
-      "action": "中毒处理高度依赖毒物种类、剂量与时间窗；是否催吐、是否使用活性炭或解毒剂须由兽医决定。请携带包装/标签照片、估计体重与摄入时间，尽快联系急诊或毒物咨询渠道（与 Merck 中毒概论中「先联系兽医」原则一致）。",
-      "refIds": ["toxicology", "five-min-toxic", "silverstein-ecc"]
+      "action": "中毒处理高度依赖毒物种类、剂量与时间窗；是否催吐、是否使用活性炭或解毒剂须由兽医决定。请携带包装/标签照片、估计体重与摄入时间，尽快联系当地急诊兽医；海外可参考毒物中心示例（如 ASPCA APCC，以官网为准），国内以医院流程为主（与默克中毒概论中「先联系兽医」原则一致）。",
+      "refIds": ["mvm-toxic-intro", "toxicology", "five-min-toxic", "aspca-apcc", "silverstein-ecc"]
     }
   ],
   "bodyRegions": [
@@ -127,7 +228,7 @@
               "species": ["cat"],
               "homeCare": "不要灌很多水；尽快去急诊。",
               "vetNeed": "请立刻去急诊（尤其公猫）。",
-              "refIds": ["feline-patient", "isfm"]
+              "refIds": ["mvm-uo", "feline-patient", "isfm", "mvm"]
             },
             {
               "id": "gdv",
@@ -136,7 +237,7 @@
               "species": ["dog"],
               "homeCare": "不要喂水喂食拖延时间，尽快出发。",
               "vetNeed": "请马上急诊，可能需要紧急手术。",
-              "refIds": ["fossum", "silverstein-ecc"]
+              "refIds": ["mvm-gdv", "fossum", "silverstein-ecc", "mvm"]
             },
             {
               "id": "neuro",
@@ -520,7 +621,7 @@
               "level": "emergency",
               "homeCare": "保留包装/照片；保持安静。",
               "vetNeed": "请立刻急诊。",
-              "refIds": ["toxicology", "five-min-toxic"]
+              "refIds": ["mvm-toxic-intro", "toxicology", "five-min-toxic", "silverstein-ecc"]
             },
             {
               "id": "tx-u",
@@ -528,7 +629,7 @@
               "level": "urgent",
               "homeCare": "先别乱催吐；记录体重与大概摄入量。",
               "vetNeed": "马上打电话给兽医或急诊问要不要处理。",
-              "refIds": ["toxicology", "mvm"]
+              "refIds": ["mvm-toxic-intro", "toxicology", "mvm"]
             },
             {
               "id": "tx-m",
@@ -645,6 +746,348 @@
       "refIds": ["low-stress", "isfm"]
     }
   ],
+  "knowledgeGraph": {
+    "title": "症状簇 ↔ 站内分诊 · 公开手册索引",
+    "intro": "将常见急症/症状簇与 CuraBot 内置流程、默克兽医手册等可公开访问的章节对应，便于自学与团队校对；不转载版权正文，不能代替兽医诊断。",
+    "clusters": [
+      {
+        "id": "feline-uo",
+        "label": "猫尿道梗阻 / 尿闭风险",
+        "species": ["cat"],
+        "hints": ["频繁蹲盆少尿、滴尿或无尿", "腹痛、呕吐、精神差（可提示梗阻）"],
+        "appHints": ["急先筛 · 尿闭相关选项", "「尿尿不正常」→ 尿少/尿不出", "猫标准化采集 · 泌尿（无尿/几滴为红线）"],
+        "refIds": ["mvm-uo", "feline-patient", "isfm", "mvm"]
+      },
+      {
+        "id": "gdv-dog",
+        "label": "胃扩张-扭转（GDV）/ 犬急腹症",
+        "species": ["dog"],
+        "hints": ["腹围快速增大", "干呕、呕不出、痛苦或虚弱"],
+        "appHints": ["急先筛 · 腹胀+干呕", "「吐或拉肚子」· 腹胀剧痛", "犬标准化采集 · 腹胀+干呕组合"],
+        "refIds": ["mvm-gdv", "fossum", "silverstein-ecc", "mvm"]
+      },
+      {
+        "id": "resp-distress",
+        "label": "呼吸窘迫",
+        "species": ["cat", "dog"],
+        "hints": ["静息费力呼吸、腹式呼吸", "猫安静时张口喘", "粘膜发绀或苍白"],
+        "appHints": ["急先筛 · 喘憋", "标准化采集 · 呼吸/粘膜异常"],
+        "refIds": ["ettinger", "silverstein-ecc", "mvm"]
+      },
+      {
+        "id": "toxin",
+        "label": "可疑中毒",
+        "species": ["cat", "dog"],
+        "hints": ["误食毒物、药物、防冻液等", "流涎、呕吐、抽搐、共济失调"],
+        "appHints": ["急先筛 · 中毒", "「怕它吃了不该吃的」流程", "犬采集 · 毒物选项"],
+        "refIds": ["mvm-toxic-intro", "toxicology", "aspca-apcc", "silverstein-ecc"]
+      },
+      {
+        "id": "gi-dehydration",
+        "label": "持续吐泻与脱水风险",
+        "species": ["cat", "dog"],
+        "hints": ["持续呕吐/腹泻", "几乎不喝水、精神差"],
+        "appHints": ["「吐或拉肚子」流程", "急先筛第二组 · 吐拉一天以上"],
+        "refIds": ["ettinger", "nelson", "mvm"]
+      },
+      {
+        "id": "behavior-masquerade",
+        "label": "行为变化与躯体疾病鉴别",
+        "species": ["cat", "dog"],
+        "hints": ["突然躲藏、攻击", "乱尿伴排尿费劲"],
+        "appHints": ["「脾气、乱尿」流程", "猫采集 · 泌尿+行为"],
+        "refIds": ["overall-behavior", "isfm", "ettinger"]
+      },
+      {
+        "id": "training-enrichment",
+        "label": "训练与环境丰容（低应激）",
+        "species": ["cat", "dog"],
+        "hints": ["奖励优于惩罚", "固定作息与可预期性", "猫：垂直空间与藏身处"],
+        "appHints": ["日常知识 · 训练教学", "让 Ta 放松一点（行为页）"],
+        "refIds": ["overall-behavior", "bsava-behavior", "low-stress", "isfm"]
+      },
+      {
+        "id": "senior-care",
+        "label": "老年动物体检与慢病随访",
+        "species": ["cat", "dog"],
+        "hints": ["体重与饮水变化", "活动度下降与疼痛线索", "定期化验与血压等按兽医安排"],
+        "appHints": ["日常知识 · 老年护理", "标准化采集（老年选项）"],
+        "refIds": ["aaevm-owner", "mvm", "ettinger", "aaha"]
+      },
+      {
+        "id": "diet-body-condition",
+        "label": "体况评分与体重管理",
+        "species": ["cat", "dog"],
+        "hints": ["摸肋骨与腰线比只看体重更可靠", "减重速度须个体化", "运动与饮食结合"],
+        "appHints": ["日常知识 · 饮食健康", "AAHA 体重指南 PDF"],
+        "refIds": ["aaha-weight-url", "nutri-sa", "mvm", "isfm-icat-url"]
+      }
+    ]
+  },
+  "dailyKnowledge": {
+    "intro": "",
+    "modules": [
+      {
+        "id": "health",
+        "title": "健康问题",
+        "summary": "猫狗常见不适线索与家庭观察要点；加重或拿不准时请就医。",
+        "topics": [
+          {
+            "id": "health-urinary-cat",
+            "title": "排尿费劲、尿频、尿血（猫）",
+            "teaser": "下泌尿道问题在猫较常见，需与梗阻区分。",
+            "species": ["cat"],
+            "science": "猫下泌尿道症状可由炎症、结晶/结石、应激等多种因素参与；公猫尿道更窄，少尿/无尿时需优先排除梗阻。诊断依赖体检、尿液检查与影像，家长可记录排尿频率与尿团大小。",
+            "advice": ["观察是否频繁蹲盆、鸣叫、舔尿道口。", "记录最后一次尿量与精神状态；勿自行灌大量水或喂利尿药。", "若几乎尿不出、腹痛或呕吐，按急诊处理。"],
+            "vetWhen": "完全尿不出、持续腹痛、呕吐或精神极差：尽快急诊。反复尿频尿血也应预约兽医排查。",
+            "graphClusterIds": ["feline-uo", "behavior-masquerade"],
+            "refIds": ["mvm-uo", "isfm", "feline-patient", "mvm"]
+          },
+          {
+            "id": "health-urinary-dog",
+            "title": "排尿异常、尿血（犬）",
+            "teaser": "感染、结石、肿瘤等均可表现类似，需化验鉴别。",
+            "species": ["dog"],
+            "science": "犬排尿困难、血尿可能涉及膀胱、尿道、前列腺（公犬）等；具体病因需尿检、影像甚至采样才能区分。",
+            "advice": ["记录排尿是否疼痛、尿流强弱、是否滴沥。", "收集新鲜尿液（若兽医要求）前勿擅自用药。", "母犬持续尿少或无尿同样要重视。"],
+            "vetWhen": "尿闭迹象、明显疼痛、虚弱或发热：尽快就诊。",
+            "graphClusterIds": ["gi-dehydration"],
+            "refIds": ["ettinger", "mvm", "nelson"]
+          },
+          {
+            "id": "health-vomit",
+            "title": "呕吐",
+            "teaser": "偶发与频繁、是否伴腹泻，意义不同。",
+            "species": ["cat", "dog"],
+            "science": "呕吐原因涵盖胃肠炎、异物、代谢病、胰腺等；幼宠与老年宠更易脱水。家长可区分呕吐物性状与频次，但确诊需兽医。",
+            "advice": ["记录次数、时间与是否进食；拍照呕吐物。", "勿自行长期使用止吐药或人用止痛药。", "短暂禁食是否合适请听兽医。"],
+            "vetWhen": "持续呕吐、呕血、腹胀剧痛、精神极差或怀疑异物：尽快急诊或当日门诊。",
+            "graphClusterIds": ["gi-dehydration"],
+            "refIds": ["ettinger", "mvm", "nelson"]
+          },
+          {
+            "id": "health-diarrhea",
+            "title": "腹泻与软便",
+            "teaser": "急性多与饮食/感染相关；血便需重视。",
+            "species": ["cat", "dog"],
+            "science": "腹泻可由寄生虫、细菌、病毒、食物不耐受、炎症性肠病等引起；便血可能提示出血性胃肠问题或其他严重病因。",
+            "advice": ["观察是否便血、黑便、发热与饮水量。", "勿突然换粮；清洁饮水与食盆。", "幼宠更易脱水，需更积极评估。"],
+            "vetWhen": "大量血便、黑便、持续水样便伴虚弱：尽快就医。",
+            "graphClusterIds": ["gi-dehydration", "toxin"],
+            "refIds": ["ettinger", "mvm"]
+          },
+          {
+            "id": "health-skin",
+            "title": "瘙痒、掉毛、皮屑",
+            "teaser": "寄生虫、过敏、感染需鉴别，勿长期乱用药膏。",
+            "species": ["cat", "dog"],
+            "science": "皮肤病常见外寄生虫、细菌/真菌感染、过敏等；人宠共患风险因因而异。诊断常需皮肤检查、刮片或培养。",
+            "advice": ["定期驱虫按兽医方案。", "避免频繁人用沐浴露刺激皮肤。", "伊丽莎白圈可减少抓挠继发感染。"],
+            "vetWhen": "大面积破溃、全身症状或人也被叮咬瘙痒：尽早就诊。",
+            "graphClusterIds": ["behavior-masquerade"],
+            "refIds": ["muller-derm", "mvm"]
+          },
+          {
+            "id": "health-dental",
+            "title": "口臭、进食困难",
+            "teaser": "牙周病常见且影响全身健康线索。",
+            "species": ["cat", "dog"],
+            "science": "牙结石、龈炎、断齿或口咽疼痛可导致口臭与挑食；严重口腔感染与全身状况相关。",
+            "advice": ["不要强行掰嘴若动物疼痛剧烈。", "观察是否流涎、单侧咀嚼。", "口腔护理产品需兽医推荐。"],
+            "vetWhen": "无法进食、明显肿胀或口臭突然加重：预约口腔检查。",
+            "graphClusterIds": [],
+            "refIds": ["dentistry", "mvm"]
+          },
+          {
+            "id": "health-limp",
+            "title": "瘸腿、不愿走路",
+            "teaser": "扭伤、关节炎、十字韧带、神经问题等均可能。",
+            "species": ["cat", "dog"],
+            "science": "跛行原因从软组织到骨骼关节、椎间盘不等；猫常表现为跳高减少或「坐而不卧」。需兽医查体，部分需影像。",
+            "advice": ["限制剧烈跑跳，记录起病时间与哪条腿。", "勿自行给非甾体抗炎药（很多人用药对猫狗有毒）。"],
+            "vetWhen": "突发瘫痪、剧痛或外伤：尽快就诊。",
+            "graphClusterIds": [],
+            "refIds": ["fossum", "ettinger", "mvm"]
+          }
+        ]
+      },
+      {
+        "id": "training",
+        "title": "训练教学",
+        "summary": "以正向训练与低应激互动为主；行为问题先排除疼痛与疾病。",
+        "topics": [
+          {
+            "id": "train-positive",
+            "title": "正向训练基础",
+            "teaser": "奖励想让它再发生的行为，而非只惩罚错误。",
+            "species": ["cat", "dog"],
+            "science": "动物学习理论中，正向强化可提高目标行为出现概率；惩罚易诱发恐惧与攻击，且难以定位正确行为。家庭训练应短时多次、 criteria 逐步提高。",
+            "advice": ["用零食/玩具/表扬在「做对的那一刻」标记奖励。", "一次只练一个小目标。", "猫也可用点击训练（clicker）配合奖励。"],
+            "vetWhen": "攻击行为致人受伤、极度恐惧或自残式舔咬：需兽医行为学或行为专科评估。",
+            "graphClusterIds": ["training-enrichment", "behavior-masquerade"],
+            "refIds": ["overall-behavior", "bsava-behavior", "low-stress"]
+          },
+          {
+            "id": "train-puppy-dog",
+            "title": "幼犬社交与咬人扑人",
+            "teaser": "在安全前提下接触多样环境，建立咬劲控制。",
+            "species": ["dog"],
+            "science": "幼犬敏感期需要积极、可控的社交体验；扑咬多与过度兴奋或试探相关，需一致规则与替代行为（如坐下换注意力）。",
+            "advice": ["疫苗未完成前避免未知犬只密集场所，可按兽医建议安排。", "被咬时停止互动（负惩罚）+ 引导啃咬玩具。"],
+            "vetWhen": "持续攻击陌生人、无法靠近牵引：寻求专业训犬师/行为兽医。",
+            "graphClusterIds": ["training-enrichment"],
+            "refIds": ["overall-behavior", "low-stress"]
+          },
+          {
+            "id": "train-litter-cat",
+            "title": "猫砂盆与「乱尿」",
+            "teaser": "先排除泌尿疾病，再谈环境与冲突。",
+            "species": ["cat"],
+            "science": "猫在砂盆外排尿可能与健康（泌尿/疼痛）或资源竞争、砂盆不洁、位置不佳有关；需系统排查。",
+            "advice": ["砂盆数量与摆放：安静、易到达；多猫家庭增加资源。", "换砂循序渐进；避免香型过强刺激。", "先尿检排除疾病再只做行为干预。"],
+            "vetWhen": "排尿姿势痛苦、尿频：先就医，勿只当「报复」。",
+            "graphClusterIds": ["feline-uo", "behavior-masquerade"],
+            "refIds": ["isfm", "feline-patient", "overall-behavior"]
+          },
+          {
+            "id": "train-leash-dog",
+            "title": "牵引与随行",
+            "teaser": "松绳随行减少气管与关节压力。",
+            "species": ["dog"],
+            "science": "暴冲与颈圈勒压可致气管、眼部压力等问题；胸前背带或合适装备配合奖励「在脚边」可逐步改善。",
+            "advice": ["奖励「绳子松」的瞬间向前走。", "幼犬每次训练几分钟即可。"],
+            "vetWhen": "一戴牵引就极度恐惧或攻击：需评估疼痛与创伤经历。",
+            "graphClusterIds": ["training-enrichment"],
+            "refIds": ["overall-behavior", "low-stress"]
+          },
+          {
+            "id": "train-enrich-cat",
+            "title": "室内猫环境丰容",
+            "teaser": "狩猎、攀爬、躲藏需求用玩具与空间满足。",
+            "species": ["cat"],
+            "science": "环境丰容可降低应激相关泌尿与行为问题风险；与觅食、垂直空间、可预测作息相关。",
+            "advice": ["逗猫棒模拟捕食终点给予零食。", "猫爬架、窗台观景位。", "避免长时间单一无聊饮食模式（可咨询兽医）。"],
+            "vetWhen": "过度舔毛至秃、拒食或躲藏：就医排查疼痛与焦虑。",
+            "graphClusterIds": ["training-enrichment"],
+            "refIds": ["isfm", "isfm-icat-url", "low-stress"]
+          }
+        ]
+      },
+      {
+        "id": "senior",
+        "title": "老年护理",
+        "summary": "慢病早筛、疼痛识别与生活质量评估比「算年龄」更重要。",
+        "topics": [
+          {
+            "id": "senior-screening",
+            "title": "老年体检查什么（思路）",
+            "teaser": "频率与项目因个体与地区指南而异，由兽医制定。",
+            "species": ["cat", "dog"],
+            "science": "老年动物肿瘤、肾病、内分泌与关节问题发生率上升；实验室与血压（尤其猫）可帮助亚临床期发现问题。具体组合无统一家庭版清单，以兽医建议为准。",
+            "advice": ["记录体重、饮水、食欲与活动度变化。", "刷牙或口腔检查纳入日常观察。", "就诊时带上既往病历与用药清单。"],
+            "vetWhen": "短期消瘦、多饮多尿、持续呕吐或精神差：不要当作「老了正常」。",
+            "graphClusterIds": ["senior-care"],
+            "refIds": ["aaevm-owner", "mvm", "aaha", "ettinger"]
+          },
+          {
+            "id": "senior-pain",
+            "title": "疼痛与关节炎线索",
+            "teaser": "猫常「隐藏」疼痛，表现为不爱跳、理毛减少。",
+            "species": ["cat", "dog"],
+            "science": "骨关节炎在老年犬猫常见；疼痛评估需结合行为与查体，影像辅助。镇痛方案须兽医处方与监测。",
+            "advice": ["防滑垫、台阶、保暖休息区。", "勿自行使用人用止痛药。", "体重管理可减轻关节负担。"],
+            "vetWhen": "拒食、明显僵硬或呻吟：尽快评估。",
+            "graphClusterIds": ["senior-care"],
+            "refIds": ["wsava-aafp", "mvm", "ettinger"]
+          },
+          {
+            "id": "senior-cognitive",
+            "title": "认知与作息变化",
+            "teaser": "夜间鸣叫、迷路样表现需与视听、内分泌等鉴别。",
+            "species": ["cat", "dog"],
+            "science": "认知功能障碍综合征在老年犬描述较多，猫亦有类似报道；需排除甲亢、高血压、疼痛等可逆因素。",
+            "advice": ["保持环境稳定，减少家具大变动。", "夜间留柔光、白天适度活动（按体能）。"],
+            "vetWhen": "症状快速进展或伴神经体征：尽早就诊。",
+            "graphClusterIds": ["senior-care"],
+            "refIds": ["ettinger", "mvm", "aaevm-owner"]
+          },
+          {
+            "id": "senior-nutrition",
+            "title": "老年营养与慢病粮",
+            "teaser": "肾病、心脏病等处方粮须兽医根据化验选用。",
+            "species": ["cat", "dog"],
+            "science": "老年营养目标因并存疾病而异；蛋白质限制等争议话题应以个体化验与兽医指南为准，不宜自行长期单一配方。",
+            "advice": ["换粮宜循序渐进并与兽医讨论处方粮。", "观察食欲与排便；多宠分食避免抢食。"],
+            "vetWhen": "长期拒食或体重骤降：当日或近日就诊。",
+            "graphClusterIds": ["senior-care", "diet-body-condition"],
+            "refIds": ["nutri-sa", "mvm", "aaha"]
+          }
+        ]
+      },
+      {
+        "id": "diet",
+        "title": "饮食健康",
+        "summary": "体况与长期习惯比单顿食量更关键；禁忌食物与毒物需牢记。",
+        "topics": [
+          {
+            "id": "diet-bcs",
+            "title": "体况评分（BCS）怎么看",
+            "teaser": "摸肋骨与腰线，比只看体重数更直观。",
+            "species": ["cat", "dog"],
+            "science": "体况评分是评估肥胖与肌肉量的常用临床工具；不同品种理想外观略有差异，兽医可演示触诊要点。",
+            "advice": ["每月固定条件称重并拍照侧面。", "减肥目标与速度须兽医根据健康状态制定。"],
+            "vetWhen": "不明原因消瘦或肥胖伴多饮多尿：排查内分泌与代谢病。",
+            "graphClusterIds": ["diet-body-condition"],
+            "refIds": ["aaha-weight-url", "mvm", "isfm-icat-url"]
+          },
+          {
+            "id": "diet-obesity",
+            "title": "肥胖与运动安全",
+            "teaser": "关节、内分泌与麻醉风险均与肥胖相关。",
+            "species": ["cat", "dog"],
+            "science": "体重管理需饮食热量与活动双管齐下；剧烈运动对超重动物关节与心肺有负荷，方案应个体化。",
+            "advice": ["用称重粮而非凭感觉添粮。", "犬：步行从短时多次开始；猫：玩耍与觅食游戏。"],
+            "vetWhen": "运动耐力骤降、喘憋：先体检再加强运动。",
+            "graphClusterIds": ["diet-body-condition", "gdv-dog"],
+            "refIds": ["aaha-weight-url", "nutri-sa", "mvm"]
+          },
+          {
+            "id": "diet-transition",
+            "title": "换粮与挑食",
+            "teaser": "突然换粮易肠胃不适；长期挑食要排除疾病。",
+            "species": ["cat", "dog"],
+            "science": "胃肠道对新配方需适应期；猫尤其不宜长时间饥饿「逼吃」，以免诱发脂质代谢问题（兽医语境）。",
+            "advice": ["7–10 天渐进混合比例（具体可按产品说明与兽医）。", "幼宠、孕哺期换粮更需谨慎。"],
+            "vetWhen": "超过 24–48 小时几乎不进食（尤其猫）：急诊或当日门诊。",
+            "graphClusterIds": ["gi-dehydration"],
+            "refIds": ["nutri-sa", "mvm"]
+          },
+          {
+            "id": "diet-toxic",
+            "title": "巧克力、葡萄、木糖醇等",
+            "teaser": "毒性因种类、剂量与个体而异，勿自行催吐。",
+            "species": ["cat", "dog"],
+            "science": "多种人类食物与药物对犬猫有毒性差异；是否催吐、用活性炭等须毒物类型与时机决定，由兽医处理。",
+            "advice": ["保留包装与估计摄入量。", "联系当地急诊兽医；海外毒物中心仅作参考示例。"],
+            "vetWhen": "任何怀疑摄入且出现异常症状：立即就医。",
+            "graphClusterIds": ["toxin"],
+            "refIds": ["mvm-toxic-intro", "toxicology", "aspca-apcc"]
+          },
+          {
+            "id": "diet-water",
+            "title": "多饮多尿要警惕",
+            "teaser": "糖尿病、肾病、内分泌等均可表现，需化验。",
+            "species": ["cat", "dog"],
+            "science": "多饮多尿（PU/PD）是症状而非诊断；鉴别需血液、尿液与影像等。家长可记录饮水量与尿团变化。",
+            "advice": ["不要因「多喝水好」而忽视突然巨量饮水。", "猫狗饮水习惯差异大，关注「相对平时」的变化。"],
+            "vetWhen": "伴消瘦、呕吐或精神差：尽快门诊。",
+            "graphClusterIds": ["diet-body-condition", "senior-care"],
+            "refIds": ["ettinger", "mvm", "nelson"]
+          }
+        ]
+      }
+    ]
+  },
   "zoonosisNotes": [
     {
       "id": "bite",

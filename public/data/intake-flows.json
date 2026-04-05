@@ -43,7 +43,7 @@
         "ci_wt": {
           "section": "① 基础信息",
           "progress": "4 / 16",
-          "text": "近几周体重/体况变化？",
+          "text": "近几周体重或体况（摸肋骨、看腰线）变化？若有条件可在家称体重；不明原因消瘦或短期发胖都值得告诉兽医。",
           "options": [
             {"label": "稳定", "next": "ci_bar", "flags": ["wt_stable"]},
             {"label": "明显下降", "next": "ci_bar", "flags": ["wt_loss"]},
@@ -295,9 +295,9 @@
           ]
         },
         "di_lame": {
-          "section": "⑤ 运动",
+          "section": "⑤ 运动与步态",
           "progress": "10 / 12",
-          "text": "跛行？",
+          "text": "现在或最近有无跛行、踮脚、不愿承重？（与运动过量、扭伤、关节炎、十字韧带问题等有关，需兽医查体；别在明显疼痛时强行加练。）",
           "options": [
             {"label": "无", "next": "di_toxin", "flags": ["d_lame_no"]},
             {"label": "有", "next": "di_toxin", "flags": ["d_lame_yes"]}

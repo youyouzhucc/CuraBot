@@ -16,6 +16,72 @@
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
+  function isLocalDevHost(hostname) {
+    const h = String(hostname || "").toLowerCase();
+    return h === "localhost" || h === "127.0.0.1" || h === "::1" || h === "[::1]";
+  }
+
+  /**
+   * 用 GET /api/capabilities（含 apiChat）判断同源是否为本仓库完整后端。
+   * 旧进程可能仍有 /api/meta 但没有 /api/chat——不能仅凭 meta 判定。
+   * 静态页 / 其它端口：把对话指向 apiDevFallback（默认 127.0.0.1:3000）。
+   * 若在 3000 仍无对话接口：置 CURABOT_API_CHAT_MISSING，由健康机器人提示重启 Node。
+   */
+  async function detectApiBase(meta) {
+    if (typeof window === "undefined") return;
+    if (window.CURABOT_API_BASE != null && String(window.CURABOT_API_BASE).trim() !== "") return;
+
+    const rawFb = meta && meta.apiDevFallback;
+    let fallback = "http://127.0.0.1:3000";
+    if (rawFb === "") return;
+    if (rawFb != null && String(rawFb).trim() !== "") {
+      fallback = String(rawFb).trim().replace(/\/$/, "");
+    }
+
+    const loc = window.location;
+    if (loc.protocol === "file:") {
+      window.CURABOT_API_BASE = fallback;
+      window.CURABOT_API_CHAT_MISSING = false;
+      return;
+    }
+
+    if (!isLocalDevHost(loc.hostname)) return;
+
+    const port = loc.port || "";
+
+    async function sameOriginHasChatCapabilities() {
+      try {
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 2500);
+        const r = await fetch(new URL("/api/capabilities", loc.origin).href, {
+          cache: "no-store",
+          signal: ctrl.signal,
+        });
+        clearTimeout(t);
+        if (!r.ok) return false;
+        const ct = (r.headers.get("content-type") || "").toLowerCase();
+        if (!ct.includes("application/json")) return false;
+        const j = await r.json();
+        return j && j.name === "CuraBot" && j.apiChat === true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    if (await sameOriginHasChatCapabilities()) {
+      window.CURABOT_API_CHAT_MISSING = false;
+      return;
+    }
+
+    const on3000OrDefaultPort = port === "3000" || port === "";
+    if (!on3000OrDefaultPort) {
+      window.CURABOT_API_BASE = fallback;
+      window.CURABOT_API_CHAT_MISSING = false;
+    } else {
+      window.CURABOT_API_CHAT_MISSING = true;
+    }
+  }
+
   async function loadKnowledge() {
     const [k, intake] = await Promise.all([
       fetch("/data/knowledge.json", { cache: "no-store" }).then((r) => {
@@ -29,6 +95,11 @@
     ]);
     state.knowledge = k;
     Object.assign(k.triageFlows || {}, intake.triageFlows || {});
+    const apiBase = k.meta && k.meta.apiBase;
+    if (apiBase != null && String(apiBase).trim() !== "") {
+      window.CURABOT_API_BASE = String(apiBase).trim().replace(/\/$/, "");
+    }
+    await detectApiBase(k.meta || {});
   }
 
   function speciesLabel(sp) {
@@ -110,13 +181,150 @@
     });
   }
 
-  function updateHomeMergedPanels() {
-    const cat = $("#homeMergedCat");
-    const dog = $("#homeMergedDog");
+  function topicMatchesSpecies(topic, species) {
+    if (!topic.species || topic.species.length === 0) return true;
+    return topic.species.indexOf(species) !== -1;
+  }
+
+  function clusterMatchesSpecies(cluster, species) {
+    if (!cluster.species || cluster.species.length === 0) return true;
+    return cluster.species.indexOf(species) !== -1;
+  }
+
+  function findDailyTopic(topicId) {
+    const dk = state.knowledge && state.knowledge.dailyKnowledge;
+    if (!dk || !dk.modules) return null;
+    for (let i = 0; i < dk.modules.length; i++) {
+      const m = dk.modules[i];
+      const t = (m.topics || []).find((x) => x.id === topicId);
+      if (t) return { module: m, topic: t };
+    }
+    return null;
+  }
+
+  /** 日常知识条目：关联知识图谱中的簇（按当前物种过滤） */
+  function renderGraphClustersForDailyTopic(clusterIds) {
+    if (!clusterIds || !clusterIds.length) return "";
+    const kg = state.knowledge && state.knowledge.knowledgeGraph;
+    if (!kg || !kg.clusters) return "";
+    const map = Object.fromEntries(kg.clusters.map((c) => [c.id, c]));
+    const parts = clusterIds
+      .map((id) => map[id])
+      .filter(Boolean)
+      .filter((c) => clusterMatchesSpecies(c, state.species));
+    if (!parts.length) {
+      return `<p class="muted">当前物种下暂无匹配的图谱节点，仍以参考文献与兽医意见为准。</p>`;
+    }
+    const cards = parts
+      .map((c) => {
+        const hints = (c.hints || []).map((h) => `<li>${escapeHtml(h)}</li>`).join("");
+        const apps = (c.appHints || []).map((h) => `<li>${escapeHtml(h)}</li>`).join("");
+        const refs = renderRefs(c.refIds || []);
+        return `<article class="card warm daily-graph-card">
+          <h4 class="daily-graph-card-title">${escapeHtml(c.label)}</h4>
+          <p class="signs-label">线索（非诊断）</p>
+          <ul class="kg-list">${hints}</ul>
+          <p class="signs-label">与站内流程的对应</p>
+          <ul class="kg-list">${apps}</ul>
+          ${refs}
+        </article>`;
+      })
+      .join("");
+    return `<section class="daily-graph-section" aria-labelledby="daily-graph-h">
+        <h3 id="daily-graph-h" class="outcome-section-title">关联知识图谱</h3>
+        <div class="region-grid daily-graph-grid">${cards}</div>
+      </section>`;
+  }
+
+  function renderDailyTopicPage(topicId) {
+    const found = findDailyTopic(topicId);
+    const host = $("#dailyTopicContent");
+    if (!host) return;
+    if (!found) {
+      host.innerHTML = `<p class="error">未找到该条目。</p>`;
+      return;
+    }
+    const { module, topic } = found;
+    if (!topicMatchesSpecies(topic, state.species)) {
+      host.innerHTML = `<p class="error">当前物种下暂无此条目，请在首页切换猫/狗。</p>`;
+      return;
+    }
+    const adviceList = (topic.advice || []).map((a) => `<li>${escapeHtml(a)}</li>`).join("");
+    const graphHtml = renderGraphClustersForDailyTopic(topic.graphClusterIds || []);
+    const refsHtml = renderRefs(topic.refIds || []);
+    host.innerHTML = `
+      <header class="flow-head daily-topic-head">
+        <p class="badge">${escapeHtml(module.title)} · ${speciesLabel(state.species)}</p>
+        <h2 class="daily-topic-h2">${escapeHtml(topic.title)}</h2>
+      </header>
+      <section class="daily-science" aria-labelledby="daily-science-h">
+        <h3 id="daily-science-h" class="outcome-section-title">科学知识</h3>
+        <div class="daily-prose">${formatRichText(topic.science || "")}</div>
+      </section>
+      <section class="daily-advice" aria-labelledby="daily-advice-h">
+        <h3 id="daily-advice-h" class="outcome-section-title">家庭建议</h3>
+        <ul class="daily-advice-list">${adviceList}</ul>
+      </section>
+      <section class="daily-vet" aria-labelledby="daily-vet-h">
+        <h3 id="daily-vet-h" class="outcome-section-title">何时需要看兽医</h3>
+        <div class="daily-prose">${formatRichText(topic.vetWhen || "")}</div>
+      </section>
+      ${graphHtml}
+      <section class="daily-refs" aria-labelledby="daily-refs-h">
+        <h3 id="daily-refs-h" class="outcome-section-title">参考资料</h3>
+        ${refsHtml || `<p class="muted">（无）</p>`}
+      </section>
+      <p class="muted daily-topic-footnote">科普参考，不能代替执业兽医诊断与治疗。</p>
+    `;
+  }
+
+  function updateDailyRefLinksVisibility() {
+    const cat = $("#homeDailyRefLinksCat");
+    const dog = $("#homeDailyRefLinksDog");
     if (!cat || !dog) return;
     const isCat = state.species === "cat";
     cat.hidden = !isCat;
-    dog.hidden = isCat;
+    dog.hidden = !isCat;
+  }
+
+  function renderDailyKnowledgeHome() {
+    const host = $("#homeDailyKnowledge");
+    const dk = state.knowledge && state.knowledge.dailyKnowledge;
+    if (!host || !dk || !dk.modules) return;
+    const mods = dk.modules
+      .map((mod) => {
+        const topics = (mod.topics || []).filter((t) => topicMatchesSpecies(t, state.species));
+        if (!topics.length) return "";
+        const topicRows = topics
+          .map(
+            (t) => `
+        <button type="button" class="home-merge-row daily-topic-row" data-daily-topic="${escapeHtml(
+          t.id
+        )}" aria-label="${escapeHtml("查看：" + t.title)}">
+          <span class="home-merge-row-text daily-topic-title-only"><strong>${escapeHtml(t.title)}</strong></span>
+        </button>`
+          )
+          .join("");
+        return `<section class="daily-mod" data-daily-module="${escapeHtml(mod.id)}">
+        <h3 class="daily-mod-title">${escapeHtml(mod.title)}</h3>
+        <div class="daily-topic-list">${topicRows}</div>
+      </section>`;
+      })
+      .filter(Boolean)
+      .join("");
+    host.innerHTML = mods;
+    $$("[data-daily-topic]", host).forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-daily-topic");
+        renderDailyTopicPage(id);
+        showView("dailyTopic");
+      });
+    });
+  }
+
+  function updateHomeMergedPanels() {
+    renderDailyKnowledgeHome();
+    updateDailyRefLinksVisibility();
   }
 
   function updateSpeciesCards() {
@@ -127,6 +335,9 @@
     });
     updateTriageIntakeVisibility();
     updateHomeMergedPanels();
+    if (typeof CuraHealthChat !== "undefined" && CuraHealthChat && CuraHealthChat.syncSpecies) {
+      CuraHealthChat.syncSpecies();
+    }
   }
 
   /** 分诊页「标准化采集」只展示当前首页所选物种对应的入口 */
@@ -591,6 +802,73 @@
       .join("");
   }
 
+  function renderKnowledgeGraphBlock() {
+    const kg = state.knowledge.knowledgeGraph;
+    if (!kg || !kg.clusters || !kg.clusters.length) return "";
+    const intro = kg.intro ? `<p class="muted small-intro">${escapeHtml(kg.intro)}</p>` : "";
+    const speciesLabel = (arr) => {
+      if (!arr || !arr.length) return "犬猫";
+      if (arr.length === 2 && arr.indexOf("cat") !== -1 && arr.indexOf("dog") !== -1) return "犬猫";
+      if (arr[0] === "dog") return "犬";
+      return "猫";
+    };
+    const cards = kg.clusters
+      .map((c) => {
+        const sp = `<span class="owner-guides-sp">${escapeHtml(speciesLabel(c.species))}</span>`;
+        const hints = (c.hints || []).map((h) => `<li>${escapeHtml(h)}</li>`).join("");
+        const apps = (c.appHints || []).map((h) => `<li>${escapeHtml(h)}</li>`).join("");
+        const refs = renderRefs(c.refIds || []);
+        return `<article class="card warm knowledge-graph-card">
+          <h3>${escapeHtml(c.label)} ${sp}</h3>
+          <p class="signs-label">常见线索（非诊断）</p>
+          <ul class="kg-list">${hints}</ul>
+          <p class="signs-label">站内相关入口</p>
+          <ul class="kg-list">${apps}</ul>
+          ${refs}
+        </article>`;
+      })
+      .join("");
+    return `<section class="ref-block ref-block--graph"><h3>${escapeHtml(
+      kg.title || "知识图谱"
+    )}</h3>${intro}<div class="region-grid knowledge-graph-grid">${cards}</div></section><hr class="ref-sep" />`;
+  }
+
+  function renderOwnerFreeGuidesBlock() {
+    const og = state.knowledge.ownerFreeGuides;
+    if (!og || !og.sections || !og.sections.length) return "";
+    const intro = og.intro
+      ? `<p class="muted owner-guides-intro">${escapeHtml(og.intro)}</p>`
+      : "";
+    const spLabel = (s) => {
+      if (s === "cat") return "猫";
+      if (s === "dog") return "犬";
+      return "犬猫";
+    };
+    const sections = og.sections
+      .map((sec) => {
+        const items = (sec.items || [])
+          .map((it) => {
+            const u = escapeHtml(it.url || "#");
+            const t = escapeHtml(it.title || "");
+            const sum = escapeHtml(it.summary || "");
+            const how = it.howto ? `<p class="muted owner-guides-howto">${escapeHtml(it.howto)}</p>` : "";
+            const badge = `<span class="owner-guides-sp">${escapeHtml(spLabel(it.species))}</span>`;
+            return `<li class="owner-guides-item">
+              <div class="owner-guides-item-head">
+                <a href="${u}" target="_blank" rel="noopener noreferrer">${t}</a>
+                ${badge}
+              </div>
+              <p class="muted owner-guides-sum">${sum}</p>
+              ${how}
+            </li>`;
+          })
+          .join("");
+        return `<section class="ref-block ref-block--owner"><h3>${escapeHtml(sec.title)}</h3><ul class="owner-guides-list">${items}</ul></section>`;
+      })
+      .join("");
+    return `<div class="owner-guides-wrap">${intro}${sections}</div><hr class="ref-sep" />`;
+  }
+
   function renderReferencesPage() {
     const refs = state.knowledge.references || [];
     const host = $("#refsContent");
@@ -600,19 +878,27 @@
       if (!byCat[c]) byCat[c] = [];
       byCat[c].push(r);
     });
+    const ownerBlock = renderOwnerFreeGuidesBlock();
+    const graphBlock = renderKnowledgeGraphBlock();
     host.innerHTML =
-      `<p class="muted small-intro">下面是团队内部用来校对内容的参考书与指南目录，不影响日常使用。</p>` +
+      ownerBlock +
+      graphBlock +
+      `<p class="muted small-intro">以下为团队内部用于校对条目的参考书与数据库目录（与上方「家长免费指南」互补）；带链接的可直接打开默克等在线章节。</p>` +
       Object.keys(byCat)
         .sort()
         .map((cat) => {
           const items = byCat[cat]
-            .map(
-              (r) => `
+            .map((r) => {
+              const link = r.url
+                ? `<div class="ref-online"><a href="${escapeHtml(r.url)}" target="_blank" rel="noopener noreferrer">在线章节</a></div>`
+                : "";
+              return `
           <li>
             <strong>${escapeHtml(r.title)}</strong>
+            ${link}
             <div class="muted">${escapeHtml(r.role || "")}</div>
-          </li>`
-            )
+          </li>`;
+            })
             .join("");
           return `<section class="ref-block"><h3>${escapeHtml(cat)}</h3><ul>${items}</ul></section>`;
         })
@@ -651,14 +937,12 @@
     });
     $("#enterApp").addEventListener("click", () => {
       updateSpeciesLabels();
-      showView("menu");
+      updateSpeciesCards();
+      showView("triageMenu");
     });
     $("#brandHome").addEventListener("click", () => renderHome());
-    $$(".js-back-to-menu").forEach((btn) => btn.addEventListener("click", () => showView("menu")));
     $$(".js-back-home").forEach((btn) => btn.addEventListener("click", () => renderHome()));
     $("#linkHome").addEventListener("click", () => renderHome());
-
-    $("#menuTriage").addEventListener("click", () => showView("triageMenu"));
     $$("[data-home-nav]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const nav = btn.getAttribute("data-home-nav");
@@ -681,6 +965,9 @@
       });
     });
 
+    const btnDailyBack = $("#btnDailyTopicBack");
+    if (btnDailyBack) btnDailyBack.addEventListener("click", () => renderHome());
+
     $("#startScreen").addEventListener("click", () => startFlow("screen"));
     $("#startUrinary").addEventListener("click", () => startFlow("urinary"));
     $("#startGi").addEventListener("click", () => startFlow("gi"));
@@ -689,6 +976,32 @@
     $("#startBehavior").addEventListener("click", () => startFlow("behavior"));
     $("#startCatIntake").addEventListener("click", () => startFlow("catIntake"));
     $("#startDogIntake").addEventListener("click", () => startFlow("dogIntake"));
+
+    const openHc = $("#openHealthChat");
+    if (openHc && typeof CuraHealthChatInit === "function") {
+      CuraHealthChatInit({
+        getSpecies: () => state.species,
+        getKnowledge: () => state.knowledge,
+        onOpenEmergency: () => {
+          renderEmergencyList();
+          showView("emergency");
+        },
+        onOpenTriage: () => {
+          showView("triageMenu");
+        },
+        onOpenDailyTopic: (topicId) => {
+          renderDailyTopicPage(topicId);
+          showView("dailyTopic");
+        },
+      });
+      openHc.addEventListener("click", () => {
+        if (typeof CuraHealthChat !== "undefined" && CuraHealthChat) {
+          CuraHealthChat.syncSpecies();
+          CuraHealthChat.open();
+        }
+        showView("healthChat");
+      });
+    }
   }
 
   async function boot() {

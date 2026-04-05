@@ -11,6 +11,10 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/css/main.css" />
+    <script>
+      // 可选：仅打开静态前端、Node 在另一端口时，填写 API 根地址（与 server.js 一致），例如：
+      // window.CURABOT_API_BASE = "http://127.0.0.1:3000";
+    </script>
   </head>
   <body>
     <div class="warm-banner" id="warmBanner" role="banner">
@@ -38,236 +42,208 @@
         <div class="home-stack">
           <div class="home-section-label" id="label-health">健康问题</div>
           <div class="hero home-hero home-hero--health">
-            <h1>今天，先陪你看一看 Ta 怎么了</h1>
+            <div class="home-health-title-row">
+              <h1>今天，先陪你看一看 Ta 怎么了</h1>
+              <button
+                type="button"
+                class="home-bot-icon-btn"
+                id="openHealthChat"
+                aria-label="打开猫狗健康机器人对话"
+              >
+                <span class="home-bot-icon-circle" aria-hidden="true">
+                  <img src="/images/curabot-logo.svg" alt="" width="48" height="48" loading="eager" decoding="async" />
+                </span>
+                <span class="home-bot-icon-word">curabot</span>
+              </button>
+            </div>
             <p class="lead">
               用几个<strong>简单问题</strong>，帮你判断要不要<strong>尽快去医院</strong>，再给一些<strong>在家能做的事</strong>。我们不是医生，不能下诊断，但能陪你少慌一点。
             </p>
 
             <p class="pick-title">先选一下：今天主要想帮谁看看？</p>
-            <div class="species-grid">
-              <button
-                type="button"
-                class="species-card is-selected"
-                data-species="cat"
-                id="pickCat"
-                aria-pressed="true"
-              >
-                <img id="heroCatImg" class="species-photo" src="" alt="" width="140" height="140" loading="lazy" />
-                <span class="species-name">猫咪</span>
-                <span class="species-pill" aria-hidden="true">✓ 已选</span>
-              </button>
-              <button type="button" class="species-card" data-species="dog" id="pickDog" aria-pressed="false">
-                <img id="heroDogImg" class="species-photo" src="" alt="" width="140" height="140" loading="lazy" />
-                <span class="species-name">狗狗</span>
-                <span class="species-pill" aria-hidden="true">✓ 已选</span>
-              </button>
-            </div>
+            <div class="home-health-actions">
+              <div class="species-grid">
+                <button
+                  type="button"
+                  class="species-card is-selected"
+                  data-species="cat"
+                  id="pickCat"
+                  aria-pressed="true"
+                >
+                  <img id="heroCatImg" class="species-photo" src="" alt="" width="140" height="140" loading="lazy" />
+                  <span class="species-name">猫咪</span>
+                  <span class="species-pill" aria-hidden="true">✓ 已选</span>
+                </button>
+                <button type="button" class="species-card" data-species="dog" id="pickDog" aria-pressed="false">
+                  <img id="heroDogImg" class="species-photo" src="" alt="" width="140" height="140" loading="lazy" />
+                  <span class="species-name">狗狗</span>
+                  <span class="species-pill" aria-hidden="true">✓ 已选</span>
+                </button>
+              </div>
 
-            <button type="button" class="btn btn-enter" id="enterApp">进入 · 开始聊聊</button>
-
-            <div class="disclaimer-box">
-              <strong>小提示</strong>：这里不能代替医生当面检查，也不会告诉你具体吃多少药。
-              <button type="button" class="btn secondary btn-inline" id="btnDisclaimer">查看完整说明</button>
+              <div class="home-start-block">
+                <button type="button" class="menu-card menu-card--core home-start-cta" id="enterApp">
+                  <span class="home-start-cta-main">
+                    <span class="menu-core-eyebrow">从这里开始</span>
+                    <span class="menu-core-title">聊聊你的毛孩子怎么了</span>
+                    <span class="menu-core-desc">
+                      标准化临床采集清单、急事先筛、按症状追问——把情况说清楚，方便判断要不要尽快去医院（非诊断）。
+                    </span>
+                  </span>
+                  <span class="home-start-cta-arrow" aria-hidden="true">
+                    <svg
+                      class="home-start-cta-arrow-svg"
+                      viewBox="0 0 72 72"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <!-- 圆角粗线条「卡通」指向右，带小圆点增加活泼感 -->
+                      <path
+                        d="M10 36h34"
+                        stroke="currentColor"
+                        stroke-width="4.5"
+                        stroke-linecap="round"
+                      />
+                      <path
+                        d="M38 20l16 16-16 16"
+                        stroke="currentColor"
+                        stroke-width="4.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <circle cx="12" cy="36" r="3.5" fill="currentColor" opacity="0.22" />
+                    </svg>
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
 
-          <div class="home-section-label" id="label-health-daily">健康与日常</div>
+          <div class="home-section-label" id="label-daily-knowledge">日常知识</div>
           <div class="hero home-hero home-hero--merged">
             <p class="home-daily-lead">
-              以下话题随你在上方选择的 <strong class="js-species-label">猫咪</strong> 切换。点<strong>标题</strong>展开说明；点<strong>查看详情</strong>进入专门页面（科普参考，不能代替就诊）。
+              四大模块：<strong>健康问题 · 训练教学 · 老年护理 · 饮食健康</strong>。条目随 <strong class="js-species-label">猫咪</strong> 筛选；点卡片看详情（科普，不代替就诊）。
             </p>
-
-            <div class="home-merged-panel" id="homeMergedCat" data-home-panel="cat">
-              <h3 class="home-merge-group-title">运动、体重与环境</h3>
-              <div class="home-merge-stack">
-                <details class="home-merge-details">
-                  <summary>室内猫与体重</summary>
-                  <div class="home-merge-body">
-                    <p>体况胖瘦（BCS）、主食和零食怎么搭配，和关节、泌尿等都有关系。具体目标要兽医一起定。</p>
-                    <p class="muted small-intro">可参考：AAFP 猫指南、ISFM 室内猫与环境丰容思路。</p>
-                  </div>
-                </details>
-                <details class="home-merge-details">
-                  <summary>安全游戏与互动玩具</summary>
-                  <div class="home-merge-body">
-                    <p>模仿捕猎、短时间多玩几次，减少无聊和应激；逗猫棒、漏食玩具、爬架位置都可以轮换。</p>
-                  </div>
-                </details>
-                <details class="home-merge-details">
-                  <summary>每日运动节奏</summary>
-                  <div class="home-merge-body">
-                    <p>以猫能接受为准，别一次累过头；记一下活动量和食欲，看病时有用。</p>
-                  </div>
-                </details>
-                <details class="home-merge-details">
-                  <summary>老年猫 / 慢病猫怎么动</summary>
-                  <div class="home-merge-body">
-                    <p>肾病、关节炎等要先问兽医适合什么强度；疼没控制好别硬加运动量。</p>
-                  </div>
-                </details>
-                <details class="home-merge-details">
-                  <summary>饮食 + 运动一起管</summary>
-                  <div class="home-merge-body">
-                    <p>减重别自己饿肚子；处方粮、吃多少、动多少，跟兽医商量最稳。</p>
-                  </div>
-                </details>
-              </div>
-
-              <h3 class="home-merge-group-title">分诊与家庭健康</h3>
-              <div class="home-merge-actions">
-                <button type="button" class="home-merge-row" data-home-nav="emergency">
-                  <span class="home-merge-row-text">
-                    <strong>这些情况要抓紧去医院</strong>
-                    <span class="home-merge-row-sub">一眼看懂：哪些算「别等」</span>
-                  </span>
-                  <span class="home-merge-row-go">查看详情</span>
-                </button>
-                <button type="button" class="home-merge-row" data-home-nav="behavior">
-                  <span class="home-merge-row-text">
-                    <strong>让 Ta 放松一点</strong>
-                    <span class="home-merge-row-sub">环境、作息、去医院的小技巧</span>
-                  </span>
-                  <span class="home-merge-row-go">查看详情</span>
-                </button>
-                <button type="button" class="home-merge-row" data-home-nav="bodymap">
-                  <span class="home-merge-row-text">
-                    <strong>怎么描述「哪里不舒服」</strong>
-                    <span class="home-merge-row-sub">帮你把部位说清楚（不是诊断）</span>
-                  </span>
-                  <span class="home-merge-row-go">查看详情</span>
-                </button>
-                <button type="button" class="home-merge-row" data-home-nav="zoonosis">
-                  <span class="home-merge-row-text">
-                    <strong>家里卫生小提示</strong>
-                    <span class="home-merge-row-sub">抓咬、拉肚子时人和宠物怎么注意</span>
-                  </span>
-                  <span class="home-merge-row-go">查看详情</span>
-                </button>
-                <button type="button" class="home-merge-row" data-home-nav="refs">
-                  <span class="home-merge-row-text">
-                    <strong>资料目录（给团队用）</strong>
-                    <span class="home-merge-row-sub">参考书与指南列表</span>
-                  </span>
-                  <span class="home-merge-row-go">查看详情</span>
-                </button>
-              </div>
-
-              <details class="home-merge-details home-merge-details--refs">
-                <summary>公开指南链接（英文页面为主）</summary>
-                <div class="home-merge-body">
-                  <ul class="home-ref-links">
-                    <li>
-                      <a href="https://www.aaha.org/guidelines/weight-management-guidelines/" target="_blank" rel="noopener noreferrer">AAHA · 犬猫体重管理指南（PDF）</a>
-                    </li>
-                    <li>
-                      <a href="https://catvets.com/guidelines" target="_blank" rel="noopener noreferrer">AAFP · 猫科指南汇总</a>
-                    </li>
-                    <li>
-                      <a href="https://icatcare.org/advice" target="_blank" rel="noopener noreferrer">ISFM / iCatCare · Advice</a>
-                    </li>
-                    <li>
-                      <a href="https://www.merckvetmanual.com/" target="_blank" rel="noopener noreferrer">Merck Veterinary Manual（可搜 Feline Exercise 等）</a>
-                    </li>
-                  </ul>
+            <div id="homeDailyKnowledge" class="daily-knowledge-root" aria-live="polite"></div>
+            <details class="home-merge-details home-merge-details--refs daily-knowledge-more">
+              <summary>更多：急症清单、身体部位描述与公开指南链接</summary>
+              <div class="home-merge-body">
+                <p class="muted small-intro">以下为常用工具页；下载步骤以各站当前页面为准。</p>
+                <div class="daily-quick-tools">
+                  <button type="button" class="home-merge-row" data-home-nav="emergency">
+                    <span class="home-merge-row-text">
+                      <strong>这些情况要抓紧去医院</strong>
+                      <span class="home-merge-row-sub">一眼看懂：哪些算「别等」</span>
+                    </span>
+                    <span class="home-merge-row-go">查看</span>
+                  </button>
+                  <button type="button" class="home-merge-row" data-home-nav="behavior">
+                    <span class="home-merge-row-text">
+                      <strong>让 Ta 放松一点</strong>
+                      <span class="home-merge-row-sub">环境、作息、去医院的小技巧</span>
+                    </span>
+                    <span class="home-merge-row-go">查看</span>
+                  </button>
+                  <button type="button" class="home-merge-row" data-home-nav="bodymap">
+                    <span class="home-merge-row-text">
+                      <strong>怎么描述「哪里不舒服」</strong>
+                      <span class="home-merge-row-sub">部位示意图（不是诊断）</span>
+                    </span>
+                    <span class="home-merge-row-go">查看</span>
+                  </button>
+                  <button type="button" class="home-merge-row" data-home-nav="zoonosis">
+                    <span class="home-merge-row-text">
+                      <strong>家里卫生小提示</strong>
+                      <span class="home-merge-row-sub">抓咬、拉肚子时人与宠物</span>
+                    </span>
+                    <span class="home-merge-row-go">查看</span>
+                  </button>
+                  <button type="button" class="home-merge-row" data-home-nav="refs">
+                    <span class="home-merge-row-text">
+                      <strong>完整资料目录与知识图谱</strong>
+                      <span class="home-merge-row-sub">参考书、在线章节、图谱简表</span>
+                    </span>
+                    <span class="home-merge-row-go">查看</span>
+                  </button>
                 </div>
-              </details>
-            </div>
-
-            <div class="home-merged-panel" id="homeMergedDog" data-home-panel="dog" hidden>
-              <h3 class="home-merge-group-title">运动、体重与日常</h3>
-              <div class="home-merge-stack">
-                <details class="home-merge-details">
-                  <summary>体重怎么评、怎么减</summary>
-                  <div class="home-merge-body">
-                    <p>理想体重、体况打分、多久复查，适合听兽医的；家里可以记体重和腰围变化。</p>
-                    <p class="muted small-intro">可参考：AAHA Weight Management Guidelines。</p>
-                  </div>
-                </details>
-                <details class="home-merge-details">
-                  <summary>安全运动强度</summary>
-                  <div class="home-merge-body">
-                    <p>看年龄、品种、心肺和关节；天热、地面太硬都要减量，避免一口气跑过头。</p>
-                  </div>
-                </details>
-                <details class="home-merge-details">
-                  <summary>每日运动量怎么拆</summary>
-                  <div class="home-merge-body">
-                    <p>散步、嗅闻、捡球可以分几次；大狗吃完饭别马上疯跑（深胸犬尤其注意）。</p>
-                  </div>
-                </details>
-                <details class="home-merge-details">
-                  <summary>老年、术后、慢性病</summary>
-                  <div class="home-merge-body">
-                    <p>心脏病、骨头问题、刚开完刀等，运动禁忌听兽医的，别自行加量。</p>
-                  </div>
-                </details>
-                <details class="home-merge-details">
-                  <summary>饮食 + 运动一起调整</summary>
-                  <div class="home-merge-body">
-                    <p>减肥要和喂多少联动；吃哪种粮、吃多少卡，由兽医算比网上抄靠谱。</p>
-                  </div>
-                </details>
+                <p class="muted small-intro daily-ref-links-title">公开指南（英文为主）</p>
+                <ul class="home-ref-links" id="homeDailyRefLinksCat">
+                  <li>
+                    <a href="https://www.aaha.org/guidelines/weight-management-guidelines/" target="_blank" rel="noopener noreferrer">AAHA · Weight Management Guidelines</a>
+                  </li>
+                  <li>
+                    <a href="https://catvets.com/guidelines" target="_blank" rel="noopener noreferrer">AAFP · Guidelines</a>
+                  </li>
+                  <li>
+                    <a href="https://icatcare.org/advice/exercise-and-play-for-cats" target="_blank" rel="noopener noreferrer">ISFM / iCatCare · Exercise and play for cats</a>
+                  </li>
+                  <li>
+                    <a href="https://www.merckvetmanual.com/small-animal-pet-health" target="_blank" rel="noopener noreferrer">Merck · Small Animal Pet Health</a>
+                  </li>
+                  <li>
+                    <a href="https://www.aspca.org/pet-care/cat-care/exercise-and-play" target="_blank" rel="noopener noreferrer">ASPCA · Cat Exercise and Play</a>
+                  </li>
+                </ul>
+                <ul class="home-ref-links" id="homeDailyRefLinksDog" hidden>
+                  <li>
+                    <a href="https://www.aaha.org/guidelines/weight-management-guidelines/" target="_blank" rel="noopener noreferrer">AAHA · Weight Management Guidelines</a>
+                  </li>
+                  <li>
+                    <a href="https://www.merckvetmanual.com/small-animal-pet-health" target="_blank" rel="noopener noreferrer">Merck · Small Animal Pet Health</a>
+                  </li>
+                  <li>
+                    <a href="https://www.avbt.org/resources/patient-education" target="_blank" rel="noopener noreferrer">AVBT · Patient Education</a>
+                  </li>
+                  <li>
+                    <a href="https://www.aaevm.org/resources/for-pet-owners" target="_blank" rel="noopener noreferrer">AAEVM · For Pet Owners</a>
+                  </li>
+                  <li>
+                    <a href="https://www.canineconditioningacademy.com/free-resources" target="_blank" rel="noopener noreferrer">Canine Conditioning Academy · Free resources</a>
+                  </li>
+                </ul>
               </div>
+            </details>
+          </div>
 
-              <h3 class="home-merge-group-title">分诊与家庭健康</h3>
-              <div class="home-merge-actions">
-                <button type="button" class="home-merge-row" data-home-nav="emergency">
-                  <span class="home-merge-row-text">
-                    <strong>这些情况要抓紧去医院</strong>
-                    <span class="home-merge-row-sub">一眼看懂：哪些算「别等」</span>
-                  </span>
-                  <span class="home-merge-row-go">查看详情</span>
-                </button>
-                <button type="button" class="home-merge-row" data-home-nav="behavior">
-                  <span class="home-merge-row-text">
-                    <strong>让 Ta 放松一点</strong>
-                    <span class="home-merge-row-sub">环境、作息、去医院的小技巧</span>
-                  </span>
-                  <span class="home-merge-row-go">查看详情</span>
-                </button>
-                <button type="button" class="home-merge-row" data-home-nav="bodymap">
-                  <span class="home-merge-row-text">
-                    <strong>怎么描述「哪里不舒服」</strong>
-                    <span class="home-merge-row-sub">帮你把部位说清楚（不是诊断）</span>
-                  </span>
-                  <span class="home-merge-row-go">查看详情</span>
-                </button>
-                <button type="button" class="home-merge-row" data-home-nav="zoonosis">
-                  <span class="home-merge-row-text">
-                    <strong>家里卫生小提示</strong>
-                    <span class="home-merge-row-sub">抓咬、拉肚子时人和宠物怎么注意</span>
-                  </span>
-                  <span class="home-merge-row-go">查看详情</span>
-                </button>
-                <button type="button" class="home-merge-row" data-home-nav="refs">
-                  <span class="home-merge-row-text">
-                    <strong>资料目录（给团队用）</strong>
-                    <span class="home-merge-row-sub">参考书与指南列表</span>
-                  </span>
-                  <span class="home-merge-row-go">查看详情</span>
-                </button>
-              </div>
+          <div class="disclaimer-box" role="note">
+            <span class="disclaimer-box-text"><strong>小提示</strong>：这里不能代替医生当面检查，也不会告诉你具体吃多少药。</span>
+            <button type="button" class="btn secondary btn-inline" id="btnDisclaimer">查看完整说明</button>
+          </div>
+        </div>
+      </section>
 
-              <details class="home-merge-details home-merge-details--refs">
-                <summary>公开指南链接（英文页面为主）</summary>
-                <div class="home-merge-body">
-                  <ul class="home-ref-links">
-                    <li>
-                      <a href="https://www.aaha.org/guidelines/weight-management-guidelines/" target="_blank" rel="noopener noreferrer">AAHA · 犬猫体重管理指南（PDF）</a>
-                    </li>
-                    <li>
-                      <a href="https://catvets.com/guidelines" target="_blank" rel="noopener noreferrer">AAFP · 猫科指南（猫家长也可参考部分条目）</a>
-                    </li>
-                    <li>
-                      <a href="https://icatcare.org/advice" target="_blank" rel="noopener noreferrer">ISFM / iCatCare · Advice</a>
-                    </li>
-                    <li>
-                      <a href="https://www.merckvetmanual.com/" target="_blank" rel="noopener noreferrer">Merck Veterinary Manual（可搜 Canine Exercise、Fitness）</a>
-                    </li>
-                  </ul>
-                </div>
-              </details>
-            </div>
+      <section data-view="healthChat" hidden>
+        <div class="hero flow-sheet health-chat-hero">
+          <header class="flow-head">
+            <p class="badge">健康机器人</p>
+            <h2>和机器人聊聊</h2>
+            <p class="muted health-chat-lead">用自然语言描述情况即可。急症请直接去医院。</p>
+            <p class="health-species-badge" id="healthChatSpeciesBadge">当前：猫咪</p>
+            <p class="muted small-intro health-chat-hint-pre" id="healthChatHint"></p>
+          </header>
+          <div id="healthChatMessages" class="health-chat-log" role="log" aria-live="polite"></div>
+          <form id="healthChatForm" class="health-chat-form" autocomplete="off">
+            <label class="visually-hidden" for="healthChatInput">输入消息</label>
+            <input
+              type="text"
+              id="healthChatInput"
+              name="healthChatInput"
+              placeholder="例如：猫一天没尿了、精神很差…"
+              maxlength="2000"
+            />
+            <button type="submit" class="btn">发送</button>
+          </form>
+          <div class="hero-actions hero-actions--bottom">
+            <button type="button" class="btn secondary js-back-home">← 返回首页</button>
+          </div>
+        </div>
+      </section>
+
+      <section data-view="dailyTopic" hidden>
+        <div class="hero flow-sheet">
+          <div id="dailyTopicContent"></div>
+          <div class="hero-actions hero-actions--bottom">
+            <button type="button" class="btn secondary" id="btnDailyTopicBack">← 返回首页</button>
           </div>
         </div>
       </section>
@@ -285,24 +261,6 @@
           <p>关于人会不会被传染：这里只给日常卫生小建议，具体风险要问医生和兽医。</p>
           <div class="hero-actions hero-actions--bottom">
             <button type="button" class="btn secondary" id="linkHome">← 上一步</button>
-          </div>
-        </div>
-      </section>
-
-      <section data-view="menu" hidden>
-        <div class="hero hero-menu">
-          <h2>嗨，我们在帮 <span class="js-species-label">猫咪</span> 看呢</h2>
-          <p class="muted">主流程帮你梳理症状与紧急程度；更多话题在首页「健康与日常」里按猫/狗查看。</p>
-          <button type="button" class="menu-card menu-card--core" id="menuTriage">
-            <span class="menu-core-eyebrow">从这里开始</span>
-            <h3 class="menu-core-title">聊聊你的毛孩子怎么了</h3>
-            <p class="menu-core-desc">
-              标准化临床采集清单、急事先筛、按症状追问——把情况说清楚，方便判断要不要尽快去医院（非诊断）。
-            </p>
-          </button>
-          <p class="muted menu-tips-lead menu-after-core">返回首页可在「健康与日常」里展开运动、分诊提示与公开资料链接。</p>
-          <div class="hero-actions hero-actions--bottom">
-            <button type="button" class="btn secondary js-back-home">← 上一步</button>
           </div>
         </div>
       </section>
@@ -329,7 +287,7 @@
             <button type="button" class="btn option" id="startBehavior">脾气、害怕、乱尿</button>
           </div>
           <div class="hero-actions hero-actions--bottom">
-            <button type="button" class="btn secondary js-back-to-menu">← 上一步</button>
+            <button type="button" class="btn secondary js-back-home">← 返回首页</button>
           </div>
         </div>
       </section>
@@ -344,7 +302,7 @@
           <p class="muted">下面是给家长看的「就医提醒」，具体还是要医生检查。</p>
           <div id="emergencyList"></div>
           <div class="hero-actions hero-actions--bottom">
-            <button type="button" class="btn secondary js-back-to-menu">← 上一步</button>
+            <button type="button" class="btn secondary js-back-home">← 返回首页</button>
           </div>
         </div>
       </section>
@@ -354,7 +312,7 @@
           <h2>让家里更舒服一点</h2>
           <div id="behaviorContent"></div>
           <div class="hero-actions hero-actions--bottom">
-            <button type="button" class="btn secondary js-back-to-menu">← 上一步</button>
+            <button type="button" class="btn secondary js-back-home">← 返回首页</button>
           </div>
         </div>
       </section>
@@ -364,7 +322,7 @@
           <h2>怎么描述「哪里不对劲」</h2>
           <div id="bodyMapContent"></div>
           <div class="hero-actions hero-actions--bottom">
-            <button type="button" class="btn secondary js-back-to-menu">← 上一步</button>
+            <button type="button" class="btn secondary js-back-home">← 返回首页</button>
           </div>
         </div>
       </section>
@@ -374,7 +332,7 @@
           <h2>人和毛孩子一起住，卫生小提示</h2>
           <div id="zoonosisContent"></div>
           <div class="hero-actions hero-actions--bottom">
-            <button type="button" class="btn secondary js-back-to-menu">← 上一步</button>
+            <button type="button" class="btn secondary js-back-home">← 返回首页</button>
           </div>
         </div>
       </section>
@@ -384,7 +342,7 @@
           <h2>资料目录</h2>
           <div id="refsContent"></div>
           <div class="hero-actions hero-actions--bottom">
-            <button type="button" class="btn secondary js-back-to-menu">← 上一步</button>
+            <button type="button" class="btn secondary js-back-home">← 返回首页</button>
           </div>
         </div>
       </section>
@@ -398,6 +356,8 @@
 
     <script src="/js/triageEngine.js"></script>
     <script src="/js/intakeEval.js"></script>
+    <script src="/js/healthBotLocal.js"></script>
+    <script src="/js/healthBot.js"></script>
     <script src="/js/app.js"></script>
   </body>
 </html>
