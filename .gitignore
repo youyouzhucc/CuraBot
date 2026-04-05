@@ -1,5 +1,12 @@
 node_modules/
 .env
 .env.*
+!.env.example
 *.log
 .DS_Store
+
+# 用户上传与本地会话快照（保留目录占位）
+public/uploads/health/*
+!public/uploads/health/.gitkeep
+data/sessions/*
+!data/sessions/.gitkeep

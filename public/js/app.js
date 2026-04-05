@@ -1068,6 +1068,56 @@
     applyHeroImages();
     bindNav();
     renderHome();
+    registerServiceWorkerAndFollowUp();
+  }
+
+  function registerServiceWorkerAndFollowUp() {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw-curabot.js").catch(() => {});
+    }
+    setInterval(checkCurabotFollowUp, 60 * 1000);
+    checkCurabotFollowUp();
+  }
+
+  function checkCurabotFollowUp() {
+    try {
+      const raw = localStorage.getItem("curabot_followup_hint_at");
+      if (!raw) return;
+      const due = Number(raw);
+      if (Number.isNaN(due) || Date.now() < due) return;
+      if (localStorage.getItem("curabot_followup_dismissed") === "1") return;
+      showCurabotFollowUpBanner();
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  function showCurabotFollowUpBanner() {
+    if (document.getElementById("curabotFollowupBanner")) return;
+    const el = document.createElement("div");
+    el.id = "curabotFollowupBanner";
+    el.className = "curabot-followup-banner";
+    el.setAttribute("role", "status");
+    el.innerHTML = `
+      <div class="curabot-followup-inner">
+        <p><strong>CuraBot 回访</strong>：上次聊过的毛孩子，现在好些了吗？今天吃、喝、拉还正常吗？需要可再打开「健康问题」里的健康咨询。</p>
+        <button type="button" class="btn secondary" id="curabotFollowupDismiss">知道了</button>
+      </div>`;
+    document.body.appendChild(el);
+    const dismiss = document.getElementById("curabotFollowupDismiss");
+    if (dismiss) {
+      dismiss.addEventListener("click", () => {
+        el.remove();
+        localStorage.setItem("curabot_followup_dismissed", "1");
+      });
+    }
+    try {
+      if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+        new Notification("CuraBot 回访", { body: "毛孩子现在好些了吗？" });
+      }
+    } catch (e) {
+      /* ignore */
+    }
   }
 
   boot();

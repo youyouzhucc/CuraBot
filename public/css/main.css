@@ -1897,6 +1897,69 @@ footer.site {
   line-height: 1.45;
 }
 
+.health-decision-illustration {
+  margin: 0.55rem 0 0;
+  padding: 0;
+  max-width: 100%;
+}
+
+.health-decision-illustration-img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid var(--border-warm);
+  background: #fff;
+}
+
+.health-decision-illustration-cap {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.health-chat-upload-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.75rem;
+  margin-top: 0.5rem;
+  padding-top: 0.55rem;
+  border-top: 1px dashed rgba(166, 124, 114, 0.25);
+}
+
+.health-chat-upload-hint {
+  flex: 1 1 12rem;
+  min-width: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.curabot-followup-banner {
+  position: fixed;
+  z-index: 9999;
+  left: 50%;
+  bottom: 1.25rem;
+  transform: translateX(-50%);
+  max-width: min(92vw, 28rem);
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, #fffdfa 0%, #f5ebe6 100%);
+  border: 1px solid rgba(166, 124, 114, 0.35);
+  box-shadow: 0 12px 40px rgba(61, 52, 56, 0.18);
+}
+
+.curabot-followup-inner p {
+  margin: 0 0 0.55rem;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #44403c;
+}
+
+.curabot-followup-inner .btn {
+  width: 100%;
+}
+
 .health-chat-hero .health-chat-log {
   max-height: min(52vh, 440px);
   overflow-y: auto;

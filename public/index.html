@@ -262,6 +262,18 @@
                 对话纪要
               </button>
             </div>
+            <div class="health-chat-upload-bar" id="healthChatUploadBar" hidden>
+              <input
+                type="file"
+                id="healthChatFileInput"
+                class="visually-hidden"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+              />
+              <button type="button" class="btn secondary" id="btnHealthChatUpload">
+                上传照片/截图
+              </button>
+              <span class="muted small health-chat-upload-hint">便便、呕吐物、皮肤、眼睛等（需本机 npm start 与 API 密钥以启用视觉分析）</span>
+            </div>
           </form>
           <div class="hero-actions hero-actions--bottom">
             <button type="button" class="btn secondary js-back-home">← 返回首页</button>

@@ -1,6 +1,8 @@
 const path = require("path");
 const fs = require("fs");
+const crypto = require("crypto");
 const express = require("express");
+const multer = require("multer");
 
 /** 固定从 server.js 所在目录读 .env，避免从其它 cwd 启动 node 时读不到密钥 */
 require("dotenv").config({ path: path.join(__dirname, ".env") });
@@ -51,6 +53,30 @@ function resolveLlmConfig() {
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const publicDir = path.join(__dirname, "public");
+const uploadsHealthDir = path.join(publicDir, "uploads", "health");
+const sessionsDir = path.join(__dirname, "data", "sessions");
+
+[uploadsHealthDir, sessionsDir].forEach((d) => {
+  if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
+});
+
+const storageHealth = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, uploadsHealthDir),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname || "") || ".jpg";
+    const safe = [".jpg", ".jpeg", ".png", ".webp", ".gif"].includes(ext.toLowerCase()) ? ext : ".jpg";
+    cb(null, `${crypto.randomUUID()}${safe}`);
+  },
+});
+
+const uploadHealth = multer({
+  storage: storageHealth,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const ok = /^image\/(jpeg|png|webp|gif)$/i.test(file.mimetype || "");
+    cb(null, ok);
+  },
+});
 
 app.use(express.json({ limit: "120kb" }));
 
@@ -97,18 +123,159 @@ app.get("/api/capabilities", (_req, res) => {
       "GET /api/chat/status",
       "POST /api/chat",
       "POST /api/health-session/snapshot",
+      "GET /api/health-session/:id",
+      "POST /api/health-upload",
+      "POST /api/vision/analyze",
     ],
   });
 });
 
-/** 预留：HealthCheckSession 持久化 / 多端同步（当前前端为内存会话） */
+/** 图片上传（供「视觉查房」） */
+app.post("/api/health-upload", uploadHealth.single("file"), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ ok: false, error: "no_file" });
+  }
+  const url = `/uploads/health/${req.file.filename}`;
+  res.json({ ok: true, url, filename: req.file.filename });
+});
+
+/**
+ * 视觉辅助分析（OpenAI 兼容 vision；DeepSeek 等纯文本端点会失败并返回本地提示）
+ * body: { imageUrl, species?, context? }
+ */
+app.post("/api/vision/analyze", async (req, res) => {
+  try {
+    const { imageUrl, species, context } = req.body || {};
+    if (!imageUrl || typeof imageUrl !== "string") {
+      return res.status(400).json({ ok: false, error: "invalid_imageUrl", text: null });
+    }
+    const { key, base } = resolveLlmConfig();
+    if (!key) {
+      return res.json({
+        ok: true,
+        mode: "no_vision",
+        text:
+          "未配置 OPENAI_API_KEY / DEEPSEEK_API_KEY 时无法调用云端视觉。请用文字描述颜色、性状、是否带血、频次等，或配置密钥后重试上传。",
+        hint: "no_api_key",
+      });
+    }
+
+    const host = req.get("host") || `127.0.0.1:${PORT}`;
+    const proto = (req.headers["x-forwarded-proto"] || req.protocol || "http").split(",")[0].trim();
+    const absolute = imageUrl.startsWith("http") ? imageUrl : `${proto}://${host}${imageUrl}`;
+
+    const visionModel = (process.env.VISION_MODEL || "gpt-4o-mini").trim();
+    const sp = species === "dog" ? "犬" : "猫";
+    const userText = [
+      `你是兽医助理助手，用简体中文。当前关注：${sp}。`,
+      context ? `家长补充背景：${String(context).slice(0, 400)}` : "",
+      "请仅根据图像中可见线索，给出简短观察（非诊断）：颜色、性状、是否明显异常；并一句提示何时需要就医。120字以内。",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const timeoutMs = Number(process.env.OPENAI_TIMEOUT_MS) || 60000;
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), timeoutMs);
+
+    let r;
+    try {
+      r = await fetch(`${base}/chat/completions`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${key}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: visionModel,
+          messages: [
+            {
+              role: "user",
+              content: [
+                { type: "text", text: userText },
+                { type: "image_url", image_url: { url: absolute } },
+              ],
+            },
+          ],
+          max_tokens: 400,
+          temperature: 0.3,
+        }),
+        signal: ac.signal,
+      });
+    } catch (err) {
+      clearTimeout(timer);
+      const isAbort = err && err.name === "AbortError";
+      return res.json({
+        ok: true,
+        mode: "error",
+        text: isAbort ? "视觉请求超时，请稍后重试或改用文字描述。" : "视觉分析请求失败：" + (err.message || "network"),
+        hint: isAbort ? "timeout" : "network",
+      });
+    }
+    clearTimeout(timer);
+
+    if (!r.ok) {
+      const errText = await r.text();
+      return res.json({
+        ok: true,
+        mode: "unsupported_or_error",
+        text:
+          "当前配置的模型或接口可能不支持图像输入（部分国内网关仅文本）。请改用文字描述，或更换支持 OpenAI vision 的 OPENAI_BASE_URL / VISION_MODEL。",
+        hint: "http_" + r.status,
+        detail: errText.slice(0, 400),
+      });
+    }
+
+    const data = await r.json();
+    const reply =
+      data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+    const text = (reply && String(reply).trim()) || "";
+    return res.json({
+      ok: true,
+      mode: "vision",
+      text: text || "模型未返回可见描述，请补充文字说明。",
+    });
+  } catch (e) {
+    console.error("[api/vision/analyze]", e);
+    return res.status(500).json({ ok: false, error: "server", text: String(e.message || e) });
+  }
+});
+
+/** HealthCheckSession 快照落盘（JSON 文件，可换数据库） */
 app.post("/api/health-session/snapshot", (req, res) => {
-  res.json({
-    ok: true,
-    mode: "client_only",
-    note: "会话快照已接收；可在此接入数据库或用户体系。当前 CuraBot 决策树在浏览器内运行。",
-    keys: req.body && typeof req.body === "object" ? Object.keys(req.body).slice(0, 20) : [],
-  });
+  try {
+    const id = crypto.randomUUID();
+    const body = req.body && typeof req.body === "object" ? { ...req.body } : {};
+    delete body.id;
+    const payload = {
+      id,
+      savedAt: new Date().toISOString(),
+      ...body,
+    };
+    const fp = path.join(sessionsDir, `${id}.json`);
+    fs.writeFileSync(fp, JSON.stringify(payload, null, 2), "utf8");
+    return res.json({ ok: true, id, mode: "persisted", path: `/api/health-session/${id}` });
+  } catch (e) {
+    console.error("[api/health-session/snapshot]", e);
+    return res.status(500).json({ ok: false, error: String(e.message || e) });
+  }
+});
+
+app.get("/api/health-session/:id", (req, res) => {
+  const raw = path.basename(String(req.params.id || ""), ".json").replace(/[^a-f0-9-]/gi, "");
+  if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(raw)) {
+    return res.status(400).json({ error: "invalid_id" });
+  }
+  const fp = path.resolve(sessionsDir, `${raw}.json`);
+  if (!fp.startsWith(path.resolve(sessionsDir)) || !fs.existsSync(fp)) {
+    return res.status(404).json({ error: "not_found" });
+  }
+  try {
+    const json = JSON.parse(fs.readFileSync(fp, "utf8"));
+    res.json(json);
+  } catch (e) {
+    res.status(500).json({ error: "read_failed" });
+  }
 });
 
 /** 前端用于显示「云端是否可用」提示（不泄露密钥） */
@@ -235,9 +402,21 @@ app.post("/api/chat", async (req, res) => {
 
 app.use(express.static(publicDir));
 
+app.use((err, req, res, next) => {
+  if (!err) return next();
+  if (err.code === "LIMIT_FILE_SIZE") {
+    return res.status(400).json({ ok: false, error: "file_too_large", max: "5MB" });
+  }
+  if (err.message && /multer|Unexpected field/i.test(err.message)) {
+    return res.status(400).json({ ok: false, error: "upload_rejected", message: err.message });
+  }
+  console.error("[express]", err);
+  res.status(500).json({ ok: false, error: "server" });
+});
+
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`CuraBot listening on http://0.0.0.0:${PORT}`);
-  console.log("[API] GET /api/capabilities · GET /api/chat/status · POST /api/chat");
+  console.log("[API] GET /api/capabilities · GET /api/chat/status · POST /api/chat · POST /api/health-upload · POST /api/vision/analyze · health-session");
   const envFile = path.join(__dirname, ".env");
   const hasKey = Boolean(resolveLlmConfig().key);
   if (!fs.existsSync(envFile)) {
