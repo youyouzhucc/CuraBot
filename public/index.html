@@ -3,119 +3,134 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>CuraBot · 猫狗治愈分诊台</title>
+    <title>CuraBot · 毛孩子温柔小助手</title>
     <link rel="stylesheet" href="/css/main.css" />
   </head>
   <body>
+    <div class="warm-banner" id="warmBanner" role="img" aria-label="温馨的宠物陪伴氛围图"></div>
+
     <div class="wrap">
       <header class="topbar">
         <div class="brand">
           <div class="brand-mark" aria-hidden="true"></div>
           <div>
             CuraBot
-            <small>PetCheck 式分诊 · 行为心理 · 急诊红线</small>
+            <small>温柔分诊 · 安心陪伴</small>
           </div>
         </div>
         <button type="button" class="btn secondary" id="topMenuBtn" hidden>主菜单</button>
       </header>
 
       <section data-view="home">
-        <div class="hero">
-          <h1>猫狗治愈平台</h1>
+        <div class="hero home-hero">
+          <h1>今天，先陪你看一看 Ta 怎么了</h1>
           <p class="lead">
-            用结构化追问帮助您判断<strong>紧急程度</strong>（非诊断），并给出<strong>行为与福利</strong>层面的可执行提示。专业知识锚点为公开兽医教科书与指南的<strong>引用元数据</strong>，便于团队后续把规则库与纸质/电子参考书逐条对齐。
+            用几个<strong>简单问题</strong>，帮你判断要不要<strong>尽快去医院</strong>，再给一些<strong>在家能做的事</strong>。我们不是医生，不能下诊断，但能陪你少慌一点。
           </p>
-          <p class="muted">请先选择本次评估对象：</p>
-          <div class="species-pick">
-            <button type="button" class="btn cat" id="pickCat">猫</button>
-            <button type="button" class="btn dog" id="pickDog">犬</button>
-          </div>
-          <p class="muted">当前选择：<span class="js-species-label">猫</span></p>
-          <button type="button" class="btn" id="enterApp">进入</button>
-          <div class="disclaimer-box">
-            <strong>重要说明</strong>：本工具不给出诊断与处方，不提供药物剂量。急诊线索仅供参考，请以执业兽医现场判断为准。
-            <button type="button" class="btn secondary" id="btnDisclaimer" style="margin-top: 0.6rem">
-              完整免责声明
+
+          <p class="pick-title">先选一下：今天主要想帮谁看看？</p>
+          <div class="species-grid">
+            <button
+              type="button"
+              class="species-card is-selected"
+              data-species="cat"
+              id="pickCat"
+              aria-pressed="true"
+            >
+              <img id="heroCatImg" class="species-photo" src="" alt="" width="140" height="140" loading="lazy" />
+              <span class="species-name">猫咪</span>
+              <span class="species-pill" aria-hidden="true">✓ 已选</span>
             </button>
+            <button type="button" class="species-card" data-species="dog" id="pickDog" aria-pressed="false">
+              <img id="heroDogImg" class="species-photo" src="" alt="" width="140" height="140" loading="lazy" />
+              <span class="species-name">狗狗</span>
+              <span class="species-pill" aria-hidden="true">✓ 已选</span>
+            </button>
+          </div>
+          <p class="muted pick-hint">选好后卡片会高亮；随时可以回首页换一位。</p>
+
+          <button type="button" class="btn btn-enter" id="enterApp">进入 · 开始聊聊</button>
+
+          <div class="disclaimer-box">
+            <strong>小提示</strong>：这里不能代替医生当面检查，也不会告诉你具体吃多少药。
+            <button type="button" class="btn secondary btn-inline" id="btnDisclaimer">查看完整说明</button>
           </div>
         </div>
       </section>
 
       <section data-view="disclaimer" hidden>
         <div class="hero">
-          <h2>免责声明</h2>
+          <h2>使用前读一读</h2>
           <p>
             CuraBot
-            展示的内容来自团队基于公开兽医教育资料整理的信息性条目与规则骨架，用于辅助饲主理解<strong>何时应尽快就医</strong>及<strong>居家可执行的低应激/福利建议</strong>。
+            里的内容是给家长看的<strong>科普与分诊参考</strong>，用来帮你判断「要不要尽快去医院」「路上要注意什么」，不能当作确诊或治疗方案。
           </p>
           <p>
-            兽医临床存在显著个体差异；任何“分诊结果”均不能替代执业兽医的体检、实验室检查与影像学检查。若动物痛苦、迅速恶化或出现本应用提示的急诊红线，请立即前往医院。
+            每只毛孩子都不一样；真的不舒服时，请以<strong>执业兽医</strong>的检查为准。若 Ta 很痛苦、越来越糟，或你心里很不安，请直接去医院。
           </p>
-          <p>
-            关于<strong>人畜共患病</strong>：本应用仅提供非恐吓式卫生提示，具体风险评估需由兽医与人医分别完成。
-          </p>
+          <p>关于人会不会被传染：这里只给日常卫生小建议，具体风险要问医生和兽医。</p>
           <button type="button" class="btn secondary" id="linkHome">返回首页</button>
         </div>
       </section>
 
       <section data-view="menu" hidden>
         <div class="hero">
-          <h2>主菜单 · <span class="js-species-label">猫</span></h2>
-          <p class="muted">选择模块开始。可随时更换物种（返回首页）。</p>
+          <h2>嗨，我们在帮 <span class="js-species-label">猫咪</span> 看呢</h2>
+          <p class="muted">选一个入口就好，随时能回首页换人。</p>
           <div class="grid-menu">
             <button type="button" class="menu-card" id="menuTriage">
-              <h3>智能分诊</h3>
-              <p>急诊筛查、泌尿、消化、皮肤、毒物、行为等追问树</p>
+              <h3>聊聊怎么了</h3>
+              <p>急事先筛、尿尿、吐拉、皮肤、误食、闹脾气等</p>
             </button>
             <button type="button" class="menu-card" id="menuRed">
-              <h3>急诊红线速查</h3>
-              <p>GDV、尿道梗阻、呼吸窘迫、神经重症等</p>
+              <h3>这些情况要抓紧去医院</h3>
+              <p>一眼看懂：哪些算「别等」</p>
             </button>
             <button type="button" class="menu-card" id="menuBehavior">
-              <h3>行为与应激</h3>
-              <p>环境资源、可预测日常、就诊体验（原则性）</p>
+              <h3>让 Ta 放松一点</h3>
+              <p>环境、作息、去医院的小技巧</p>
             </button>
             <button type="button" class="menu-card" id="menuBody">
-              <h3>身体部位命名</h3>
-              <p>与解剖图谱对齐的入口，不做自动诊断</p>
+              <h3>怎么描述「哪里不舒服」</h3>
+              <p>帮你把部位说清楚（不是诊断）</p>
             </button>
             <button type="button" class="menu-card" id="menuZoonosis">
-              <h3>人畜共患与卫生</h3>
-              <p>抓咬、腹泻等场景的一般提示</p>
+              <h3>家里卫生小提示</h3>
+              <p>抓咬、拉肚子时人和宠物怎么注意</p>
             </button>
             <button type="button" class="menu-card" id="menuRefs">
-              <h3>参考书与指南索引</h3>
-              <p>默克手册、ECC、猫科、皮肤病、毒物、行为学等元数据</p>
+              <h3>资料目录（给团队用）</h3>
+              <p>参考书与指南列表</p>
             </button>
           </div>
-          <button type="button" class="btn secondary js-back-home">返回首页换物种</button>
+          <button type="button" class="btn secondary js-back-home">← 回首页换人</button>
         </div>
       </section>
 
       <section data-view="triageMenu" hidden>
         <div class="hero">
-          <h2>智能分诊</h2>
-          <p class="muted">选择一条追问流程。结果页会列出参考书/指南引用 ID，便于数据库对齐。</p>
-          <div class="option-grid" style="margin-top: 0.75rem">
-            <button type="button" class="btn option" id="startScreen">急诊红线快速筛查</button>
-            <button type="button" class="btn option" id="startUrinary">泌尿与排尿异常</button>
-            <button type="button" class="btn option" id="startGi">消化：呕吐与腹泻</button>
-            <button type="button" class="btn option" id="startSkin">皮肤、瘙痒与耳</button>
-            <button type="button" class="btn option" id="startToxic">可疑误食与毒物</button>
-            <button type="button" class="btn option" id="startBehavior">行为、恐惧与应激</button>
+          <h2>想从哪件事聊起？</h2>
+          <p class="muted">很多步骤可以<strong>多选</strong>，更像真实养宠时的「好几件同时担心」。</p>
+          <div class="option-grid triage-picks">
+            <button type="button" class="btn option" id="startScreen">先筛一筛：有没有急事</button>
+            <button type="button" class="btn option" id="startUrinary">尿尿不太对</button>
+            <button type="button" class="btn option" id="startGi">吐或拉肚子</button>
+            <button type="button" class="btn option" id="startSkin">痒、掉毛、耳朵</button>
+            <button type="button" class="btn option" id="startToxic">怕吃了不该吃的</button>
+            <button type="button" class="btn option" id="startBehavior">脾气、害怕、乱尿</button>
           </div>
           <button type="button" class="btn secondary js-open-menu">返回主菜单</button>
         </div>
       </section>
 
       <section data-view="flow" hidden>
-        <div id="flowContent" class="hero"></div>
+        <div id="flowContent" class="hero flow-sheet"></div>
       </section>
 
       <section data-view="emergency" hidden>
         <div class="hero">
-          <h2>急诊红线速查</h2>
-          <p class="muted">以下为教育性摘要，用于<strong>就医导向</strong>；具体病例由兽医诊断。</p>
+          <h2>这些情况，尽量别在家等</h2>
+          <p class="muted">下面是给家长看的「就医提醒」，具体还是要医生检查。</p>
           <div id="emergencyList"></div>
           <button type="button" class="btn secondary js-open-menu">返回主菜单</button>
         </div>
@@ -123,7 +138,7 @@
 
       <section data-view="behavior" hidden>
         <div class="hero">
-          <h2>行为与应激 · 居家可执行原则</h2>
+          <h2>让家里更舒服一点</h2>
           <div id="behaviorContent"></div>
           <button type="button" class="btn secondary js-open-menu">返回主菜单</button>
         </div>
@@ -131,7 +146,7 @@
 
       <section data-view="bodymap" hidden>
         <div class="hero">
-          <h2>身体部位命名</h2>
+          <h2>怎么描述「哪里不对劲」</h2>
           <div id="bodyMapContent"></div>
           <button type="button" class="btn secondary js-open-menu">返回主菜单</button>
         </div>
@@ -139,7 +154,7 @@
 
       <section data-view="zoonosis" hidden>
         <div class="hero">
-          <h2>人畜共患与卫生提示</h2>
+          <h2>人和毛孩子一起住，卫生小提示</h2>
           <div id="zoonosisContent"></div>
           <button type="button" class="btn secondary js-open-menu">返回主菜单</button>
         </div>
@@ -147,19 +162,16 @@
 
       <section data-view="refs" hidden>
         <div class="hero">
-          <h2>参考书与指南索引（元数据）</h2>
-          <p class="muted">
-            对应未来数据库表：<code>references</code>（书目/指南）、<code>symptom_nodes</code>、<code>rules</code>、<code>followup_questions</code>
-            之间的外键；此处为前端演示加载同一 JSON。
-          </p>
+          <h2>资料目录</h2>
           <div id="refsContent"></div>
           <button type="button" class="btn secondary js-open-menu">返回主菜单</button>
         </div>
       </section>
 
       <footer class="site">
-        CuraBot · 信息性教育工具 ·
+        CuraBot · 愿你与毛孩子都被温柔对待 ·
         <a href="https://github.com/youyouzhucc/CuraBot" target="_blank" rel="noopener">GitHub</a>
+        <span class="photo-credit">照片来自 Unsplash 仅供展示</span>
       </footer>
     </div>
 

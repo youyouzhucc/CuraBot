@@ -1,285 +1,613 @@
 {
   "meta": {
     "name": "CuraBot",
-    "version": "0.1.0",
-    "disclaimer": "本工具仅提供基于公开兽医教育资料整理的信息性分诊与行为提示，不能替代执业兽医的现场检查、化验与诊断。出现急诊红线症状请立即就医或联系急诊医院。",
-    "noRxNote": "不提供具体药物剂量或处方建议；用药须由执业兽医根据个体情况决定。"
+    "version": "0.2.0",
+    "disclaimer": "这里的内容用来帮你判断「要不要尽快去医院」，不能代替医生当面检查。若宠物很难受或越来越糟，请直接去医院。",
+    "noRxNote": "不提供吃药剂量，也不帮开药；用药一定要听执业兽医的。"
+  },
+  "uiImages": {
+    "heroCat": "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=640&q=80&auto=format&fit=crop",
+    "heroDog": "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=640&q=80&auto=format&fit=crop",
+    "bannerSoft": "https://images.unsplash.com/photo-1450778869180-f41ee9fdca2a?w=1200&q=70&auto=format&fit=crop"
   },
   "references": [
-    {"id": "mvm", "category": "全科手册", "title": "The Merck Veterinary Manual（默克兽医手册）", "role": "症状—疾病线索、预后与紧急程度叙述、鉴别方向"},
-    {"id": "ettinger", "category": "内科", "title": "Ettinger's Textbook of Veterinary Internal Medicine", "role": "系统化各系统疾病表现与病程，追问树主干"},
-    {"id": "nelson", "category": "内科", "title": "Nelson & Couto: Small Animal Internal Medicine", "role": "内科鉴别与随访要点"},
-    {"id": "silverstein-ecc", "category": "急诊重症", "title": "Small Animal Critical Care Medicine (Silverstein 等)", "role": "稳定化原则、重症监护思路"},
-    {"id": "bsava-ecc", "category": "急诊重症", "title": "BSAVA Manual of Canine and Feline Emergency and Critical Care", "role": "急诊流程与常见急症处理框架"},
-    {"id": "ecc-pocket", "category": "急诊重症", "title": "兽医急诊快速参考 / ECC 口袋书（类）", "role": "红旗症状组合、转运途中观察要点"},
-    {"id": "feline-patient", "category": "猫专科", "title": "The Feline Patient (Norsworthy 等)", "role": "猫科主诉追问逻辑"},
-    {"id": "august-feline", "category": "猫专科", "title": "The Cat: Clinical Medicine and Management (August)", "role": "猫内科与管理"},
-    {"id": "isfm", "category": "指南", "title": "ISFM 系列指南（泌尿、应激、老年猫等）", "role": "猫泌尿、应激、福利与就诊体验"},
-    {"id": "fossum", "category": "外科", "title": "Small Animal Surgery (Fossum)", "role": "腹痛、梗阻、创伤等急诊外科线索（就医导向）"},
-    {"id": "muller-derm", "category": "皮肤病", "title": "Muller & Kirk's Small Animal Dermatology", "role": "瘙痒、脱毛、耳病、外寄生虫分支"},
-    {"id": "gelatt-eye", "category": "眼科", "title": "Veterinary Ophthalmology (Gelatt 体系)", "role": "红眼、角膜与急性视力问题红旗"},
-    {"id": "dentistry", "category": "口腔", "title": "Veterinary Dentistry: Principles and Practice", "role": "口臭、进食困难、口腔疼痛线索"},
-    {"id": "toxicology", "category": "毒物", "title": "Small Animal Toxicology（常见教材体系）", "role": "误食、植物、家用化学品风险分层"},
-    {"id": "five-min-toxic", "category": "毒物", "title": "Five-Minute Consult Clinical Companion: Small Animal Toxicology", "role": "毒物速查条目结构参考"},
-    {"id": "overall-behavior", "category": "行为", "title": "Manual of Clinical Behavioral Medicine for Dogs and Cats (Overall)", "role": "恐惧/焦虑/攻击与疼痛共病提问框架"},
-    {"id": "bsava-behavior", "category": "行为", "title": "BSAVA Manual of Canine and Feline Behavioural Medicine", "role": "行为问题鉴别与干预原则"},
-    {"id": "low-stress", "category": "行为/福利", "title": "Low Stress Handling, Restraint and Behavior Modification (Yin)", "role": "低应激操作与福利相关提示"},
-    {"id": "plumb", "category": "药物学", "title": "Plumb's Veterinary Drug Handbook", "role": "内部校对：处方边界（本应用不做剂量引擎）"},
-    {"id": "wsava-aafp", "category": "指南", "title": "WSAVA / AAFP 等公开指南与声明", "role": "疼痛、传染病与护理标准（以可引用版本为准）"}
+    {"id": "mvm", "category": "手册", "title": "默克兽医手册", "role": "常见症状与护理说明"},
+    {"id": "ettinger", "category": "内科", "title": "兽医内科学（Ettinger 体系）", "role": "各系统常见病线索"},
+    {"id": "nelson", "category": "内科", "title": "小动物内科学（Nelson & Couto）", "role": "随访与鉴别要点"},
+    {"id": "silverstein-ecc", "category": "急诊", "title": "小动物重症医学", "role": "急症与稳定化原则"},
+    {"id": "bsava-ecc", "category": "急诊", "title": "BSAVA 小动物急诊重症手册", "role": "急诊流程"},
+    {"id": "ecc-pocket", "category": "急诊", "title": "急诊快速参考类", "role": "红旗症状组合"},
+    {"id": "feline-patient", "category": "猫", "title": "The Feline Patient", "role": "猫咪常见问题追问"},
+    {"id": "august-feline", "category": "猫", "title": "猫内科与管理（August）", "role": "猫健康管理"},
+    {"id": "isfm", "category": "指南", "title": "ISFM 猫科指南", "role": "猫泌尿、应激、老年猫"},
+    {"id": "fossum", "category": "外科", "title": "小动物外科学（Fossum）", "role": "腹痛、胀气、创伤等线索"},
+    {"id": "muller-derm", "category": "皮肤", "title": "小动物皮肤病学", "role": "瘙痒、脱毛、耳朵问题"},
+    {"id": "gelatt-eye", "category": "眼科", "title": "兽医眼科学", "role": "红眼、角膜问题"},
+    {"id": "dentistry", "category": "口腔", "title": "兽医牙科", "role": "口臭、进食困难"},
+    {"id": "toxicology", "category": "毒物", "title": "小动物毒理学", "role": "误食与中毒处理思路"},
+    {"id": "five-min-toxic", "category": "毒物", "title": "毒物速查类", "role": "常见毒物条目"},
+    {"id": "overall-behavior", "category": "行为", "title": "犬猫行为医学（Overall）", "role": "行为与疼痛区分"},
+    {"id": "bsava-behavior", "category": "行为", "title": "BSAVA 行为医学手册", "role": "行为问题与训练原则"},
+    {"id": "low-stress", "category": "行为", "title": "低应激保定与行为（Yin）", "role": "减少紧张与就诊体验"},
+    {"id": "plumb", "category": "药物", "title": "兽药手册（Plumb）", "role": "用药须兽医处方"},
+    {"id": "wsava-aafp", "category": "指南", "title": "WSAVA / AAFP 公开指南", "role": "疼痛与护理标准"}
   ],
   "emergencyRedLines": [
     {
       "id": "gdv-dog",
       "species": ["dog"],
-      "title": "胃扩张-扭转（GDV）可疑",
-      "signs": ["腹部胀大或发硬", "干呕或呕不出", "明显不安或精神萎靡", "流涎增多"],
-      "action": "疑似 GDV 属于时间敏感急症，请立即前往具备急诊与外科能力的医院，不要等待“观察一下”。",
+      "title": "狗狗：肚子胀得很快、一直想吐却吐不出来",
+      "signs": ["肚子明显鼓起来或摸起来很硬", "干呕、吐不出东西", "特别不安或趴着不动", "口水变多"],
+      "action": "这可能是胃扭转等急症，拖久了很危险。请马上开车去能做急诊和手术的医院，不要在家等。",
       "refIds": ["fossum", "silverstein-ecc", "ecc-pocket"]
     },
     {
       "id": "uro-cat",
       "species": ["cat"],
-      "title": "猫下泌尿道梗阻（尿道梗阻）可疑",
-      "signs": ["频繁蹲盆却几乎无尿或滴尿", "下腹部疼痛、嚎叫", "精神差、呕吐（尤其公猫）"],
-      "action": "疑似尿道梗阻可迅速危及生命，请立即急诊。不要强行灌水或自行导尿。",
+      "title": "猫咪：老是去猫砂盆，却几乎尿不出",
+      "signs": ["频繁蹲盆，只有几滴尿或没有尿", "肚子一碰就疼、会叫", "精神差、呕吐（公猫更危险）"],
+      "action": "猫咪尿不出来可能很快危及生命。请立刻去急诊，不要硬灌水，也不要自己尝试导尿。",
       "refIds": ["feline-patient", "isfm", "silverstein-ecc"]
     },
     {
       "id": "resp-distress",
       "species": ["cat", "dog"],
-      "title": "呼吸窘迫",
-      "signs": ["张口呼吸（猫）", "明显费力呼吸、鼻翼扇动", "口唇发紫或黏膜苍白", "静息时呼吸频率异常增高且持续"],
-      "action": "呼吸窘迫属于急诊红线，请尽快就医；途中减少应激、避免捂热与剧烈运动。",
+      "title": "呼吸很费劲或喘不上气",
+      "signs": ["猫像狗一样张嘴喘气（安静时）", "呼吸很用力、肚子一鼓一鼓", "嘴巴舌头颜色发紫或特别白", "安静时呼吸也明显变快并一直不停"],
+      "action": "请尽快去医院急诊；路上别捂太紧，尽量别让它激动乱跑。",
       "refIds": ["ettinger", "silverstein-ecc", "mvm"]
     },
     {
       "id": "neuro-acute",
       "species": ["cat", "dog"],
-      "title": "急性神经重症",
-      "signs": ["抽搐持续或反复发作", "突发瘫痪或无法站立", "意识障碍、昏迷", "严重头颈疼痛征象"],
-      "action": "请立即急诊；记录发作持续时间与频率，避免口腔塞物，注意转运安全。",
+      "title": "抽搐、站不起来、意识不清",
+      "signs": ["抽个不停或一阵接一阵", "突然站不起来、拖后腿", "叫不醒、昏沉沉", "头颈明显疼痛不让碰"],
+      "action": "请立刻急诊。可以记录发作了多久、发作几次，但不要往嘴里塞东西。",
       "refIds": ["silverstein-ecc", "ettinger"]
     },
     {
       "id": "hemorrhage-shock",
       "species": ["cat", "dog"],
-      "title": "大出血或休克征象",
-      "signs": ["大量外出血", "牙龈苍白、肢端冰凉", "脉搏弱快、意识淡漠"],
-      "action": "立即急诊；在兽医指导下可加压止血，但不要延误出发。",
+      "title": "流血很多或像要休克",
+      "signs": ["血止不住", "牙龈发白、脚垫发凉", "脉搏很弱、反应迟钝"],
+      "action": "立刻去急诊；可在兽医指导下加压止血，但别耽误出发。",
       "refIds": ["bsava-ecc", "silverstein-ecc"]
     },
     {
       "id": "toxin-unknown",
       "species": ["cat", "dog"],
-      "title": "可疑毒物/药物误食（不确定种类或剂量）",
-      "signs": ["误食后很快出现精神异常、流涎、呕吐、抽搐等", "已知或高度怀疑防冻液、鼠药、人用药物大量摄入"],
-      "action": "不要自行催吐除非兽医明确指示；携带包装尽快联系急诊毒物处置。",
+      "title": "可能吃了毒药、老鼠药、防冻液或大量人用药",
+      "signs": ["吃完后很快不对劲：流口水、呕吐、抽抽、走路不稳", "明确或高度怀疑吃了上面这些东西"],
+      "action": "不要自己催吐，除非兽医在电话里让你做；带上包装或照片，尽快联系急诊。",
       "refIds": ["toxicology", "five-min-toxic", "silverstein-ecc"]
     }
   ],
   "bodyRegions": [
-    {"id": "head", "label": "头颈", "note": "命名与解剖图谱对照用，非诊断"},
-    {"id": "thorax", "label": "胸背", "note": "心肺与上呼吸道相关主诉入口"},
-    {"id": "abdomen", "label": "腹腰", "note": "消化、泌尿相关主诉入口"},
-    {"id": "limbs", "label": "四肢", "note": "跛行、外伤、关节"},
-    {"id": "skin", "label": "皮肤被毛", "note": "瘙痒、脱毛、皮疹、耳"},
-    {"id": "urogenital", "label": "会阴/泌尿生殖外观", "note": "排尿姿势、分泌物（仅作线索）"}
+    {"id": "head", "label": "头、脸、脖子", "note": "眼睛、耳朵、口腔、咳嗽等可以从这里想起"},
+    {"id": "thorax", "label": "胸口、后背", "note": "呼吸、心脏相关不适可以记这里"},
+    {"id": "abdomen", "label": "肚子、腰", "note": "呕吐、拉肚子、肚子胀等"},
+    {"id": "limbs", "label": "四条腿、爪子", "note": "瘸、肿、外伤、关节"},
+    {"id": "skin", "label": "皮肤、毛", "note": "痒、掉毛、红疹、寄生虫"},
+    {"id": "urogenital", "label": "小便、屁屁附近", "note": "尿尿姿势、分泌物、乱尿等（只是帮助描述）"}
   ],
   "triageFlows": {
     "screen": {
-      "title": "急诊红线快速筛查",
+      "title": "急事先筛一下",
       "species": ["cat", "dog"],
       "start": "s0",
       "steps": {
         "s0": {
-          "text": "请选择当前最贴近的一项描述（按物种会自动隐藏不适用选项）：",
+          "text": "下面这些情况，**有哪一项就像在说我家毛孩子**？可以勾选多项，选完点「看看怎么办」。",
+          "multi": true,
+          "submitLabel": "选好了，看看怎么办",
+          "noneLabel": "这些急事都没有，继续下一步",
           "options": [
-            {"label": "明显呼吸费力、张口呼吸（猫）或静息呼吸异常急促", "level": "emergency", "refIds": ["silverstein-ecc", "mvm"]},
-            {"label": "猫：蹲盆频繁但几乎无尿，或伴呕吐、精神差", "level": "emergency", "species": ["cat"], "refIds": ["feline-patient", "isfm"]},
-            {"label": "犬：腹胀、干呕、明显不适", "level": "emergency", "species": ["dog"], "refIds": ["fossum", "silverstein-ecc"]},
-            {"label": "抽搐不止、意识异常、突发瘫痪", "level": "emergency", "refIds": ["silverstein-ecc", "ettinger"]},
-            {"label": "大出血或休克表现（苍白、冰凉、意识差）", "level": "emergency", "refIds": ["bsava-ecc"]},
-            {"label": "高度怀疑毒物/药物误食且已有症状", "level": "emergency", "refIds": ["toxicology", "five-min-toxic"]},
-            {"label": "以上红线情况都不符合", "next": "s1"}
-          ]
+            {
+              "id": "breath",
+              "label": "喘得很厉害、呼吸很费劲（猫安静时还像狗一样张嘴喘气）",
+              "level": "emergency",
+              "homeCare": "路上少包裹、保持通风，尽量别激动。",
+              "vetNeed": "请尽快去能看急诊的医院。",
+              "refIds": ["silverstein-ecc", "mvm"]
+            },
+            {
+              "id": "uro-cat",
+              "label": "猫：一直蹲猫砂盆，却几乎尿不出，或精神差、还吐",
+              "level": "emergency",
+              "species": ["cat"],
+              "homeCare": "不要灌很多水；尽快去急诊。",
+              "vetNeed": "请立刻去急诊（尤其公猫）。",
+              "refIds": ["feline-patient", "isfm"]
+            },
+            {
+              "id": "gdv",
+              "label": "狗：肚子胀得很快、干呕或吐不出、很难受的样子",
+              "level": "emergency",
+              "species": ["dog"],
+              "homeCare": "不要喂水喂食拖延时间，尽快出发。",
+              "vetNeed": "请马上急诊，可能需要紧急手术。",
+              "refIds": ["fossum", "silverstein-ecc"]
+            },
+            {
+              "id": "neuro",
+              "label": "抽个不停、叫不醒、或突然站不起来/拖后腿",
+              "level": "emergency",
+              "homeCare": "记录发作时间；转运时固定好，防摔。",
+              "vetNeed": "请立刻急诊。",
+              "refIds": ["silverstein-ecc", "ettinger"]
+            },
+            {
+              "id": "bleed",
+              "label": "流血很多，或牙龈发白、脚垫冰凉、快没反应",
+              "level": "emergency",
+              "homeCare": "用干净布加压止血（如兽医电话指导）。",
+              "vetNeed": "请立刻急诊。",
+              "refIds": ["bsava-ecc", "silverstein-ecc"]
+            },
+            {
+              "id": "toxin",
+              "label": "怀疑吃了毒药/老鼠药/巧克力葡萄等，而且已经有症状",
+              "level": "emergency",
+              "homeCare": "保留呕吐物或包装拍照；不要自行催吐除非兽医说可以。",
+              "vetNeed": "请尽快急诊并联系中毒处理。",
+              "refIds": ["toxicology", "five-min-toxic"]
+            }
+          ],
+          "noneNext": "s1"
         },
         "s1": {
-          "text": "是否有以下中度警示情况？",
+          "text": "那再看看有没有下面这些情况？也可以多选。",
+          "multi": true,
+          "submitLabel": "选好了，看看怎么办",
+          "noneLabel": "这些也没有，我只是在担心小问题",
           "options": [
-            {"label": "持续呕吐或腹泻超过 24 小时，或无法进食进水", "level": "urgent", "refIds": ["ettinger", "mvm"]},
-            {"label": "中度腹痛、腹胀进行性加重", "level": "urgent", "refIds": ["fossum", "ettinger"]},
-            {"label": "发热或精神显著变差但尚能活动", "level": "urgent", "refIds": ["mvm"]},
-            {"label": "以上都没有，仅为轻度或偶发问题", "next": "OUTCOME", "outcome": {"level": "monitor", "title": "可先观察与预约门诊", "body": "建议记录症状频率、饮食与大小便情况；若加重或出现红线症状，请重新评估或就医。", "refIds": ["mvm"]}}
-          ]
+            {
+              "id": "vomit-long",
+              "label": "吐或拉超过一天，或者完全不吃不喝",
+              "level": "urgent",
+              "homeCare": "可以记录吐/拉几次、最后一次进食时间；若幼宠更小更要注意脱水。",
+              "vetNeed": "建议今天或明天尽快看兽医。",
+              "refIds": ["ettinger", "mvm"]
+            },
+            {
+              "id": "pain-bloat",
+              "label": "肚子痛、肚子越来越胀、一碰就叫",
+              "level": "urgent",
+              "homeCare": "不要强行喂止痛药；减少跑动。",
+              "vetNeed": "建议尽快门诊，狗腹胀要格外警惕。",
+              "refIds": ["fossum", "ettinger"]
+            },
+            {
+              "id": "fever-down",
+              "label": "明显没精神、发热感或比平时蔫很多",
+              "level": "urgent",
+              "homeCare": "提供安静环境，观察是否还喝水、是否呕吐。",
+              "vetNeed": "建议尽快预约兽医检查。",
+              "refIds": ["mvm"]
+            }
+          ],
+          "noneOutcome": {
+            "level": "monitor",
+            "title": "可以先在家多观察一下",
+            "body": "听起来暂时不像最急那一类。你可以把吃喝、大小便、精神状态记个小笔记或录短视频，心里不踏实或变严重，随时再点「急事先筛」或预约门诊。",
+            "vetNeed": "若一切正常只是偶尔小毛病，可观察；不放心就预约门诊求个安心。",
+            "homeCare": "保持环境安静、饮水干净；别乱喂人用药。",
+            "refIds": ["mvm"]
+          }
         }
       }
     },
     "urinary": {
-      "title": "泌尿与排尿异常",
+      "title": "尿尿不正常",
       "species": ["cat", "dog"],
       "start": "u0",
       "steps": {
         "u0": {
-          "text": "排尿方面最突出的表现是？",
+          "text": "最让你担心的是哪一种？",
           "options": [
-            {"label": "排尿困难、尿少或无尿、频繁蹲盆", "next": "u1"},
-            {"label": "尿血、尿液颜色异常", "next": "u2"},
-            {"label": "尿频但尿量尚可，无梗阻征象", "next": "u3"},
-            {"label": "乱尿/标记行为为主，排尿本身顺畅", "next": "u4"}
+            {"label": "尿得少、尿得费劲、老蹲盆", "next": "u1"},
+            {"label": "尿里带血、颜色怪", "next": "u2"},
+            {"label": "尿频但尿量还行，不像尿不出来", "next": "u3"},
+            {"label": "主要是乱尿，尿尿本身还算顺", "next": "u4"}
           ]
         },
         "u1": {
-          "text": "动物种类与性别？公猫出现少尿/无尿需高度警惕梗阻。",
+          "text": "公猫「尿少/尿不出」要特别小心。下面哪句更像？",
           "options": [
-            {"label": "公猫，伴精神差、呕吐或腹部疼痛", "level": "emergency", "refIds": ["feline-patient", "isfm"]},
-            {"label": "母猫或犬，明显尿闭或少尿", "level": "urgent", "refIds": ["ettinger", "mvm"]},
-            {"label": "症状较轻，刚开始尿频尿痛", "level": "urgent", "refIds": ["mvm", "nelson"]}
+            {
+              "label": "公猫，精神差、吐或肚子一碰就疼",
+              "level": "emergency",
+              "homeCare": "别灌水；尽快出发。",
+              "vetNeed": "请立刻急诊。",
+              "refIds": ["feline-patient", "isfm"]
+            },
+            {
+              "label": "母猫或狗，明显尿少或尿不出",
+              "level": "urgent",
+              "homeCare": "记录最后一次尿尿时间。",
+              "vetNeed": "请尽快看兽医。",
+              "refIds": ["ettinger", "mvm"]
+            },
+            {
+              "label": "刚开始尿频、尿尿痛，精神还行",
+              "level": "urgent",
+              "homeCare": "多喝水是否合适请听兽医；先别乱吃药。",
+              "vetNeed": "建议尽快门诊检查。",
+              "refIds": ["mvm", "nelson"]
+            }
           ]
         },
         "u2": {
-          "text": "血尿可能来自泌尿道、生殖道或全身性问题，需化验鉴别。",
+          "text": "尿血原因很多，需要化验才能确定。",
           "options": [
-            {"label": "全程血尿伴排尿不适", "level": "urgent", "refIds": ["ettinger", "mvm"]},
-            {"label": "偶见淡红，动物精神食欲好", "level": "monitor", "refIds": ["mvm"]}
+            {
+              "label": "全程血尿，尿尿也费劲",
+              "level": "urgent",
+              "homeCare": "记录尿血从什么时候开始。",
+              "vetNeed": "建议尽快门诊。",
+              "refIds": ["ettinger", "mvm"]
+            },
+            {
+              "label": "偶尔一点淡红，吃喝玩都正常",
+              "level": "monitor",
+              "homeCare": "继续观察是否加重；多喝水是否合适问兽医。",
+              "vetNeed": "若反复出现或加重，请预约门诊。",
+              "refIds": ["mvm"]
+            }
           ]
         },
         "u3": {
-          "text": "提示炎症或刺激可能较大，但仍需排除结石、感染等。",
+          "text": "尿频但还能尿出来，常见于发炎或刺激，也要排除结石等。",
           "options": [
-            {"label": "已持续数日或反复发作", "level": "urgent", "refIds": ["feline-patient", "isfm"]},
-            {"label": "首次发现、精神食欲好", "level": "monitor", "refIds": ["mvm"]}
+            {
+              "label": "已经好几天或老反复",
+              "level": "urgent",
+              "homeCare": "记录排尿频率；猫砂盆是否好进。",
+              "vetNeed": "建议尽快门诊。",
+              "refIds": ["feline-patient", "isfm"]
+            },
+            {
+              "label": "第一次发现，精神食欲都好",
+              "level": "monitor",
+              "homeCare": "多观察是否变严重或尿不出来。",
+              "vetNeed": "加重或尿闭迹象请立刻急诊。",
+              "refIds": ["mvm"]
+            }
           ]
         },
         "u4": {
-          "text": "行为问题常与应激、环境变化相关，需与疾病鉴别。",
+          "text": "乱尿常与压力、环境变化有关，但也要排除生病。",
           "options": [
-            {"label": "合并不适、舔舐尿道口或排尿姿势异常", "level": "urgent", "refIds": ["overall-behavior", "isfm"]},
-            {"label": "环境变化后出现，排尿体检未见异常线索", "level": "routine", "refIds": ["overall-behavior", "bsava-behavior"]}
+            {
+              "label": "会舔尿道口、尿尿姿势怪、或伴随其他不舒服",
+              "level": "urgent",
+              "homeCare": "减少争吵与应激源；砂盆干净。",
+              "vetNeed": "建议先看兽医排除泌尿问题。",
+              "refIds": ["overall-behavior", "isfm"]
+            },
+            {
+              "label": "搬家、新成员后出现，身体看起来没别的问题",
+              "level": "routine",
+              "homeCare": "增加藏身处、砂盆数量与安静环境。",
+              "vetNeed": "仍可做体检求安心；行为可咨询训练师/行为兽医。",
+              "refIds": ["overall-behavior", "bsava-behavior"]
+            }
           ]
         }
       }
     },
     "gi": {
-      "title": "消化：呕吐与腹泻",
+      "title": "吐或拉肚子",
       "species": ["cat", "dog"],
       "start": "g0",
       "steps": {
         "g0": {
-          "text": "呕吐还是腹泻为主？",
+          "text": "主要是吐、还是拉？（选一项进入下一步）",
           "options": [
-            {"label": "呕吐为主", "next": "g1"},
-            {"label": "腹泻为主", "next": "g2"},
-            {"label": "两者都有", "next": "g3"}
+            {"label": "吐为主", "next": "g1"},
+            {"label": "拉稀为主", "next": "g2"},
+            {"label": "又吐又拉", "next": "g3"}
           ]
         },
         "g1": {
-          "text": "呕吐频率与全身状态？幼犬幼猫脱水更快。",
+          "text": "下面哪些符合？可以勾多项。",
+          "multi": true,
+          "submitLabel": "选好了，看看怎么办",
+          "noneLabel": "都不清楚，先按最轻的看",
           "options": [
-            {"label": "频繁呕吐、无法保水，或伴腹胀与明显不适（犬）", "level": "emergency", "refIds": ["fossum", "silverstein-ecc"]},
-            {"label": "偶吐 1–2 次，精神食欲尚可", "level": "monitor", "refIds": ["mvm", "ettinger"]},
-            {"label": "反复呕吐超过 24 小时", "level": "urgent", "refIds": ["ettinger", "nelson"]}
-          ]
+            {
+              "id": "g1e",
+              "label": "一直吐、喝不进水，或狗肚子胀得很大还很疼",
+              "level": "emergency",
+              "homeCare": "别硬喂；幼犬幼猫更容易脱水。",
+              "vetNeed": "请尽快急诊或马上门诊。",
+              "refIds": ["fossum", "silverstein-ecc"]
+            },
+            {
+              "id": "g1u",
+              "label": "吐了一天以上，或完全不吃东西",
+              "level": "urgent",
+              "homeCare": "记录吐几次、最后一次进食。",
+              "vetNeed": "建议今天或明天看兽医。",
+              "refIds": ["ettinger", "nelson"]
+            },
+            {
+              "id": "g1m",
+              "label": "就吐了一两次，精神还能玩能吃",
+              "level": "monitor",
+              "homeCare": "可短暂禁食遵医嘱；小口水试喝。",
+              "vetNeed": "加重或再吐请尽快门诊。",
+              "refIds": ["mvm", "ettinger"]
+            }
+          ],
+          "noneOutcome": {
+            "level": "monitor",
+            "title": "信息不全时先保守一点",
+            "body": "若你不太确定，宁可多观察吃喝和精神，一旦出现吐个不停、腹胀、蔫了，请尽快去医院。",
+            "vetNeed": "心里不踏实就预约门诊。",
+            "homeCare": "记录症状时间与视频。",
+            "refIds": ["mvm"]
+          }
         },
         "g2": {
-          "text": "腹泻性状与伴随症状？",
+          "text": "拉肚子这边，哪些符合？可多选。",
+          "multi": true,
+          "submitLabel": "选好了，看看怎么办",
+          "noneLabel": "只是软便一次，精神很好",
           "options": [
-            {"label": "大量血便或黑便、虚弱", "level": "emergency", "refIds": ["silverstein-ecc", "mvm"]},
-            {"label": "稀便但精神尚可", "level": "monitor", "refIds": ["mvm"]},
-            {"label": "腹泻超过 48 小时或幼龄动物", "level": "urgent", "refIds": ["ettinger"]}
-          ]
+            {
+              "id": "g2e",
+              "label": "拉很多血、或拉黑便、特别虚",
+              "level": "emergency",
+              "homeCare": "保留粪便照片；别乱喂止泻药。",
+              "vetNeed": "请尽快急诊。",
+              "refIds": ["silverstein-ecc", "mvm"]
+            },
+            {
+              "id": "g2u",
+              "label": "拉稀超过两天，或幼宠很小",
+              "level": "urgent",
+              "homeCare": "注意是否喝水、是否呕吐。",
+              "vetNeed": "建议尽快门诊。",
+              "refIds": ["ettinger"]
+            },
+            {
+              "id": "g2m",
+              "label": "稀便但精神还行",
+              "level": "monitor",
+              "homeCare": "清淡饮食是否合适问兽医；观察是否加重。",
+              "vetNeed": "变差或血便请尽快就医。",
+              "refIds": ["mvm"]
+            }
+          ],
+          "noneOutcome": {
+            "level": "monitor",
+            "title": "可以先观察",
+            "body": "偶尔软便一次、精神好，可先观察饮食与是否再发。",
+            "vetNeed": "持续或加重请门诊。",
+            "homeCare": "不要突然换粮；记录粪便情况。",
+            "refIds": ["mvm"]
+          }
         },
         "g3": {
-          "text": "同时存在呕吐与腹泻时脱水风险升高。",
+          "text": "又吐又拉时更容易脱水。哪些符合？可多选。",
+          "multi": true,
+          "submitLabel": "选好了，看看怎么办",
           "options": [
-            {"label": "精神差、不饮水、牙龈干燥", "level": "emergency", "refIds": ["silverstein-ecc"]},
-            {"label": "能进水、反应尚可", "level": "urgent", "refIds": ["ettinger", "mvm"]}
-          ]
+            {
+              "id": "g3e",
+              "label": "几乎不喝、牙龈干、精神很差",
+              "level": "emergency",
+              "homeCare": "幼宠更危险；尽快出发。",
+              "vetNeed": "请尽快急诊。",
+              "refIds": ["silverstein-ecc"]
+            },
+            {
+              "id": "g3u",
+              "label": "能喝点水、反应还行",
+              "level": "urgent",
+              "homeCare": "可少量多次给水是否合适请听兽医。",
+              "vetNeed": "建议尽快门诊。",
+              "refIds": ["ettinger", "mvm"]
+            }
+          ],
+          "noneOutcome": {
+            "level": "urgent",
+            "title": "又吐又拉建议别拖",
+            "body": "若你未勾选但仍又吐又拉，请默认更谨慎，联系兽医或门诊。",
+            "vetNeed": "建议尽快让兽医评估脱水风险。",
+            "homeCare": "记录次数与时间。",
+            "refIds": ["ettinger", "mvm"]
+          }
         }
       }
     },
     "skin": {
-      "title": "皮肤、瘙痒与耳",
+      "title": "皮肤痒、掉毛、耳朵",
       "species": ["cat", "dog"],
       "start": "sk0",
       "steps": {
         "sk0": {
-          "text": "主要表现？",
+          "text": "最明显的是？",
           "options": [
-            {"label": "剧烈瘙痒、抓挠", "next": "sk1"},
-            {"label": "脱毛、皮屑或皮疹", "next": "sk2"},
-            {"label": "耳痒、耳臭或甩头", "next": "sk3"}
+            {"label": "痒得受不了、一直抓", "next": "sk1"},
+            {"label": "掉毛、皮屑、红疹", "next": "sk2"},
+            {"label": "挠耳朵、耳臭、甩头", "next": "sk3"}
           ]
         },
         "sk1": {
-          "text": "寄生虫、过敏、感染等均需鉴别；注意人畜共患病可能。",
+          "text": "痒的原因很多，有的会传染人。下面哪句更像？",
           "options": [
-            {"label": "伴皮肤破损、渗出或全身不适", "level": "urgent", "refIds": ["muller-derm", "mvm"]},
-            {"label": "局限瘙痒、精神好", "level": "routine", "refIds": ["muller-derm"]}
+            {
+              "label": "抓破皮、流水、或全身不舒服",
+              "level": "urgent",
+              "homeCare": "戴伊丽莎白圈防抓挠（若宠物能接受）；别用人用膏药乱涂。",
+              "vetNeed": "建议尽快门诊。",
+              "refIds": ["muller-derm", "mvm"]
+            },
+            {
+              "label": "局部痒，精神还好",
+              "level": "routine",
+              "homeCare": "检查是否有跳蚤；环境吸尘。",
+              "vetNeed": "反复发作还是建议兽医查过敏/寄生虫。",
+              "refIds": ["muller-derm"]
+            }
           ]
         },
         "sk2": {
-          "text": "脱毛模式（对称性、斑片状）有助鉴别，但仍需兽医检查。",
+          "text": "掉毛要区分是换季还是皮肤病。",
           "options": [
-            {"label": "快速扩散或伴全身症状", "level": "urgent", "refIds": ["muller-derm"]},
-            {"label": "慢性反复", "level": "routine", "refIds": ["muller-derm", "mvm"]}
+            {
+              "label": "几天内扩散很快，或精神差",
+              "level": "urgent",
+              "homeCare": "拍照记录变化。",
+              "vetNeed": "建议尽快门诊。",
+              "refIds": ["muller-derm"]
+            },
+            {
+              "label": "老毛病反复，精神还行",
+              "level": "routine",
+              "homeCare": "梳毛、温和洗澡频率问兽医。",
+              "vetNeed": "预约门诊做皮肤检查。",
+              "refIds": ["muller-derm", "mvm"]
+            }
           ]
         },
         "sk3": {
-          "text": "外耳炎常与过敏、寄生虫、感染相关；剧烈疼痛需就诊。",
+          "text": "耳朵不舒服常见于感染或过敏。",
           "options": [
-            {"label": "疼痛明显、头歪或共济失调", "level": "urgent", "refIds": ["muller-derm"]},
-            {"label": "轻度搔抓耳部", "level": "routine", "refIds": ["muller-derm"]}
+            {
+              "label": "头歪、走不稳、或一碰耳朵就剧痛",
+              "level": "urgent",
+              "homeCare": "别自己掏深耳道。",
+              "vetNeed": "建议尽快门诊。",
+              "refIds": ["muller-derm"]
+            },
+            {
+              "label": "偶尔挠挠，精神好",
+              "level": "routine",
+              "homeCare": "保持耳外干爽；别乱滴人用药。",
+              "vetNeed": "反复发作请兽医看耳朵。",
+              "refIds": ["muller-derm"]
+            }
           ]
         }
       }
     },
     "toxic": {
-      "title": "可疑误食与毒物",
+      "title": "怕它吃了不该的东西",
       "species": ["cat", "dog"],
       "start": "t0",
       "steps": {
         "t0": {
-          "text": "能否明确误食物质与时间？",
+          "text": "你担心的情况有哪些？可多选。",
+          "multi": true,
+          "submitLabel": "选好了，看看怎么办",
           "options": [
-            {"label": "不确定物质或剂量，已有神经、呕吐、流涎等症状", "level": "emergency", "refIds": ["toxicology", "five-min-toxic"]},
-            {"label": "明确少量巧克力/葡萄等常见风险物，暂无症状", "level": "urgent", "refIds": ["toxicology", "mvm"]},
-            {"label": "仅怀疑舔舐，无症状", "level": "monitor", "refIds": ["toxicology"]}
-          ]
+            {
+              "id": "tx-e",
+              "label": "不知道吃了啥或吃了多少，已经出现抽抽、吐、流口水、神志不对",
+              "level": "emergency",
+              "homeCare": "保留包装/照片；保持安静。",
+              "vetNeed": "请立刻急诊。",
+              "refIds": ["toxicology", "five-min-toxic"]
+            },
+            {
+              "id": "tx-u",
+              "label": "吃了巧克力/葡萄/木糖醇等，但暂时看起来正常",
+              "level": "urgent",
+              "homeCare": "先别乱催吐；记录体重与大概摄入量。",
+              "vetNeed": "马上打电话给兽医或急诊问要不要处理。",
+              "refIds": ["toxicology", "mvm"]
+            },
+            {
+              "id": "tx-m",
+              "label": "只是舔了一下，不确定吃进去没有，暂时正常",
+              "level": "monitor",
+              "homeCare": "继续观察 12–24 小时精神、呕吐、腹泻。",
+              "vetNeed": "出现异常立即联系兽医。",
+              "refIds": ["toxicology"]
+            }
+          ],
+          "noneOutcome": {
+            "level": "monitor",
+            "title": "若完全不确定",
+            "body": "如果你其实没观察到误食，只是担心，也可以先记录饮食，出现症状再评估。",
+            "vetNeed": "有症状或误食高风险物品请致电兽医。",
+            "homeCare": "把危险物品收好。",
+            "refIds": ["toxicology"]
+          }
         }
       }
     },
     "behavior": {
-      "title": "行为、恐惧与应激",
+      "title": "脾气、害怕、乱尿乱抓",
       "species": ["cat", "dog"],
       "start": "b0",
       "steps": {
         "b0": {
-          "text": "哪类描述最接近？",
+          "text": "更像下面哪一种？",
           "options": [
-            {"label": "突发攻击、躲藏、对声音极度敏感", "next": "b1"},
-            {"label": "排泄习惯改变、过度舔毛（猫）", "next": "b2"},
-            {"label": "分离相关破坏或吠叫", "next": "b3"}
+            {"label": "突然凶、躲起来、对声音特别敏感", "next": "b1"},
+            {"label": "乱拉乱尿、过度舔毛（猫）", "next": "b2"},
+            {"label": "主人一走就拆家、狂叫（狗常见）", "next": "b3"}
           ]
         },
         "b1": {
-          "text": "先排除疼痛与神经系统问题；行为常与恐惧/焦虑相关。",
+          "text": "先想想是不是身体疼或生病；行为问题也常和害怕有关。",
           "options": [
-            {"label": "合并跛行、食欲差或排尿异常", "level": "urgent", "refIds": ["overall-behavior", "ettinger"]},
-            {"label": "环境诱因明确，身体线索少", "level": "routine", "refIds": ["overall-behavior", "bsava-behavior", "low-stress"]}
+            {
+              "label": "同时瘸、不吃、尿尿也不对劲",
+              "level": "urgent",
+              "homeCare": "减少刺激，别强行抱。",
+              "vetNeed": "建议先看兽医排除疼痛。",
+              "refIds": ["overall-behavior", "ettinger"]
+            },
+            {
+              "label": "像是被什么吓到了，身体看不出别的问题",
+              "level": "routine",
+              "homeCare": "给藏身处、固定作息；奖励安静，不惩罚恐吓。",
+              "vetNeed": "可预约行为咨询或兽医行为学。",
+              "refIds": ["overall-behavior", "bsava-behavior", "low-stress"]
+            }
           ]
         },
         "b2": {
-          "text": "猫应激与泌尿、皮肤自损可并存；ISFM 强调环境与就诊体验。",
+          "text": "猫乱尿有时是压力，有时要排除泌尿病。",
           "options": [
-            {"label": "伴泌尿症状", "level": "urgent", "refIds": ["isfm", "feline-patient"]},
-            {"label": "纯行为/应激线索", "level": "routine", "refIds": ["isfm", "overall-behavior"]}
+            {
+              "label": "尿尿也不顺、频繁蹲盆",
+              "level": "urgent",
+              "homeCare": "砂盆干净、位置安静。",
+              "vetNeed": "建议先看泌尿相关。",
+              "refIds": ["isfm", "feline-patient"]
+            },
+            {
+              "label": "主要是舔毛、躲藏，排尿看起来正常",
+              "level": "routine",
+              "homeCare": "费洛蒙、藏身处、多猫资源分配。",
+              "vetNeed": "持续可咨询行为兽医。",
+              "refIds": ["isfm", "overall-behavior"]
+            }
           ]
         },
         "b3": {
-          "text": "犬分离相关问题需行为干预与排除医学问题。",
+          "text": "分离焦虑要慢慢练，也要排除其他疾病。",
           "options": [
-            {"label": "首次严重发作", "level": "urgent", "refIds": ["overall-behavior"]},
-            {"label": "长期可管理的习惯问题", "level": "routine", "refIds": ["bsava-behavior", "low-stress"]}
+            {
+              "label": "第一次就特别严重，甚至受伤",
+              "level": "urgent",
+              "homeCare": "短期别让狗单独太久；环境安全。",
+              "vetNeed": "建议兽医评估是否需行为干预或药物。",
+              "refIds": ["overall-behavior"]
+            },
+            {
+              "label": "老问题，还能慢慢练",
+              "level": "routine",
+              "homeCare": "离家前低刺激、回家不夸张；脱敏训练需循序渐进。",
+              "vetNeed": "可找专业训练师/行为兽医。",
+              "refIds": ["bsava-behavior", "low-stress"]
+            }
           ]
         }
       }
@@ -288,34 +616,34 @@
   "behaviorTips": [
     {
       "id": "cat-env",
-      "title": "猫：资源与领地",
-      "items": ["食、水、砂盆、休息点分散放置，避免单一路径冲突。", "垂直空间与藏身处可降低应激。", "多猫家庭注意资源数量与分布。"],
+      "title": "猫咪：吃喝拉撒分开摆",
+      "items": ["水碗、粮碗、砂盆、窝别挤在一条路上，减少冲突。", "猫爬架、纸箱能当安全岛。", "多猫家庭：砂盆数量 = 猫数 + 1 更好记。"],
       "refIds": ["isfm", "low-stress"]
     },
     {
       "id": "dog-routine",
-      "title": "犬：可预测的日常",
-      "items": ["规律散步与互动，避免惩罚式训练加重恐惧。", "新刺激分级暴露（需在专业人士指导下）。"],
+      "title": "狗狗：固定节奏更安心",
+      "items": ["散步、吃饭、睡觉时间尽量规律。", "用奖励代替打骂，越怕越容易出问题。"],
       "refIds": ["overall-behavior", "bsava-behavior"]
     },
     {
       "id": "vet-visit",
-      "title": "就诊低应激（原则性）",
-      "items": ["提前禁食要求请遵医嘱；猫可用熟悉毯子遮盖提篮。", "避免在医院大堂强行拖拽，减少与其他动物对视冲突。"],
+      "title": "去医院也可以温柔一点",
+      "items": ["要不要禁食听兽医的。", "猫用提篮盖住毛巾，有时更安静。", "候诊时避免和陌生狗硬凑在一起。"],
       "refIds": ["low-stress", "isfm"]
     }
   ],
   "zoonosisNotes": [
     {
       "id": "bite",
-      "title": "抓咬与伤口",
-      "text": "人若被咬伤或严重抓伤，请按当地指南处理伤口并评估破伤风/狂犬病暴露风险；宠物伤口由兽医处理。",
+      "title": "被抓被咬",
+      "text": "人伤口按当地习惯清洗消毒；严重或深伤口要找人医评估。宠物伤口交给兽医。",
       "refIds": ["mvm", "wsava-aafp"]
     },
     {
       "id": "gi-zoo",
-      "title": "腹泻与人宠共居卫生",
-      "text": "清理排泄物后洗手；免疫抑制人群更需谨慎。具体病原与检测由兽医与人医分别评估。",
+      "title": "拉肚子和家里卫生",
+      "text": "清理后洗手；老人、免疫差的人更要注意。具体有没有寄生虫要化验才知道。",
       "refIds": ["mvm"]
     }
   ]
