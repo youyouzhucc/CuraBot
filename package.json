@@ -1,7 +1,7 @@
 {
-  "name": "aliyun-demo-app",
-  "version": "1.0.0",
-  "description": "示例：本地开发 → GitHub → 阿里云部署",
+  "name": "curabot",
+  "version": "0.1.0",
+  "description": "CuraBot：猫狗治愈分诊台（PetCheck 式分诊 + 行为心理 + 急诊红线）",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
