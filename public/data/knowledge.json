@@ -26,7 +26,7 @@
       },
       {
         "id": "gender",
-        "prompt": "Ta 的性别是？",
+        "prompt": "猫猫或狗狗的性别是？",
         "options": [
           { "value": "male", "label": "男生" },
           { "value": "female", "label": "女生" }

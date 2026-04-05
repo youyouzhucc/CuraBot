@@ -1789,14 +1789,19 @@ footer.site {
 .home-health-title-row h1.home-health-title-text {
   margin: 0;
   max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
 .curabot-title-inline {
   display: inline-flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 0.35rem 0.5rem;
+  gap: 0.3rem 0.45rem;
   line-height: 1.25;
+  white-space: nowrap;
 }
 
 .curabot-title-prefix {
@@ -1840,8 +1845,8 @@ footer.site {
 }
 
 .curabot-title-rest {
-  flex: 1 1 12rem;
-  min-width: 8rem;
+  flex: 0 1 auto;
+  white-space: nowrap;
 }
 
 .health-chat-hero .health-chat-log {
@@ -1884,6 +1889,66 @@ footer.site {
   border: 1px solid var(--fill-warm);
   padding: 0.5rem 0.75rem;
   border-radius: 12px;
+}
+
+/* 建议分层：紧急 / 中等 / 正常 / 不明确 */
+.health-tier-badge {
+  margin: 0 0 0.4rem;
+  padding: 0;
+  max-width: 96%;
+}
+
+.health-tier-badge-inner {
+  display: inline-block;
+  padding: 0.22rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.health-tier-badge--emergency .health-tier-badge-inner {
+  background: linear-gradient(180deg, #fee2e2 0%, #fecaca 100%);
+  color: #991b1b;
+  border: 1px solid rgba(185, 28, 28, 0.45);
+}
+
+.health-tier-badge--moderate .health-tier-badge-inner {
+  background: linear-gradient(180deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  border: 1px solid rgba(217, 119, 6, 0.4);
+}
+
+.health-tier-badge--normal .health-tier-badge-inner {
+  background: linear-gradient(180deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #065f46;
+  border: 1px solid rgba(5, 150, 105, 0.35);
+}
+
+.health-tier-badge--unclear .health-tier-badge-inner {
+  background: linear-gradient(180deg, #f3f4f6 0%, #e5e7eb 100%);
+  color: #374151;
+  border: 1px solid rgba(107, 114, 128, 0.35);
+}
+
+.health-msg--tier-emergency .health-msg-inner {
+  border-left: 4px solid #dc2626;
+  background: linear-gradient(90deg, rgba(254, 226, 226, 0.55) 0%, #fff 42%);
+}
+
+.health-msg--tier-moderate .health-msg-inner {
+  border-left: 4px solid #d97706;
+  background: linear-gradient(90deg, rgba(254, 243, 199, 0.55) 0%, #fff 42%);
+}
+
+.health-msg--tier-normal .health-msg-inner {
+  border-left: 4px solid #059669;
+  background: linear-gradient(90deg, rgba(209, 250, 229, 0.5) 0%, #fff 42%);
+}
+
+.health-msg--tier-unclear .health-msg-inner {
+  border-left: 4px solid #9ca3af;
+  background: linear-gradient(90deg, rgba(243, 244, 246, 0.75) 0%, #fff 42%);
 }
 
 .health-msg--bot .health-msg-disclaimer {
@@ -2024,15 +2089,27 @@ footer.site {
 }
 
 .health-chat-hero .health-chat-title-with-logo .curabot-title-inline {
-  gap: 0.3rem 0.45rem;
+  gap: 0.28rem 0.4rem;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .health-chat-hero .health-chat-title-with-logo .curabot-title-rest {
-  flex: 1 1 10rem;
+  flex: 0 1 auto;
+  white-space: nowrap;
   min-width: 0;
 }
 
-.health-guided-wrap {
+.health-chat-hero .health-chat-title-pill.health-chat-title-with-logo {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.health-guided-wrap,
+.health-followup-wrap {
   margin-bottom: 0.65rem;
 }
 

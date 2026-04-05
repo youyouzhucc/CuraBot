@@ -9,6 +9,10 @@
   let chatProfile = {};
   let guidedStepIndex = 0;
   let guidedComplete = false;
+  /** 用户最近一次在输入框提交的症状原文（用于追问选项合并上下文） */
+  let lastUserPlainInput = "";
+  /** 已在会话中回答过的症状追问 id，避免重复弹出同一题 */
+  let answeredQuizIds = [];
 
   function syncProfileToWindow() {
     if (typeof window !== "undefined") {
@@ -117,11 +121,45 @@
       if (v == null || v === "") return;
       const opt = (s.options || []).find((o) => o.value === v);
       const lab = opt ? opt.label : v;
-      const q = String(s.prompt || "").replace(/？$/, "");
+      let q = String(s.prompt || "").replace(/？$/, "");
+      if (s.id === "gender") {
+        if (profile.species === "cat") q = "猫猫的性别是";
+        else if (profile.species === "dog") q = "狗狗的性别是";
+      }
       parts.push(`${q}：${lab}`);
     });
     if (!parts.length) return "";
     return "【用户已选档案】" + parts.join("；") + "。\n\n";
+  }
+
+  /** 引导题文案：性别题按已选物种展示「猫猫/狗狗的性别是」 */
+  function prepareStepForDisplay(step) {
+    if (!step) return step;
+    const out = Object.assign({}, step);
+    if (step.id === "gender") {
+      if (chatProfile.species === "cat") out.prompt = "猫猫的性别是？";
+      else if (chatProfile.species === "dog") out.prompt = "狗狗的性别是？";
+    }
+    return out;
+  }
+
+  /** 解析大模型文末分层标记（与 server.js system 提示一致） */
+  function extractTierFromText(text) {
+    const s = String(text || "");
+    const re = /【\s*建议分层\s*[：:]\s*(紧急|中等|正常|不明确)\s*】/;
+    const m = s.match(re);
+    const map = { 紧急: "emergency", 中等: "moderate", 正常: "normal", 不明确: "unclear" };
+    if (!m) return { clean: s.trim(), tier: null };
+    const clean = s.replace(re, "").trim();
+    return { clean, tier: map[m[1]] || "unclear" };
+  }
+
+  function heuristicTierFromLlmText(text) {
+    const t = String(text || "");
+    if (/(尽快|急诊|立即|立刻|危险|严重|勿等|立刻去医院)/.test(t)) return "emergency";
+    if (/(建议就诊|尽快联系兽医|不容忽视|需要检查|预约兽医)/.test(t)) return "moderate";
+    if (/(可先观察|一般情况|保持观察|不必过于紧张)/.test(t)) return "normal";
+    return "unclear";
   }
 
   function updateChatInputState() {
@@ -133,16 +171,32 @@
       : "请先完成上方的选项，再在此描述症状…";
   }
 
-  function appendBubble(role, text, extraHtml) {
+  function appendBubble(role, text, extraHtml, bubbleOpts) {
+    const opts = bubbleOpts || {};
+    const tier = opts.severity;
+    const tierLabels = {
+      emergency: "紧急",
+      moderate: "中等",
+      normal: "正常",
+      unclear: "不明确",
+    };
     const { log } = getEls();
     if (!log) return;
     const div = document.createElement("div");
-    div.className = `health-msg health-msg--${role === "user" ? "user" : "bot"}`;
+    const tierClass =
+      role === "bot" && tier && tierLabels[tier] ? ` health-msg--tier-${tier}` : "";
+    div.className = `health-msg health-msg--${role === "user" ? "user" : "bot"}${tierClass}`;
     div.setAttribute("role", "listitem");
     if (role === "bot") {
       const main = stripDisclaimerFromBody(text);
       const disclaimerHtml = `<p class="health-msg-disclaimer" role="note">${escapeHtml(BOT_DISCLAIMER_LINE)}</p>`;
-      div.innerHTML = `<div class="health-msg-inner">${formatRich(main)}</div>${disclaimerHtml}${extraHtml || ""}`;
+      const tierBadge =
+        tier && tierLabels[tier]
+          ? `<p class="health-tier-badge health-tier-badge--${tier}" role="status"><span class="health-tier-badge-inner">${escapeHtml(
+              tierLabels[tier]
+            )}</span></p>`
+          : "";
+      div.innerHTML = `${tierBadge}<div class="health-msg-inner">${formatRich(main)}</div>${disclaimerHtml}${extraHtml || ""}`;
     } else {
       div.innerHTML = `<div class="health-msg-inner">${formatRich(text)}</div>${extraHtml || ""}`;
     }
@@ -150,20 +204,44 @@
     scrollLog();
   }
 
-  function appendGuidedStep(step) {
+  function appendFollowUpQuiz(quiz) {
+    if (!quiz || !quiz.options || !quiz.options.length) return;
     const { log } = getEls();
-    if (!log || !step) return;
+    if (!log) return;
+    const wrap = document.createElement("div");
+    wrap.className = "health-msg health-msg--bot health-followup-wrap";
+    wrap.setAttribute("data-quiz-prompt", quiz.prompt);
+    wrap.setAttribute("data-quiz-id", quiz.id || "q");
+    const btns = quiz.options
+      .map(
+        (o) =>
+          `<button type="button" class="btn secondary soft" data-followup-option="1" data-value="${escapeHtml(
+            o.value
+          )}" data-label="${escapeHtml(o.label)}">${escapeHtml(o.label)}</button>`
+      )
+      .join("");
+    wrap.innerHTML = `<div class="health-msg-inner">${formatRich(quiz.prompt)}</div><p class="health-msg-disclaimer" role="note">${escapeHtml(
+      BOT_DISCLAIMER_LINE
+    )}</p><div class="health-guided-options">${btns}</div>`;
+    log.appendChild(wrap);
+    scrollLog();
+  }
+
+  function appendGuidedStep(step) {
+    const displayStep = prepareStepForDisplay(step);
+    const { log } = getEls();
+    if (!log || !displayStep) return;
     const wrap = document.createElement("div");
     wrap.className = "health-msg health-msg--bot health-guided-wrap";
-    const btns = (step.options || [])
+    const btns = (displayStep.options || [])
       .map(
         (o) =>
           `<button type="button" class="btn secondary soft" data-guided-option="1" data-step-id="${escapeHtml(
-            step.id
+            displayStep.id
           )}" data-value="${escapeHtml(o.value)}" data-label="${escapeHtml(o.label)}">${escapeHtml(o.label)}</button>`
       )
       .join("");
-    wrap.innerHTML = `<div class="health-msg-inner">${formatRich(step.prompt)}</div><p class="health-msg-disclaimer" role="note">${escapeHtml(
+    wrap.innerHTML = `<div class="health-msg-inner">${formatRich(displayStep.prompt)}</div><p class="health-msg-disclaimer" role="note">${escapeHtml(
       BOT_DISCLAIMER_LINE
     )}</p><div class="health-guided-options">${btns}</div>`;
     log.appendChild(wrap);
@@ -235,16 +313,80 @@
     };
   }
 
+  function buildActionMetaHtml(localMeta, opts) {
+    if (!localMeta) return "";
+    const parts = [];
+    if (localMeta.suggestNav === "emergency" && opts.onOpenEmergency) {
+      parts.push(`<button type="button" class="btn secondary soft" data-chat-action="emergency">打开急症清单</button>`);
+    }
+    if (localMeta.suggestNav === "triageMenu" && opts.onOpenTriage) {
+      parts.push(`<button type="button" class="btn secondary soft" data-chat-action="triage">打开分诊入口</button>`);
+    }
+    if (localMeta.suggestTopicId && opts.onOpenDailyTopic) {
+      parts.push(
+        `<button type="button" class="btn secondary soft" data-chat-action="daily-topic" data-topic-id="${escapeHtml(
+          localMeta.suggestTopicId
+        )}">打开对应科普条目</button>`
+      );
+    }
+    if (!parts.length) return "";
+    return `<div class="health-msg-actions">${parts.join("")}</div>`;
+  }
+
+  function onFollowUpOptionClick(btn, getKnowledge, getSpecies, opts) {
+    if (!guidedComplete) return;
+    const wrap = btn.closest && btn.closest(".health-followup-wrap");
+    if (!wrap) return;
+    const quizId = wrap.getAttribute("data-quiz-id") || "q";
+    const prompt = wrap.getAttribute("data-quiz-prompt") || "补充";
+    const label = btn.getAttribute("data-label") || "";
+    wrap.querySelectorAll("[data-followup-option]").forEach((b) => {
+      b.disabled = true;
+    });
+    appendBubble("user", label, "");
+    const supplement = `（补充）${prompt}：${label}`;
+    history.push({ role: "user", content: supplement });
+    if (answeredQuizIds.indexOf(quizId) === -1) answeredQuizIds.push(quizId);
+
+    const knowledge = getKnowledge();
+    const steps = getGuidedSteps(knowledge);
+    const prefix = formatProfilePrefix(chatProfile, steps);
+    const merged = (lastUserPlainInput || "") + "\n" + supplement;
+    const composed = prefix ? prefix + merged : merged;
+    const species = getChatSpecies(getSpecies);
+
+    setLoading(true);
+    try {
+      const localMeta = CuraHealthBotLocal.reply({
+        message: composed,
+        species,
+        knowledge,
+        answeredQuizIds,
+      });
+      const replyText = localMeta.text;
+      let metaHtml = `<p class="health-msg-source muted">已结合补充信息（本地知识库）</p>`;
+      metaHtml += buildActionMetaHtml(localMeta, opts);
+      history.push({ role: "assistant", content: replyText });
+      appendBubble("bot", replyText, metaHtml, { severity: localMeta.severity || "unclear" });
+      if (localMeta.followUpQuiz) appendFollowUpQuiz(localMeta.followUpQuiz);
+    } catch (e) {
+      appendBubble("bot", "处理补充信息时出错，请再试一次。", "", { severity: "unclear" });
+    }
+    setLoading(false);
+    scrollLog();
+  }
+
   async function sendMessage(getSpecies, getKnowledge, opts) {
     const { input, log } = getEls();
     if (!input) return;
     if (!guidedComplete) {
-      appendBubble("bot", "请先点选上方的选项，完成基本信息后再描述症状。", "");
+      appendBubble("bot", "请先点选上方的选项，完成基本信息后再描述症状。", "", { severity: "unclear" });
       return;
     }
     const raw = input.value.trim();
     if (!raw) return;
     input.value = "";
+    lastUserPlainInput = raw;
 
     const knowledge = getKnowledge();
     const steps = getGuidedSteps(knowledge);
@@ -270,10 +412,16 @@
         metaHtml = `<p class="health-msg-source muted">由大模型生成 · 仍不能代替兽医诊断</p>`;
       } else {
         try {
-          localMeta = CuraHealthBotLocal.reply({ message: composed, species, knowledge });
+          localMeta = CuraHealthBotLocal.reply({
+            message: composed,
+            species,
+            knowledge,
+            answeredQuizIds,
+          });
         } catch (e2) {
           localMeta = {
             text: "本地知识库暂时无法生成回复，请稍后再试或使用首页分诊流程。",
+            severity: "unclear",
           };
         }
         replyText = localMeta.text;
@@ -282,37 +430,39 @@
       }
     } catch (e) {
       try {
-        localMeta = CuraHealthBotLocal.reply({ message: composed, species, knowledge });
+        localMeta = CuraHealthBotLocal.reply({
+          message: composed,
+          species,
+          knowledge,
+          answeredQuizIds,
+        });
         replyText = localMeta.text;
       } catch (e2) {
         replyText = "对话出错，请刷新页面后重试。";
-        localMeta = { text: replyText };
+        localMeta = { text: replyText, severity: "unclear" };
       }
       metaHtml = `<p class="health-msg-source muted">已使用本地知识库（${escapeHtml(e.message || "请求异常")}）</p>`;
     }
 
     if (!fromLlm && localMeta) {
-      const parts = [];
-      if (localMeta.suggestNav === "emergency" && opts.onOpenEmergency) {
-        parts.push(`<button type="button" class="btn secondary soft" data-chat-action="emergency">打开急症清单</button>`);
-      }
-      if (localMeta.suggestNav === "triageMenu" && opts.onOpenTriage) {
-        parts.push(`<button type="button" class="btn secondary soft" data-chat-action="triage">打开分诊入口</button>`);
-      }
-      if (localMeta.suggestTopicId && opts.onOpenDailyTopic) {
-        parts.push(
-          `<button type="button" class="btn secondary soft" data-chat-action="daily-topic" data-topic-id="${escapeHtml(
-            localMeta.suggestTopicId
-          )}">打开对应科普条目</button>`
-        );
-      }
-      if (parts.length) {
-        metaHtml += `<div class="health-msg-actions">${parts.join("")}</div>`;
-      }
+      metaHtml += buildActionMetaHtml(localMeta, opts);
     }
 
-    history.push({ role: "assistant", content: replyText });
-    appendBubble("bot", replyText, metaHtml);
+    let displayText = replyText;
+    let tier = "unclear";
+    if (fromLlm) {
+      const ex = extractTierFromText(replyText);
+      displayText = ex.clean;
+      tier = ex.tier || heuristicTierFromLlmText(displayText);
+    } else if (localMeta) {
+      tier = localMeta.severity || "unclear";
+    }
+
+    history.push({ role: "assistant", content: displayText });
+    appendBubble("bot", displayText, metaHtml, { severity: tier });
+    if (!fromLlm && localMeta && localMeta.followUpQuiz) {
+      appendFollowUpQuiz(localMeta.followUpQuiz);
+    }
 
     setLoading(false);
     scrollLog();
@@ -347,7 +497,11 @@
       any = true;
       const opt = (s.options || []).find((o) => o.value === v);
       const lab = opt ? opt.label : v;
-      const title = String(s.prompt || "").replace(/？$/, "");
+      let title = String(s.prompt || "").replace(/？$/, "");
+      if (s.id === "gender") {
+        if (p.species === "cat") title = "猫猫的性别是";
+        else if (p.species === "dog") title = "狗狗的性别是";
+      }
       lines.push(`· ${title}：${lab}`);
     });
     if (!any) lines.push("· （尚未完成上方选择题，或档案为空）");
@@ -463,6 +617,8 @@
     chatProfile = presetProfile && typeof presetProfile === "object" ? { ...presetProfile } : {};
     guidedStepIndex = 0;
     guidedComplete = false;
+    lastUserPlainInput = "";
+    answeredQuizIds = [];
     syncProfileToWindow();
 
     const knowledge = getKnowledge();
@@ -527,6 +683,12 @@
         if (gBtn && !guidedComplete) {
           e.preventDefault();
           onGuidedOptionClick(gBtn, getKnowledge, getSpecies, opts);
+          return;
+        }
+        const fBtn = e.target && e.target.closest && e.target.closest("[data-followup-option]");
+        if (fBtn) {
+          e.preventDefault();
+          onFollowUpOptionClick(fBtn, getKnowledge, getSpecies, opts);
           return;
         }
         const btn = e.target && e.target.closest && e.target.closest("[data-chat-action]");
