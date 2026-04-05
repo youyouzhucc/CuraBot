@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>CuraBot · 毛孩子温柔小助手</title>
+    <title>CuraBot · 毛孩子温暖小助手</title>
     <link rel="stylesheet" href="/css/main.css" />
   </head>
   <body>
@@ -12,33 +12,18 @@
     <div class="wrap">
       <header class="topbar">
         <div class="brand">
-          <!-- 内联圆形头像 + 爪印，不请求外链图片 -->
-          <svg
+          <img
             class="brand-logo"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 64 64"
-            width="48"
-            height="48"
-            role="img"
-            aria-label="CuraBot"
-          >
-            <defs>
-              <linearGradient id="cb-av" x1="10" y1="8" x2="54" y2="56" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#fffafd" />
-                <stop offset="1" stop-color="#e9ccd8" />
-              </linearGradient>
-            </defs>
-            <circle cx="32" cy="32" r="30" fill="url(#cb-av)" stroke="#dfc4d2" stroke-width="1.2" />
-            <g fill="#b8889e">
-              <ellipse cx="32" cy="40" rx="11" ry="9.5" opacity="0.95" />
-              <circle cx="21" cy="24" r="5.2" opacity="0.95" />
-              <circle cx="32" cy="19" r="5.2" opacity="0.95" />
-              <circle cx="43" cy="24" r="5.2" opacity="0.95" />
-            </g>
-          </svg>
+            src="/images/brand-logo.png"
+            alt="CuraBot"
+            width="120"
+            height="44"
+            loading="eager"
+            decoding="async"
+          />
           <div class="brand-text">
             CuraBot
-            <small>温柔分诊 · 安心陪伴</small>
+            <small>每一份呵护，都有温度</small>
           </div>
         </div>
         <button type="button" class="btn secondary topbar-menu-btn" id="topMenuBtn" hidden>主菜单</button>

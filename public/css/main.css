@@ -1,22 +1,23 @@
 :root {
-  /* 通透浅粉 · 留白更松 */
-  --bg: #fefcfd;
-  --bg-deep: #fcf8fa;
-  --surface: #ffffff;
-  --text: #3d383a;
-  --muted: #9a9094;
-  --accent: #edd0dc;
-  --accent-mid: #f3e0e8;
-  --accent-dark: #b895a5;
-  --accent-soft: rgba(225, 195, 210, 0.35);
-  --accent-glow: rgba(225, 195, 210, 0.16);
-  --blush: rgba(255, 242, 247, 0.92);
-  --blush-border: rgba(232, 210, 220, 0.55);
-  --rose-tint: #fcfafb;
+  /* 暖橙 + 奶油 · 与品牌 Logo 一致 */
+  --bg: #fff8f0;
+  --bg-deep: #fff4e6;
+  --surface: #fffcfa;
+  --text: #292524;
+  --muted: #78716c;
+  --accent: #ea580c;
+  --accent-mid: #fb923c;
+  --accent-dark: #c2410c;
+  --accent-soft: rgba(234, 88, 12, 0.14);
+  --accent-glow: rgba(234, 88, 12, 0.18);
+  --blush: #fffbeb;
+  --blush-border: #fde68a;
+  --cream-tint: #fff7ed;
+  --rose-tint: #fff7ed;
   --danger: #c75c5c;
   --danger-soft: rgba(199, 92, 92, 0.12);
-  --radius: 18px;
-  --shadow: 0 12px 40px rgba(61, 52, 56, 0.06);
+  --radius: 14px;
+  --shadow: 0 12px 40px rgba(41, 37, 36, 0.08);
   --hero-pad-x: clamp(1.5rem, 5vw, 2.35rem);
   --hero-pad-y: clamp(1.85rem, 5vw, 2.65rem);
   --space-page-x: clamp(1.35rem, 5vw, 2.15rem);
@@ -37,7 +38,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(120% 90% at 50% -14%, rgba(255, 245, 249, 0.75) 0%, transparent 55%), var(--bg);
+  background: radial-gradient(120% 90% at 50% -14%, rgba(255, 237, 213, 0.85) 0%, transparent 55%), var(--bg);
   color: var(--text);
   line-height: 1.65;
 }
@@ -48,7 +49,7 @@ a {
 
 .warm-banner {
   height: min(28vh, 220px);
-  background: linear-gradient(168deg, #fffafc 0%, #faf7f9 40%, #fefcfd 100%);
+  background: linear-gradient(168deg, #fffbeb 0%, #fff7ed 40%, #fff8f0 100%);
   border-bottom-left-radius: 32px;
   border-bottom-right-radius: 32px;
   box-shadow: inset 0 -20px 44px rgba(255, 255, 255, 0.9);
@@ -88,13 +89,15 @@ a {
 
 .brand-logo {
   display: block;
-  width: 48px;
-  height: 48px;
+  width: auto;
+  height: 44px;
+  max-width: 130px;
   flex-shrink: 0;
-  border-radius: 50%;
-  overflow: visible;
-  box-shadow: 0 4px 18px rgba(61, 52, 56, 0.08);
-  filter: drop-shadow(0 1px 2px rgba(180, 140, 160, 0.2));
+  object-fit: contain;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 16px rgba(41, 37, 36, 0.08);
+  border: 1px solid rgba(254, 215, 170, 0.65);
 }
 
 .brand small {
@@ -133,7 +136,7 @@ a {
 }
 
 .home-hero {
-  background: linear-gradient(165deg, #fff 0%, #fefbfc 52%, #fff 100%);
+  background: linear-gradient(165deg, #fff 0%, #fffaf5 52%, #fff 100%);
 }
 
 .hero h1,
@@ -141,7 +144,7 @@ a {
   margin: 0 0 0.85rem;
   font-size: 1.55rem;
   font-weight: 700;
-  color: #4a3e44;
+  color: #44403c;
 }
 
 .hero > h2 + .muted {
@@ -156,13 +159,13 @@ a {
 }
 
 .lead strong {
-  color: #5c4a52;
+  color: #57534e;
 }
 
 .pick-title {
   font-weight: 600;
   margin: 0 0 0.85rem;
-  color: #5c4a52;
+  color: #57534e;
 }
 
 .pick-hint {
@@ -177,10 +180,10 @@ a {
 
 .species-card {
   position: relative;
-  border: 2px solid #f3e6eb;
+  border: 2px solid #fed7aa;
   border-radius: var(--radius);
   padding: 1.15rem 0.85rem 1.2rem;
-  background: linear-gradient(180deg, #fffbfc 0%, #fff8fa 100%);
+  background: linear-gradient(180deg, #fffcfa 0%, #fff7ed 100%);
   cursor: pointer;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
   display: flex;
@@ -192,14 +195,14 @@ a {
 }
 
 .species-card:hover {
-  border-color: rgba(210, 175, 190, 0.55);
+  border-color: rgba(234, 88, 12, 0.35);
   box-shadow: 0 10px 28px var(--accent-glow);
 }
 
 .species-card.is-selected {
   border-color: var(--accent);
-  background: linear-gradient(180deg, #fff 0%, #ffeef3 100%);
-  box-shadow: 0 12px 36px rgba(210, 175, 190, 0.18);
+  background: linear-gradient(180deg, #fff 0%, #ffedd5 100%);
+  box-shadow: 0 12px 36px rgba(234, 88, 12, 0.15);
   transform: translateY(-2px);
 }
 
@@ -241,11 +244,11 @@ a {
   min-height: 2.85rem;
   font-size: 1rem;
   cursor: pointer;
-  background: linear-gradient(135deg, #d4a8ba, #e6c2d2);
+  background: linear-gradient(135deg, #ea580c, #fb923c);
   color: #fff;
   font-weight: 600;
   transition: transform 0.08s ease, box-shadow 0.12s ease;
-  box-shadow: 0 8px 26px rgba(180, 135, 155, 0.22);
+  box-shadow: 0 8px 26px rgba(234, 88, 12, 0.25);
 }
 
 .btn:hover {
@@ -255,8 +258,8 @@ a {
 .btn.secondary {
   background: #fff;
   color: var(--text);
-  border: 1px solid #f0d0d9;
-  box-shadow: 0 2px 10px rgba(61, 52, 56, 0.04);
+  border: 1px solid #fed7aa;
+  box-shadow: 0 2px 10px rgba(41, 37, 36, 0.05);
 }
 
 .btn-enter {
@@ -287,7 +290,7 @@ a {
 
 .btn.soft {
   background: var(--blush);
-  color: #6b4a55;
+  color: #92400e;
   border: 1px solid var(--blush-border);
   box-shadow: none;
 }
@@ -302,13 +305,13 @@ a {
 }
 
 .disclaimer-box {
-  background: linear-gradient(135deg, var(--rose-tint), #fff);
-  border: 1px solid #f5d5e0;
+  background: linear-gradient(135deg, var(--cream-tint), #fff);
+  border: 1px solid #fed7aa;
   border-radius: var(--radius);
   padding: 1.1rem 1.15rem;
   margin-top: 1.5rem;
   font-size: 0.92rem;
-  color: #5c4a52;
+  color: #57534e;
 }
 
 .grid-menu {
@@ -319,25 +322,25 @@ a {
 }
 
 .menu-card {
-  background: linear-gradient(180deg, #fefcfd 0%, #fcf9fb 100%);
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg-deep) 100%);
   border-radius: var(--radius);
   padding: 1.35rem 1.3rem;
   box-shadow: var(--shadow);
   text-align: left;
-  border: 1px solid #f0e6ec;
+  border: 1px solid #fed7aa;
   cursor: pointer;
   transition: border-color 0.12s ease, transform 0.08s ease;
 }
 
 .menu-card:hover {
-  border-color: rgba(210, 175, 190, 0.45);
+  border-color: rgba(234, 88, 12, 0.28);
   transform: translateY(-2px);
 }
 
 .menu-card h3 {
   margin: 0 0 0.45rem;
   font-size: 1.05rem;
-  color: #4a3e44;
+  color: #44403c;
 }
 
 .menu-card p {
@@ -364,7 +367,7 @@ a {
 .flow-q {
   font-size: 1.05rem;
   margin: 0.5rem 0 0;
-  color: #4a3e44;
+  color: #44403c;
 }
 
 .flow-sheet {
@@ -389,8 +392,8 @@ a {
 
 .option-intake {
   font-weight: 600;
-  border-color: rgba(210, 175, 190, 0.55) !important;
-  background: linear-gradient(90deg, #fefcfd, #fff8fa) !important;
+  border-color: rgba(234, 88, 12, 0.3) !important;
+  background: linear-gradient(90deg, var(--bg), #fff7ed) !important;
 }
 
 .intake-meta {
@@ -401,7 +404,7 @@ a {
 
 .intake-section {
   font-weight: 600;
-  color: #6b5a62;
+  color: #57534e;
 }
 
 .intake-sub {
@@ -416,7 +419,7 @@ a {
 .copy-template {
   margin-top: 1.15rem;
   padding-top: 1rem;
-  border-top: 1px dashed #edd5de;
+  border-top: 1px dashed #fdba74;
 }
 
 .copy-text {
@@ -426,8 +429,8 @@ a {
   font-size: 0.88rem;
   line-height: 1.55;
   border-radius: 12px;
-  border: 1px solid #f0e4ea;
-  background: #fefcfd;
+  border: 1px solid #ffedd5;
+  background: var(--bg);
   color: var(--text);
   resize: vertical;
   font-family: inherit;
@@ -435,11 +438,11 @@ a {
 
 .option-grid .btn.option {
   text-align: left;
-  background: #fffbfc;
+  background: #fffcfa;
   color: var(--text);
-  border: 1px solid #f1e6ea;
+  border: 1px solid #ffedd5;
   border-radius: var(--radius);
-  box-shadow: 0 2px 8px rgba(61, 52, 56, 0.04);
+  box-shadow: 0 2px 8px rgba(41, 37, 36, 0.05);
   font-weight: 500;
   line-height: 1.5;
   padding: 0.95rem 1.15rem;
@@ -448,7 +451,7 @@ a {
 
 .option-grid .btn.option:hover {
   border-color: var(--accent);
-  background: var(--rose-tint);
+  background: var(--cream-tint);
 }
 
 .multi-hint {
@@ -469,15 +472,15 @@ a {
   gap: 0.75rem;
   padding: 1rem 1.1rem;
   border-radius: var(--radius);
-  border: 1px solid #f1e6ea;
-  background: #fffbfc;
+  border: 1px solid #ffedd5;
+  background: #fffcfa;
   cursor: pointer;
   transition: border-color 0.12s ease, background 0.12s ease;
 }
 
 .check-card:has(input:checked) {
   border-color: var(--accent);
-  background: linear-gradient(90deg, var(--rose-tint), #fffbfc);
+  background: linear-gradient(90deg, var(--cream-tint), #fffcfa);
   box-shadow: 0 4px 18px var(--accent-glow);
 }
 
@@ -491,7 +494,7 @@ a {
 
 .check-text {
   line-height: 1.55;
-  color: #4a3e44;
+  color: #44403c;
 }
 
 .multi-actions {
@@ -513,11 +516,11 @@ a {
 }
 
 .outcome {
-  background: linear-gradient(180deg, #fff 0%, #fefcfd 100%);
+  background: linear-gradient(180deg, #fff 0%, var(--bg) 100%);
   border-radius: calc(var(--radius) + 4px);
   padding: var(--hero-pad-y) var(--hero-pad-x);
   box-shadow: var(--shadow);
-  border: 1px solid #f0e8ec;
+  border: 1px solid #fed7aa;
 }
 
 .outcome.level-emergency {
@@ -526,7 +529,7 @@ a {
 }
 
 .outcome.level-urgent {
-  border-color: rgba(210, 175, 190, 0.4);
+  border-color: rgba(234, 88, 12, 0.28);
 }
 
 .outcome-kicker {
@@ -538,11 +541,11 @@ a {
 .outcome-title {
   margin: 0 0 0.85rem;
   font-size: 1.35rem;
-  color: #4a3e44;
+  color: #44403c;
 }
 
 .outcome-body {
-  color: #5c4a52;
+  color: #57534e;
   white-space: pre-wrap;
 }
 
@@ -553,7 +556,7 @@ a {
   margin-top: 1.15rem;
   padding: 1rem 1.15rem;
   border-radius: var(--radius);
-  background: linear-gradient(135deg, var(--blush), rgba(255, 250, 252, 0.95));
+  background: linear-gradient(135deg, var(--blush), rgba(255, 252, 245, 0.95));
   border: 1px solid var(--blush-border);
 }
 
@@ -565,14 +568,14 @@ a {
 .vet-text {
   flex: 1;
   font-weight: 600;
-  color: #6b4a55;
+  color: #92400e;
   font-size: 0.98rem;
 }
 
 .refs-fold {
   margin-top: 1.15rem;
   padding: 0.65rem 0;
-  border-top: 1px dashed #edd5de;
+  border-top: 1px dashed #fdba74;
   font-size: 0.88rem;
   color: var(--muted);
 }
@@ -580,7 +583,7 @@ a {
 .refs-fold summary {
   cursor: pointer;
   font-weight: 600;
-  color: #8a7a80;
+  color: #78716c;
 }
 
 .refs-fold ul {
@@ -589,7 +592,7 @@ a {
 }
 
 .ref-title {
-  color: #5c4a52;
+  color: #57534e;
 }
 
 .row {
@@ -609,16 +612,16 @@ a {
 }
 
 .card {
-  background: linear-gradient(180deg, #fefcfd 0%, #fff 100%);
+  background: linear-gradient(180deg, var(--bg) 0%, #fff 100%);
   border-radius: var(--radius);
   padding: 1.3rem 1.25rem;
-  border: 1px solid #f0e8ec;
+  border: 1px solid #fed7aa;
   box-shadow: var(--shadow);
   margin-bottom: 1.15rem;
 }
 
 .card.warm {
-  background: linear-gradient(180deg, #fffbfc 0%, #fff 100%);
+  background: linear-gradient(180deg, #fffcfa 0%, #fff 100%);
 }
 
 .card.redline.warm {
@@ -667,7 +670,7 @@ a {
 
 .ref-block li {
   padding: 0.65rem 0;
-  border-bottom: 1px solid #f0e8ec;
+  border-bottom: 1px solid #ffedd5;
 }
 
 .error {
