@@ -35,7 +35,13 @@
       dog.src = k.uiImages.heroDog;
       dog.alt = "狗狗照片";
     }
-    if (banner && k.uiImages.bannerSoft) banner.style.backgroundImage = `url(${k.uiImages.bannerSoft})`;
+    if (banner) {
+      if (k.uiImages.bannerSoft) {
+        banner.style.backgroundImage = `url(${k.uiImages.bannerSoft})`;
+      } else {
+        banner.style.backgroundImage = "none";
+      }
+    }
   }
 
   function renderRefs(refIds) {

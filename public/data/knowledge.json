@@ -6,9 +6,9 @@
     "noRxNote": "不提供吃药剂量，也不帮开药；用药一定要听执业兽医的。"
   },
   "uiImages": {
-    "heroCat": "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=640&q=80&auto=format&fit=crop",
-    "heroDog": "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=640&q=80&auto=format&fit=crop",
-    "bannerSoft": "https://images.unsplash.com/photo-1450778869180-f41ee9fdca2a?w=1200&q=70&auto=format&fit=crop"
+    "heroCat": "/images/hero-cat.png",
+    "heroDog": "/images/hero-dog.png",
+    "bannerSoft": null
   },
   "references": [
     {"id": "mvm", "category": "手册", "title": "默克兽医手册", "role": "常见症状与护理说明"},
