@@ -928,6 +928,43 @@ a {
   line-height: 1.65;
 }
 
+.outcome-section {
+  margin-top: 1.2rem;
+  padding: 1rem 1.05rem;
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(232, 212, 204, 0.85);
+}
+
+.outcome-section--home {
+  background: linear-gradient(180deg, #fffdfb 0%, #faf6f2 100%);
+  border-color: rgba(166, 124, 114, 0.22);
+}
+
+.outcome-section--summary {
+  background: #f7f4f1;
+  border-style: dashed;
+}
+
+.outcome-section-title {
+  margin: 0 0 0.55rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #57534e;
+  letter-spacing: 0.02em;
+}
+
+.outcome-section-body {
+  color: #57534e;
+  line-height: 1.65;
+  font-size: 0.96rem;
+}
+
+.outcome-section-body--mono {
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+}
+
 .refs-fold {
   margin-top: 1.15rem;
   padding: 0.65rem 0;

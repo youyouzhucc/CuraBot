@@ -1,46 +1,78 @@
 /**
  * CuraBot：分诊流程解释器（支持单选 / 多选合并严重程度）
+ * 结论结构：紧急程度(level) + 一句话建议 + 详细说明 + 在家措施；表述对齐公开兽医共识（如 Merck Veterinary Manual、AAHA/AAFP 指南思路），非转载教科书全文。
  */
 (function (global) {
   const LEVEL_ORDER = { routine: 0, monitor: 1, urgent: 2, emergency: 3 };
 
+  /** detailExplain：症状与分诊逻辑；homeCare：可执行的家庭措施；oneLiner：就医优先级摘要 */
   const LEVEL_META = {
     emergency: {
       title: "【分诊】提示需尽快急诊评估（非诊断）",
-      body:
+      oneLiner: "请尽快前往具备急诊与重症监护能力的动物医院，必要时先致电说明物种、体重与主要症状。",
+      detailExplain:
         "综合你勾选的症状组合，从**急诊分诊优先级**上看，更接近需要**尽快由执业兽医当面评估**，并可能需要**急诊支持治疗**的一类情况。临床上与此相关的常见方向包括：呼吸道窘迫、疑似泌尿梗阻（尤其公猫）、急性神经症状、难以控制的出血、疑似中毒或休克前状态等——具体病因需体检、化验与影像鉴别，本工具**不下诊断**。\n\n" +
-        "**处置原则（与主流小动物急诊教材一致）**：优先确认**气道—呼吸—循环**是否稳定；转运途中保持通风、避免过度包裹导致过热；疼痛与用药须由兽医决定，**勿自行使用人用 NSAID/止痛药**；是否催吐仅能在兽医指导下进行。\n\n" +
-        "**就诊沟通要点**：起病时间、是否进行性加重、呕吐/腹泻/排尿次数、最后一次进食饮水、误食史或创伤史；有条件可携带粪便/尿样照片或视频。延伸阅读可参考《默克兽医手册》宠物主人版中「犬猫急诊时该怎么做」等条目。",
+        "**处置原则（与《默克兽医手册》及小动物急诊重症公开论述一致的共识）**：优先确认**气道—呼吸—循环**是否稳定；疼痛与用药须由兽医决定，**勿自行使用人用 NSAID/止痛药**；是否催吐仅能在兽医指导下进行。\n\n" +
+        "**就诊沟通要点**：起病时间、是否进行性加重、呕吐/腹泻/排尿次数、最后一次进食饮水、误食史或创伤史；有条件可携带粪便/尿样照片或视频。延伸阅读可参考 Merck Veterinary Manual 宠物主人版「犬猫急诊」相关条目。",
+      homeCare:
+        "• 转运途中保持通风、避免闷热环境与过度包裹。\n• 记录症状出现时间、频率与变化，就诊时口述或拍照留存。\n• 未经兽医指导，勿喂人用止痛药、勿随意催吐、灌肠或强行灌水。",
       vetNeed:
         "**建议**：尽快前往具备急诊与重症监护能力的动物医院；路途较远或夜间可先致电医院，说明物种、体重与主要症状，便于院内准备。",
+      body: "", // 由 merge 组装
     },
     urgent: {
       title: "【分诊】建议尽快门诊（24–48 小时内优先）",
-      body:
-        "当前线索提示**不宜长期拖延**，建议在**数小时至一两天内**安排兽医门诊，以便完成体格检查，并按需要做血常规、生化、尿液检查、影像等，用于鉴别感染、炎症、疼痛、代谢紊乱、泌尿/消化/皮肤等常见问题。\n\n" +
-        "在就诊前可系统记录：**食欲/饮水量、呕吐与排便次数、排尿是否费力、精神状态、跛行与否**，并拍摄短视频，有助于缩小鉴别范围。若期间出现喘憋、腹胀伴干呕、无尿、抽搐或粘膜苍白/发绀等，请改按急诊处理。\n\n" +
-        "本结论为**分诊参考**，不能替代兽医诊断。",
+      oneLiner: "建议在 24–48 小时内预约兽医门诊，完成体检并按需做化验或影像；幼龄、老年或慢性病患宠宜更积极。",
+      detailExplain:
+        "当前线索提示**不宜长期拖延**，建议在**数小时至一两天内**安排兽医门诊，以便完成体格检查，并按需要做血常规、生化、尿液检查、影像等，用于鉴别感染、炎症、疼痛、代谢紊乱、泌尿/消化/皮肤等常见问题（思路与《犬猫内科学》等教材中的系统评估一致，本工具**不替代**兽医诊断）。\n\n" +
+        "就诊前可系统记录：**食欲/饮水量、呕吐与排便次数、排尿是否费力、精神状态、跛行与否**，并拍摄短视频，有助于缩小鉴别范围。若期间出现喘憋、腹胀伴干呕、无尿、抽搐或粘膜苍白/发绀等，请改按急诊处理。",
+      homeCare:
+        "• 继续观察并做简单日志：进食、饮水、大小便次数与时间。\n• 保留呕吐物/粪便/尿团照片或视频，就诊时出示。\n• 在兽医确认前，勿自行使用人用感冒药、止痛药或抗生素。",
       vetNeed:
         "**建议**：优先预约全科或专科门诊；幼龄、老年或合并慢性病者宜适当提前。",
+      body: "",
     },
     monitor: {
       title: "【分诊】可先密切观察并完善记录",
-      body:
+      oneLiner: "以观察与记录为主；若出现红旗症状或 24–48 小时内无改善，应预约门诊；心里不踏实或老幼宠宁可提前就医。",
+      detailExplain:
         "就目前信息而言，更接近**可先加强观察、同时准备就诊资料**的情形，但仍需持续关注是否出现**红旗症状**（如进行性嗜睡、拒食拒水、反复呕吐、排尿困难、呼吸频率或用力度明显增加等）。\n\n" +
-        "建议建立简单日志：时间轴上的症状、饮食与大小便情况；若症状反复或超过 24–48 小时无改善，仍应预约门诊以排除潜在疾病。\n\n" +
-        "若心理不确定或物种为幼龄/老年，**宁可提前门诊**求安心。",
+        "若心理不确定或物种为幼龄/老年，**宁可提前门诊**求安心。预防医学与猫健康管理相关公开指南（如 AAHA/AAFP 预防医学与猫科健康资料思路）亦强调：异常行为或轻度症状背后可能仍有潜在疾病，需体检排除。",
+      homeCare:
+        "• 建立 24–48 小时日志：时间轴上的症状、饮食与大小便情况。\n• 保持环境安静、温湿度适宜，避免强行折腾或频繁换粮。\n• 一旦出现急症表现，请重新使用本工具急先筛或直接前往急诊。",
       vetNeed:
         "**建议**：以观察为主；一旦出现急症表现或症状升级，请重新使用急先筛或直接前往急诊。",
+      body: "",
     },
     routine: {
       title: "【分诊】倾向门诊/行为管理（仍需排除躯体病）",
-      body:
-        "线索整体更符合**择期门诊、环境管理或行为干预**可逐步处理的问题；但犬猫的「行为问题」常与疼痛、内分泌、泌尿等疾病重叠，**仍建议首次由兽医做基础体检**，再制定训练或行为方案。\n\n" +
-        "若同时存在躲藏、攻击性突然加重、排尿异常或体重变化，请优先排查躯体疾病。",
+      oneLiner: "建议预约常规体检或行为咨询；任何新发躯体症状（食欲、排尿、体重、活动度变化）应优先请兽医评估。",
+      detailExplain:
+        "线索整体更符合**择期门诊、环境管理或行为干预**可逐步处理的问题；但犬猫的「行为问题」常与疼痛、内分泌、泌尿等疾病重叠，**仍建议首次由兽医做基础体检**，再制定训练或行为方案（与行为医学与内科鉴别诊断的常规教学一致）。\n\n" +
+        "若同时存在躲藏、攻击性突然加重、排尿异常或体重变化，请优先排查躯体疾病。营养与肥胖相关问题可参考《犬猫营养学》等公开章节中与兽医共同制定饲喂方案的原则。",
+      homeCare:
+        "• 记录行为变化触发因素（环境、新成员、换粮等），便于兽医鉴别。\n• 在排除疼痛与内科问题前，避免高强度惩罚式训练。\n• 可按兽医建议逐步调整环境与作息，并准备常规体检时的体重与体况评分记录。",
       vetNeed:
         "**建议**：预约常规门诊或行为咨询；任何新发躯体症状优先兽医评估。",
+      body: "",
     },
   };
+
+  function buildBodyFromParts(detailExplain, homeCare) {
+    const parts = [detailExplain].filter(Boolean);
+    if (homeCare && String(homeCare).trim()) {
+      parts.push("【在家可以这样做】\n" + homeCare);
+    }
+    return parts.join("\n\n");
+  }
+
+  function oneLinerFromVetNeed(vetNeed) {
+    if (!vetNeed) return "";
+    return String(vetNeed)
+      .replace(/^\*\*建议\*\*[：:\s]*/i, "")
+      .replace(/\*\*/g, "")
+      .trim();
+  }
 
   function filterOptionBySpecies(option, species) {
     if (!option.species || option.species.length === 0) return true;
@@ -56,15 +88,29 @@
     const level = option.level;
     const meta = LEVEL_META[level] || {};
     const title = option.title || meta.title;
-    let body = meta.body || "";
-    if (option.body) body = option.body;
-    if (option.homeCare) {
-      body = body ? `${body}\n\n【在家可以这样做】\n${option.homeCare}` : option.homeCare;
+
+    let detailExplain = option.detailExplain != null ? option.detailExplain : meta.detailExplain || meta.body || "";
+    if (option.body && option.detailExplain == null) {
+      detailExplain = option.body;
     }
+
+    let homeCare = meta.homeCare || "";
+    if (option.homeCare) {
+      homeCare = homeCare ? `${homeCare}\n${option.homeCare}` : option.homeCare;
+    }
+
     const vetNeed = option.vetNeed || meta.vetNeed;
+    let oneLiner = option.oneLiner || meta.oneLiner;
+    if (!oneLiner) oneLiner = oneLinerFromVetNeed(vetNeed);
+
+    const body = buildBodyFromParts(detailExplain, homeCare);
+
     return {
       level,
       title,
+      oneLiner,
+      detailExplain,
+      homeCare,
       body,
       vetNeed,
       refIds: option.refIds || [],
@@ -76,15 +122,23 @@
     if (option.outcome && option.next === "OUTCOME") {
       const o = option.outcome;
       const meta = LEVEL_META[o.level] || {};
-      let body = o.body || meta.body || "";
-      if (o.homeCare) body += (body ? "\n\n" : "") + `【在家可以这样做】\n${o.homeCare}`;
+      let detailExplain = o.detailExplain != null ? o.detailExplain : o.body || meta.detailExplain || meta.body || "";
+      let homeCare = o.homeCare != null ? o.homeCare : meta.homeCare || "";
+      if (o.homeCare && meta.homeCare) homeCare = `${meta.homeCare}\n${o.homeCare}`;
+      else if (o.homeCare) homeCare = o.homeCare;
+      const vetNeed = o.vetNeed || meta.vetNeed;
+      let oneLiner = o.oneLiner || meta.oneLiner || oneLinerFromVetNeed(vetNeed);
+      const body = buildBodyFromParts(detailExplain, homeCare);
       return {
         kind: "outcome",
         outcome: {
           level: o.level,
           title: o.title || meta.title,
+          oneLiner,
+          detailExplain,
+          homeCare,
           body,
-          vetNeed: o.vetNeed || meta.vetNeed,
+          vetNeed,
           refIds: o.refIds || [],
         },
       };
@@ -124,20 +178,32 @@
     });
 
     const meta = LEVEL_META[maxLevel] || LEVEL_META.monitor;
-    let body = meta.body;
+    let detailExplain = meta.detailExplain || meta.body || "";
+    let homeCare = meta.homeCare || "";
+
     if (homeParts.length) {
-      body += `\n\n【结合你勾选的情况，在家可以这样做】\n• ${homeParts.join("\n• ")}`;
+      homeCare = homeCare
+        ? `${homeCare}\n• ${homeParts.join("\n• ")}`
+        : `• ${homeParts.join("\n• ")}`;
     }
     if (labels.length) {
-      body = `你提到的情况包括：${labels.join("；")}。\n\n` + body;
+      detailExplain = `你提到的情况包括：${labels.join("；")}。\n\n` + detailExplain;
     }
+
     const vetNeed = vetParts.length
       ? vetParts.filter((v, i, a) => a.indexOf(v) === i).join("\n")
       : meta.vetNeed;
 
+    const oneLiner = vetParts.length ? oneLinerFromVetNeed(vetParts[0]) : meta.oneLiner || oneLinerFromVetNeed(meta.vetNeed);
+
+    const body = buildBodyFromParts(detailExplain, homeCare);
+
     return {
       level: maxLevel,
       title: meta.title,
+      oneLiner,
+      detailExplain,
+      homeCare,
       body,
       vetNeed,
       refIds: Array.from(refSet),

@@ -210,12 +210,39 @@
     const levelClass = `level-${o.level}`;
     const sev = severityUi(o.level);
     const diagnosticMod = `outcome-diagnostic--${sev.mod}`;
-    const vetBlock = o.vetNeed
+    const suggestSource = o.oneLiner || o.vetNeed || "";
+    const vetBlock = suggestSource
       ? `<div class="outcome-suggestion" role="status">
           <span class="outcome-suggestion-icon" aria-hidden="true">🏥</span>
-          <div class="outcome-suggestion-text">${formatRichText(o.vetNeed)}</div>
+          <div class="outcome-suggestion-text">${formatRichText(suggestSource)}</div>
         </div>`
       : "";
+    const hasStruct =
+      o.detailExplain != null && String(o.detailExplain).trim() !== "";
+    const detailSection = hasStruct
+      ? `<section class="outcome-section" aria-labelledby="outcome-detail-h">
+          <h3 id="outcome-detail-h" class="outcome-section-title">症状与分诊说明</h3>
+          <div class="outcome-section-body">${formatRichText(o.detailExplain)}</div>
+        </section>`
+      : "";
+    const homeSection =
+      hasStruct && o.homeCare != null && String(o.homeCare).trim() !== ""
+        ? `<section class="outcome-section outcome-section--home" aria-labelledby="outcome-home-h">
+          <h3 id="outcome-home-h" class="outcome-section-title">在家可以这样做</h3>
+          <div class="outcome-section-body">${formatRichText(o.homeCare)}</div>
+        </section>`
+        : "";
+    const summarySection =
+      o.intakeSummary != null && String(o.intakeSummary).trim() !== ""
+        ? `<section class="outcome-section outcome-section--summary" aria-labelledby="outcome-sum-h">
+          <h3 id="outcome-sum-h" class="outcome-section-title">已结构化记录要点</h3>
+          <div class="outcome-section-body outcome-section-body--mono">${formatRichText(o.intakeSummary)}</div>
+        </section>`
+        : "";
+    const legacyBody =
+      !hasStruct && o.body
+        ? `<div class="outcome-body">${formatRichText(o.body)}</div>`
+        : "";
     const flowMeta = state.knowledge.triageFlows[state.flowKey];
     const kicker =
       flowMeta && flowMeta.outcomeKicker
@@ -225,7 +252,7 @@
       o.copyBlock &&
       `<div class="copy-template">
         <p class="muted">以下为可复制文本，便于在线问诊或就诊时使用（请补充持续时间、用药与化验单）：</p>
-        <textarea readonly class="copy-text" rows="12" id="intakeCopyArea">${escapeHtml(o.copyBlock)}</textarea>
+        <textarea readonly class="copy-text" rows="14" id="intakeCopyArea">${escapeHtml(o.copyBlock)}</textarea>
         <button type="button" class="btn secondary" id="btnCopyIntake">复制全文</button>
       </div>`;
     const refsBlock =
@@ -247,7 +274,10 @@
             <h2 class="outcome-title">${escapeHtml(o.title)}</h2>
             ${vetBlock}
           </section>
-          <div class="outcome-body">${formatRichText(o.body)}</div>
+          ${detailSection}
+          ${homeSection}
+          ${summarySection}
+          ${legacyBody}
           ${copyBlock || ""}
           <div class="row outcome-actions">
             <button type="button" class="btn secondary" id="btnRestartFlow">再测一次</button>
@@ -363,13 +393,25 @@
   function applyNoneOutcome(raw) {
     state.outcomeReturnStepId = state.stepId;
     const meta = CuraTriageEngine.LEVEL_META[raw.level] || {};
-    let body = raw.body || meta.body || "";
-    if (raw.homeCare) body += `\n\n【在家可以这样做】\n${raw.homeCare}`;
+    let detailExplain =
+      raw.detailExplain != null ? raw.detailExplain : raw.body || meta.detailExplain || meta.body || "";
+    let homeCare = raw.homeCare != null ? raw.homeCare : meta.homeCare || "";
+    if (raw.body && raw.detailExplain == null && !meta.detailExplain) {
+      detailExplain = raw.body;
+    }
+    const vetNeed = raw.vetNeed || meta.vetNeed;
+    const oneLiner = raw.oneLiner || meta.oneLiner || "";
+    const body =
+      detailExplain +
+      (homeCare ? "\n\n【在家可以这样做】\n" + homeCare : "");
     state.lastOutcome = {
       level: raw.level,
       title: raw.title || meta.title,
+      oneLiner,
+      detailExplain,
+      homeCare,
       body,
-      vetNeed: raw.vetNeed || meta.vetNeed,
+      vetNeed,
       refIds: raw.refIds || [],
     };
     renderOutcome();

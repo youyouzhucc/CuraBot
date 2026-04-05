@@ -1,10 +1,10 @@
 {
   "meta": {
     "name": "CuraBot",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "disclaimer": "这里的内容用来帮你判断「要不要尽快去医院」，不能代替医生当面检查。若宠物很难受或越来越糟，请直接去医院。",
     "noRxNote": "不提供吃药剂量，也不帮开药；用药一定要听执业兽医的。",
-    "educationNote": "科普表述与分诊逻辑参考国际通用小动物急诊与内科教材体系，并鼓励查阅 Merck Veterinary Manual（默克兽医手册）宠物主人版等公开资料；本应用不转载第三方全文，结论仍为非诊断性分诊。"
+    "educationNote": "科普表述与分诊逻辑对齐以下公开资料体系（非转载受版权保护的全文）：Merck Veterinary Manual（默克兽医手册，含在线版与宠物主人版）、AAHA/AAFP 预防医学与猫健康指南（公开 PDF）、Small Animal Internal Medicine（犬猫内科学体系）、犬猫急诊与重症监护、犬猫营养学等教材中的通用教学与共识；结论仅为非诊断性分诊线索。"
   },
   "uiImages": {
     "heroCat": "/images/hero-cat.png",
@@ -12,7 +12,11 @@
     "bannerSoft": null
   },
   "references": [
-    {"id": "mvm", "category": "手册", "title": "Merck Veterinary Manual（默克兽医手册）", "role": "犬猫疾病概述与急诊原则；宠物主人版见 https://www.merckvetmanual.com/"},
+    {"id": "mvm", "category": "手册", "title": "Merck Veterinary Manual（默克兽医手册，在线版 / 第 12 版体系）", "role": "犬猫疾病概述、急诊与内科：见 https://www.merckvetmanual.com/ ；宠物主人版见 Merck Pet Owner Topics"},
+    {"id": "aaha-aafp", "category": "指南", "title": "AAHA + AAFP 预防医学与猫健康指南（公开 PDF）", "role": "体检频率、疫苗、猫科环境与护理要点"},
+    {"id": "saim", "category": "内科", "title": "Small Animal Internal Medicine（犬猫内科学）", "role": "各系统鉴别诊断与化验组合思路"},
+    {"id": "ecc-sa", "category": "急诊", "title": "犬猫急诊与重症监护（教材体系）", "role": "ABC、氧疗、液体与稳定化原则"},
+    {"id": "nutri-sa", "category": "营养", "title": "犬猫营养学（教材体系）", "role": "饲喂原则与代谢病管理；具体配方须兽医"},
     {"id": "ettinger", "category": "内科", "title": "兽医内科学（Ettinger 体系）", "role": "各系统常见病线索"},
     {"id": "nelson", "category": "内科", "title": "小动物内科学（Nelson & Couto）", "role": "随访与鉴别要点"},
     {"id": "silverstein-ecc", "category": "急诊", "title": "小动物重症医学", "role": "急症与稳定化原则"},
