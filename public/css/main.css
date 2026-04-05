@@ -1800,6 +1800,16 @@ footer.site {
   border-radius: 12px;
 }
 
+.health-msg--bot .health-msg-disclaimer {
+  margin: 0.35rem 0 0;
+  padding: 0 0.15rem 0 0.05rem;
+  max-width: 96%;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  font-weight: 400;
+  color: var(--muted);
+}
+
 .health-chat-form {
   display: flex;
   gap: 0.5rem;

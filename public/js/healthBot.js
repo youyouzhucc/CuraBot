@@ -3,14 +3,16 @@
  */
 (function (global) {
   const history = [];
-  /** 每条机器人回复末尾展示（若正文中已含该句则不再重复追加） */
+  /** 每条机器人气泡下方单独一行灰色小字提醒（不与正文混排） */
   const BOT_DISCLAIMER_LINE = "建议仅供参考，急症请优先去医院。";
 
-  function withBotDisclaimer(text) {
-    const t = String(text || "").trim();
-    if (!t) return BOT_DISCLAIMER_LINE;
-    if (t.includes(BOT_DISCLAIMER_LINE)) return t;
-    return t + "\n\n" + BOT_DISCLAIMER_LINE;
+  /** 去掉正文中可能重复的免责句，避免与页脚提醒重复 */
+  function stripDisclaimerFromBody(text) {
+    let t = String(text || "");
+    if (t.includes(BOT_DISCLAIMER_LINE)) {
+      t = t.split(BOT_DISCLAIMER_LINE).join("").replace(/\n{3,}/g, "\n\n").trim();
+    }
+    return t;
   }
 
   /**
@@ -82,8 +84,13 @@
     const div = document.createElement("div");
     div.className = `health-msg health-msg--${role === "user" ? "user" : "bot"}`;
     div.setAttribute("role", role === "user" ? "listitem" : "listitem");
-    const body = role === "bot" ? withBotDisclaimer(text) : text;
-    div.innerHTML = `<div class="health-msg-inner">${formatRich(body)}</div>${extraHtml || ""}`;
+    if (role === "bot") {
+      const main = stripDisclaimerFromBody(text);
+      const disclaimerHtml = `<p class="health-msg-disclaimer" role="note">${escapeHtml(BOT_DISCLAIMER_LINE)}</p>`;
+      div.innerHTML = `<div class="health-msg-inner">${formatRich(main)}</div>${disclaimerHtml}${extraHtml || ""}`;
+    } else {
+      div.innerHTML = `<div class="health-msg-inner">${formatRich(text)}</div>${extraHtml || ""}`;
+    }
     log.appendChild(div);
     scrollLog();
   }
@@ -241,6 +248,9 @@
     if (welcome) appendBubble("bot", welcome, "");
     const chips = hc.quickChips || ["猫尿很少怎么办", "狗吃了巧克力", "急症有哪些"];
     const sp = getSpecies();
+    const chipsLabel =
+      (sp === "dog" ? hc.chipsLabelDog : hc.chipsLabelCat) ||
+      (sp === "dog" ? "狗狗的常见健康问题分类" : "猫咪的常见健康问题分类");
     const chipRow = chips
       .map(
         (c) =>
@@ -252,7 +262,7 @@
     if (log) {
       const wrap = document.createElement("div");
       wrap.className = "health-chips-wrap";
-      wrap.innerHTML = `<p class="muted health-chips-label">试试问：</p><div class="health-chips">${chipRow}</div>`;
+      wrap.innerHTML = `<p class="muted health-chips-label">${escapeHtml(chipsLabel)}</p><div class="health-chips">${chipRow}</div>`;
       log.appendChild(wrap);
       wrap.querySelectorAll("[data-chip]").forEach((btn) => {
         btn.addEventListener("click", () => {
