@@ -13,8 +13,9 @@
   --border-warm: #e8d4cc;
   --border-warm-strong: #d4b8a8;
   --fill-warm: #efe4df;
-  --core-panel: linear-gradient(165deg, #ffffff 0%, #faf0ec 55%, #f3e6e0 100%);
-  --core-panel-border: #c9a399;
+  --core-panel: linear-gradient(152deg, #fffaf7 0%, #f5e0d8 38%, #e8c9bc 100%);
+  --core-panel-border: #8f5d52;
+  --core-accent-bar: linear-gradient(180deg, #d4a090, #7a453c);
   --tips-panel: #f0ebe7;
   --tips-panel-border: #d8cfc7;
   --tips-muted: #8a7f78;
@@ -56,48 +57,11 @@ a {
 }
 
 .warm-banner {
-  position: relative;
   height: min(28vh, 220px);
   border-bottom-left-radius: 32px;
   border-bottom-right-radius: 32px;
-  overflow: hidden;
-  background: var(--bg);
-  box-shadow: inset 0 -24px 48px rgba(255, 255, 255, 0.75);
-}
-
-.warm-banner__photos {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  height: 100%;
-  width: 100%;
-}
-
-.warm-banner__photo {
-  height: 100%;
-  min-height: 0;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-image: linear-gradient(180deg, #f5ebe6 0%, #efe4df 100%);
-}
-
-.warm-banner__photo--cat {
-  background-image: url("/images/hero-cat.png");
-}
-
-.warm-banner__photo--dog {
-  background-image: url("/images/hero-dog.png");
-}
-
-.warm-banner__scrim {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(180deg, rgba(250, 246, 242, 0.1) 0%, rgba(250, 246, 242, 0.45) 100%);
-}
-
-.warm-banner.warm-banner--single .warm-banner__photos {
-  display: none;
+  background: linear-gradient(168deg, #faf6f2 0%, #f3ebe6 45%, #faf6f2 100%);
+  box-shadow: inset 0 -20px 44px rgba(255, 255, 255, 0.85);
 }
 
 .warm-banner.warm-banner--single {
@@ -398,14 +362,29 @@ a {
 }
 
 .menu-card--core {
+  position: relative;
   width: 100%;
   margin-top: 1rem;
-  padding: 1.5rem 1.4rem 1.65rem;
-  border-width: 2px;
+  padding: 1.55rem 1.45rem 1.7rem 1.65rem;
+  border-width: 3px;
   border-color: var(--core-panel-border);
   background: var(--core-panel);
-  box-shadow: 0 14px 36px rgba(120, 82, 74, 0.14);
+  box-shadow:
+    0 18px 44px rgba(120, 70, 60, 0.22),
+    0 0 0 1px rgba(255, 255, 255, 0.55) inset;
   text-align: left;
+  overflow: hidden;
+}
+
+.menu-card--core::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 7px;
+  background: var(--core-accent-bar);
+  border-radius: 0 6px 6px 0;
 }
 
 .menu-core-eyebrow {
@@ -413,15 +392,15 @@ a {
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.08em;
-  color: var(--accent-dark);
+  color: #6b453c;
   margin-bottom: 0.45rem;
 }
 
 .menu-core-title {
   margin: 0 0 0.65rem;
-  font-size: 1.38rem;
+  font-size: 1.42rem;
   font-weight: 700;
-  color: #44403c;
+  color: #352a26;
   line-height: 1.35;
 }
 
@@ -456,14 +435,14 @@ a {
 
 .menu-card--tip {
   padding: 1rem 1rem 1.1rem;
-  background: linear-gradient(180deg, #f7f3f0 0%, #f0ebe7 100%);
-  border-color: var(--tips-panel-border);
-  box-shadow: 0 4px 14px rgba(62, 48, 40, 0.05);
+  background: linear-gradient(180deg, #f2eeea 0%, #e8e2dc 100%);
+  border-color: #c4bbb3;
+  box-shadow: 0 3px 10px rgba(62, 48, 40, 0.04);
 }
 
 .menu-card--tip:hover {
-  border-color: #c9bfb6;
-  box-shadow: 0 6px 18px rgba(62, 48, 40, 0.07);
+  border-color: #b5aba3;
+  box-shadow: 0 5px 14px rgba(62, 48, 40, 0.06);
 }
 
 .menu-card--tip h3 {
@@ -516,7 +495,7 @@ a {
 }
 
 .menu-card--core .menu-core-title {
-  font-size: 1.38rem;
+  font-size: 1.42rem;
 }
 
 .menu-card p {
