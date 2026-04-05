@@ -1853,15 +1853,22 @@ footer.site {
   color: var(--accent-dark);
 }
 
-.health-chat-lead {
-  margin: 0.2rem 0 0;
-  font-size: 0.9rem;
+/* 健康聊天页主标题：沿用原「健康机器人」标签的胶囊样式 */
+.health-chat-hero .flow-head.health-chat-head {
+  margin-bottom: 0.35rem;
 }
 
-.health-chat-hint-pre {
-  white-space: pre-line;
-  line-height: 1.5;
-  max-width: 52rem;
+.health-chat-hero .health-chat-title-pill {
+  display: inline-block;
+  margin: 0;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
 }
 
 @supports not selector(:has(*)) {

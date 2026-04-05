@@ -3,6 +3,15 @@
  */
 (function (global) {
   const history = [];
+  /** 每条机器人回复末尾展示（若正文中已含该句则不再重复追加） */
+  const BOT_DISCLAIMER_LINE = "建议仅供参考，急症请优先去医院。";
+
+  function withBotDisclaimer(text) {
+    const t = String(text || "").trim();
+    if (!t) return BOT_DISCLAIMER_LINE;
+    if (t.includes(BOT_DISCLAIMER_LINE)) return t;
+    return t + "\n\n" + BOT_DISCLAIMER_LINE;
+  }
 
   /**
    * 后端 API 根地址（与页面不同端口时必须配置，否则会请求到错误主机导致 404）。
@@ -59,7 +68,6 @@
       form: document.getElementById("healthChatForm"),
       input: document.getElementById("healthChatInput"),
       badge: document.getElementById("healthChatSpeciesBadge"),
-      hint: document.getElementById("healthChatHint"),
     };
   }
 
@@ -74,7 +82,8 @@
     const div = document.createElement("div");
     div.className = `health-msg health-msg--${role === "user" ? "user" : "bot"}`;
     div.setAttribute("role", role === "user" ? "listitem" : "listitem");
-    div.innerHTML = `<div class="health-msg-inner">${formatRich(text)}</div>${extraHtml || ""}`;
+    const body = role === "bot" ? withBotDisclaimer(text) : text;
+    div.innerHTML = `<div class="health-msg-inner">${formatRich(body)}</div>${extraHtml || ""}`;
     log.appendChild(div);
     scrollLog();
   }
@@ -210,33 +219,8 @@
     scrollLog();
   }
 
-  async function refreshChatStatus(getKnowledge) {
-    const hintEl = document.getElementById("healthChatHint");
-    if (!hintEl) return;
-    if (typeof window !== "undefined" && window.CURABOT_API_CHAT_MISSING) {
-      hintEl.textContent =
-        "后端缺少对话接口（无 /api/capabilities）。请结束占用本机 3000 端口的旧 Node 进程，在项目根目录重新执行 npm start，再刷新本页。";
-      return;
-    }
-    const k = getKnowledge();
-    const extra = (k && k.healthChat && k.healthChat.hint) || "";
-    try {
-      const r = await fetch(apiUrl("/api/chat/status"), { cache: "no-store" });
-      if (!r.ok) throw new Error("bad");
-      const j = await r.json();
-      let line = "";
-      if (j.openaiConfigured) {
-        line = `云端：已配置 · ${j.baseHost || "接口"} · 模型 ${j.model || ""}`;
-      } else {
-        line =
-          "云端：未配置 OPENAI_API_KEY。国内网络常无法直连 OpenAI，可在服务器环境变量中设置 OPENAI_BASE_URL（如 DeepSeek 等 OpenAI 兼容地址）。";
-      }
-      hintEl.textContent = line + (extra ? "\n" + extra : "");
-    } catch (e) {
-      hintEl.textContent =
-        "未检测到本机 API：请在项目目录运行 npm start，用浏览器打开终端提示的 http 地址（勿用「仅打开 HTML 文件」）。" +
-        (extra ? "\n" + extra : "");
-    }
+  function refreshChatStatus() {
+    /* 已移除页眉云端状态区；若需排查可打开开发者工具查看 /api/chat/status */
   }
 
   function syncBadge(getSpecies) {
@@ -280,7 +264,7 @@
         });
       });
     }
-    refreshChatStatus(getKnowledge);
+    refreshChatStatus();
     syncBadge(getSpecies);
     scrollLog();
   }
