@@ -57,14 +57,18 @@ a {
 }
 
 .warm-banner {
-  height: min(18vh, 148px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem var(--space-page-x) 0.55rem;
   border-bottom-left-radius: 32px;
   border-bottom-right-radius: 32px;
   background: linear-gradient(168deg, #faf6f2 0%, #f3ebe6 45%, #faf6f2 100%);
-  box-shadow: inset 0 -20px 44px rgba(255, 255, 255, 0.85);
+  box-shadow: inset 0 -16px 36px rgba(255, 255, 255, 0.85);
 }
 
 .warm-banner.warm-banner--single {
+  min-height: 96px;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -72,7 +76,7 @@ a {
 
 .wrap {
   max-width: 920px;
-  margin: -44px auto 0;
+  margin: -28px auto 0;
   padding: 0.15rem var(--space-page-x) max(2.75rem, env(safe-area-inset-bottom));
   padding-left: max(var(--space-page-x), env(safe-area-inset-left));
   padding-right: max(var(--space-page-x), env(safe-area-inset-right));
@@ -90,6 +94,19 @@ a {
   min-height: 3.25rem;
   position: relative;
   z-index: 1;
+}
+
+.warm-banner .topbar,
+.topbar--banner {
+  justify-content: center;
+  margin-bottom: 0;
+  margin-top: 0;
+  width: 100%;
+  max-width: 920px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0.2rem 0.15rem;
+  min-height: 0;
 }
 
 .brand {
@@ -1034,12 +1051,16 @@ footer.site {
 
 @media (max-width: 560px) {
   .warm-banner {
-    height: 112px;
+    padding: 0.35rem var(--space-page-x) 0.45rem;
     border-radius: 0 0 24px 24px;
   }
 
+  .warm-banner.warm-banner--single {
+    min-height: 84px;
+  }
+
   .wrap {
-    margin-top: -34px;
+    margin-top: -22px;
   }
 
   .species-photo {
