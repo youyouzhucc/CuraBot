@@ -242,7 +242,12 @@
         }
       }
 
-      if (/血|呕血|吐血|便血|黑便|休克|抽|喘|尿不出|闭尿|胀得很快|意识/.test(accStr + chiefStr)) {
+      if (chief.system === "待分诊" || /主诉不明确/.test(String(chief.sign || ""))) {
+        levelText =
+          "**信息不足以分层**：你在筛查中表示「说不清」或主诉暂不明确——**不能据此判断「正常」或「安全」**。请在下框用自然语言补充：吃喝拉撒吐、精神、持续时间、是否加重等；补充前请以观察为主。";
+        vetLine =
+          "若出现拒食、精神萎靡、持续呕吐/腹泻、便血或黑便、尿量明显减少/无尿、呼吸困难、抽搐或明显疼痛，请尽快联系动物医院或急诊。";
+      } else if (/血|呕血|吐血|便血|黑便|休克|抽|喘|尿不出|闭尿|胀得很快|意识/.test(accStr + chiefStr)) {
         levelText = "**中高风险**：建议尽快安排门诊；若症状加重或出现新红旗，请走急诊。";
       } else if (chief.system) {
         levelText = "**需关注**：主诉集中在「" + chief.system + "」相关，建议兽医面诊与必要检查。";
@@ -284,12 +289,17 @@
 
   /** 用于助手气泡分层：与决策树标签一致，避免「紧急」后又出现「正常」。 */
   function deriveSeverityFromSession(session) {
-    if (!session) return "normal";
+    if (!session) return "unclear";
     if (session.closedReason === "emergency") return "emergency";
     const t = session.tags || {};
     const chief = t.chief || {};
     const acc = t.accompanying || {};
     const tmp = t.temporal || {};
+    const chiefSys = String(chief.system || "");
+    const chiefSign = String(chief.sign || "");
+    if (chiefSys === "待分诊" || /主诉不明确/.test(chiefSign)) {
+      return "unclear";
+    }
     const sigParts = [
       chief.sign,
       acc.appetite_spirit,
@@ -311,19 +321,90 @@
     if (acc.appetite_spirit === "差" || /萎靡|不吃|精神很差|越来越差/.test(blob)) {
       return "moderate";
     }
-    if (chief.system && /消化|泌尿|神经|呼吸|胸|腹/.test(String(chief.system))) {
+    if (chief.system && /消化|泌尿|神经|呼吸|胸|腹|皮肤/.test(chiefSys)) {
       return "moderate";
     }
     if (tmp.onset === "急性" || /急性|突然|很快/.test(blob)) {
       return "moderate";
     }
-    return "normal";
+    return "unclear";
+  }
+
+  /**
+   * 将选项标签拆成可匹配片段（中文标点/斜杠）
+   */
+  function tokenizeOptionLabel(label) {
+    return String(label || "")
+      .split(/[/／、，,;；|｜\s]+/)
+      .map((s) => s.trim())
+      .filter((s) => s.length >= 2);
+  }
+
+  /**
+   * 用户自由输入是否已等价于当前节点的某一选项（避免只会点按钮、复读模板）
+   * @returns {object|null} 匹配的 option 或 null
+   */
+  function matchOptionFromUserText(node, userText) {
+    const t0 = String(userText || "").trim();
+    if (!t0 || !node || !node.options || !node.options.length) return null;
+    if (/^(不是|并非|没有|无)(说|指)/.test(t0)) return null;
+    const t = t0.replace(/\s/g, "");
+    const lower = t0.toLowerCase();
+
+    let best = null;
+    let bestScore = 0;
+
+    for (const o of node.options) {
+      let sc = 0;
+      const val = String(o.value || "");
+      const toks = tokenizeOptionLabel(o.label);
+      for (const tok of toks) {
+        const plain = tok.replace(/\s/g, "");
+        if (plain.length >= 2 && t.indexOf(plain) !== -1) {
+          sc += Math.min(28, 4 + plain.length * 2);
+        }
+      }
+      /* 常见主诉/症状路由 */
+      if (val === "gi" && /(吐|呕|腹泻|拉稀|软便|胃口|食欲|不吃|消化|毛球|吐毛)/.test(t)) sc += 22;
+      if (val === "uro" && /(尿|排尿|尿团|砂盆|蹲盆|尿血|尿频|尿闭|没尿|无尿|不尿|滴尿|舔尿道)/.test(t)) sc += 22;
+      if (val === "resp" && /(喘|呼吸|张口|发绀|缺氧|咳嗽|呼吸急)/.test(t)) sc += 22;
+      if (val === "skin" && /(痒|掉毛|皮疹|皮肤|红疹|脱毛)/.test(t)) sc += 18;
+      if (val === "neuro" && /(抽搐|瘫|站不稳|瘫痪|共济)/.test(t)) sc += 22;
+      if (val === "gdv_suspect" && /(胀|鼓|胃扭转|干呕|肚子大)/.test(t)) sc += 22;
+      if (val === "other" && /(说不清|不知道|其他|不确定|杂|混合)/.test(t)) sc += 12;
+      /* 消化子链 */
+      if (val === "vomit" && /(吐|呕|反流|毛球|吐毛)/.test(t)) sc += 20;
+      if (val === "diarrhea" && /(拉稀|腹泻|软便|水样)/.test(t)) sc += 20;
+      if (val === "both" && /(吐.*拉|拉.*吐|又吐又拉)/.test(t)) sc += 18;
+      /* 食欲 */
+      if (val === "poor" && /(不吃|拒食|精神差|萎靡|很差|没胃口)/.test(t)) sc += 16;
+      if (val === "ok" && /(还能吃|吃一点|一般|凑合)/.test(t)) sc += 14;
+      if (val === "normal" && /(尚可|正常|还行|不错|精神好)/.test(t)) sc += 14;
+      /* 时间线粗颗粒 */
+      if (val === "today" && /(今天|今早|刚才|刚刚|上午|下午|今晚)/.test(t)) sc += 14;
+      if (val === "1_2d" && /(一两天|1.?2|两天|昨天|前天)/.test(t)) sc += 12;
+      if (val === "3d_plus" && /(三天|一周|很久|持续|多天)/.test(t)) sc += 12;
+      /* 猫泌尿 */
+      if (val === "strain_anuria" && /(滴尿|挤不出|尿不出|几乎没尿|很少尿)/.test(t)) sc += 18;
+      if (val === "hematuria_oliguria" && /(血尿|粉红|尿血|尿少|颜色深)/.test(t)) sc += 16;
+      if (val === "painful" && /(疼|叫|弓背|舔尿道)/.test(t)) sc += 16;
+      if (val === "unclear" && /(没观察|不确定|好像没尿|担心没尿)/.test(t)) sc += 12;
+
+      if (sc > bestScore) {
+        bestScore = sc;
+        best = o;
+      }
+    }
+
+    if (best && bestScore >= 14) return best;
+    return null;
   }
 
   global.CuraHealthDecisionEngine = {
     createSession,
     getCurrentNode,
     applyOption,
+    matchOptionFromUserText,
     generateSOAP,
     buildAdvicePlan,
     deriveSeverityFromSession,

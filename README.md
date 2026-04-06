@@ -6,6 +6,10 @@
 
 本仓库中的临床条目为团队基于公开兽医教育资料整理的 **规则骨架与引用元数据**，**不构成诊疗建议**，不替代执业兽医。不提供药物剂量或处方逻辑。
 
+**知识库治理、RAG 与审读流程**见 [`docs/KNOWLEDGE_BASE_GOVERNANCE.md`](docs/KNOWLEDGE_BASE_GOVERNANCE.md)。合并前建议执行：`npm run validate:knowledge`。
+
+对话接口（`/api/chat`）已注入 **日常知识关键词检索**（`kb-retrieval.js`）。可选环境变量：`RAG_TOP_K`（默认 3）、`RAG_DISABLE=1`（关闭）。调试命中：`GET /api/knowledge/rag-preview?message=猫猫掉毛&species=cat`。
+
 ## 本地运行
 
 需要 **Node.js 22.5+**（内置 `node:sqlite`，用于健康会话快照 `data/curabot.db`；首次启动会把旧的 `data/sessions/*.json` 导入库内）。

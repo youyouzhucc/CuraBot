@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "validate:knowledge": "node scripts/validate-knowledge.mjs"
   },
   "engines": {
     "node": ">=22.5.0"

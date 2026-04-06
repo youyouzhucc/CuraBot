@@ -179,12 +179,13 @@
     "n_visual_hint_gi": {
       "id": "n_visual_hint_gi",
       "uiType": "single",
-      "prompt": "若方便，可拍一张呕吐物或便便照片（下方可上传）；现在用文字也可以：有无血便/黑便/异物？",
-      "mediaHint": "文字描述不够时，照片能帮助医生更快判断；对话区下方支持上传，将由视觉模型辅助生成可见线索（非诊断）。",
+      "prompt": "请尽量用文字说明：有无血便/黑便/异物？（就诊时也可带照片给兽医看）",
+      "mediaHint": "颜色、次数、是否带黏液等细节越具体越好；就诊时给兽医看实物或照片更有帮助。",
       "illustration": {
-        "src": "/images/illustrations/bcs-strip.svg",
-        "alt": "BCS 体况评分条带示意",
-        "caption": "参考：体况评分与营养线索（与便便性状无关，仅供对照图示习惯）"
+        "src": "/images/illustrations/stool-signals.svg",
+        "alt": "便便颜色与血便/黑便警示示意图",
+        "caption": "示意图仅帮助描述，不代表最终诊断；请结合精神、食欲、呕吐与时间线。",
+        "topic": "stool"
       },
       "options": [
         {

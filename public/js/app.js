@@ -14,7 +14,13 @@
     flowStepHistory: [],
     /** 进入结果页前的一步，用于从结果返回题目 */
     outcomeReturnStepId: null,
+    /** 日常知识各模块（饮食健康等）标题旁「展开全部」：moduleId -> 是否展开 */
+    dailyModuleExpanded: {},
   };
+
+  /** 与栅格断点同步，用于 resize 时判断是否需要重算「两排」数量 */
+  let lastDailyGridCols = null;
+  let dailyGridResizeTimer = null;
 
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -22,6 +28,16 @@
   function isLocalDevHost(hostname) {
     const h = String(hostname || "").toLowerCase();
     return h === "localhost" || h === "127.0.0.1" || h === "::1" || h === "[::1]";
+  }
+
+  /** 含局域网 IP，便于 Live Server / 手机同网访问时仍把 API 指到本机 Node */
+  function isLikelyDevMachineHostname(hostname) {
+    if (isLocalDevHost(hostname)) return true;
+    const h = String(hostname || "").trim();
+    if (/^192\.168\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+    if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+    if (/^172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+    return false;
   }
 
   /**
@@ -48,7 +64,7 @@
       return;
     }
 
-    if (!isLocalDevHost(loc.hostname)) return;
+    if (!isLikelyDevMachineHostname(loc.hostname)) return;
 
     const port = loc.port || "";
 
@@ -65,7 +81,11 @@
         const ct = (r.headers.get("content-type") || "").toLowerCase();
         if (!ct.includes("application/json")) return false;
         const j = await r.json();
-        return j && j.name === "CuraBot" && j.apiChat === true;
+        const hasAuth =
+          j &&
+          (j.apiAuth === true ||
+            (Array.isArray(j.routes) && j.routes.some((x) => String(x).indexOf("auth/register") !== -1)));
+        return j && j.name === "CuraBot" && j.apiChat === true && hasAuth;
       } catch (e) {
         return false;
       }
@@ -81,7 +101,13 @@
       window.CURABOT_API_BASE = fallback;
       window.CURABOT_API_CHAT_MISSING = false;
     } else {
-      window.CURABOT_API_CHAT_MISSING = true;
+      /**
+       * 同源未检测到完整 API 时（例如用 Live Server / 仅静态 占 80 或 3000，而 Node 在 3000），
+       * 若仍用相对路径 /api 会打到静态站点的 HTML 404 → 账号接口报「非接口数据」。
+       * 强制指向本机 Node 默认端口；若你确为「整站只在 80 提供 API」，可在 knowledge.json 里设 meta.apiBase。
+       */
+      window.CURABOT_API_BASE = fallback;
+      window.CURABOT_API_CHAT_MISSING = false;
     }
   }
 
@@ -115,6 +141,15 @@
     return "猫/狗";
   }
 
+  /** 站点内静态资源：统一为以 / 开头的路径，避免相对路径与 base 不一致 */
+  function resolveSiteAssetUrl(p) {
+    if (p == null || p === "") return "";
+    const s = String(p).trim();
+    if (/^https?:\/\//i.test(s)) return s;
+    if (s.charAt(0) === "/") return s;
+    return "/" + s.replace(/^\/+/, "");
+  }
+
   function applyHeroImages() {
     const k = state.knowledge;
     if (!k || !k.uiImages) return;
@@ -122,11 +157,11 @@
     const dog = $("#heroDogImg");
     const banner = $("#warmBanner");
     if (cat && k.uiImages.heroCat) {
-      cat.src = k.uiImages.heroCat;
+      cat.src = resolveSiteAssetUrl(k.uiImages.heroCat);
       cat.alt = "猫猫照片";
     }
     if (dog && k.uiImages.heroDog) {
-      dog.src = k.uiImages.heroDog;
+      dog.src = resolveSiteAssetUrl(k.uiImages.heroDog);
       dog.alt = "狗狗照片";
     }
     if (banner) {
@@ -206,6 +241,15 @@
     if (!species) return true;
     if (!topic.species || topic.species.length === 0) return true;
     return topic.species.indexOf(species) !== -1;
+  }
+
+  /** 日常知识卡片副标题：猫/狗分开展示，避免双物种条目只写一侧描述 */
+  function topicTeaserForSpecies(topic, species) {
+    if (!topic) return "";
+    const sp = species === "dog" ? "dog" : "cat";
+    if (sp === "dog" && topic.teaserDog) return topic.teaserDog;
+    if (sp === "cat" && topic.teaserCat) return topic.teaserCat;
+    return topic.teaser || "";
   }
 
   function clusterMatchesSpecies(cluster, species) {
@@ -314,45 +358,107 @@
     dog.hidden = isCat;
   }
 
+  /** 与 .daily-topic-list 栅格断点一致：520→1 列、900→2 列、否则 3 列；两排 = 列数×2 张 */
+  function getDailyGridCols() {
+    if (typeof window === "undefined") return 3;
+    const w = window.innerWidth;
+    if (w <= 520) return 1;
+    if (w <= 900) return 2;
+    return 3;
+  }
+
+  function scheduleDailyKnowledgeGridResize() {
+    if (dailyGridResizeTimer) clearTimeout(dailyGridResizeTimer);
+    dailyGridResizeTimer = setTimeout(() => {
+      if (state.view !== "home") return;
+      const c = getDailyGridCols();
+      if (lastDailyGridCols !== null && lastDailyGridCols === c) return;
+      renderDailyKnowledgeHome();
+    }, 160);
+  }
+
+  function bindDailyKnowledgeInteractions(host) {
+    if (!host) return;
+    host.querySelectorAll(".daily-mod-expand").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const modId = btn.getAttribute("data-daily-mod-expand");
+        if (modId == null || modId === "") return;
+        const next = !(state.dailyModuleExpanded[modId] === true);
+        state.dailyModuleExpanded[modId] = next;
+        const sec = btn.closest(".daily-mod");
+        const list = sec && sec.querySelector(".daily-topic-list");
+        if (list) list.classList.toggle("is-collapsed", !next);
+        btn.setAttribute("aria-expanded", next ? "true" : "false");
+        btn.setAttribute("aria-label", next ? "收起" : "展开全部");
+        const ic = btn.querySelector(".daily-mod-expand-icon");
+        if (ic) ic.classList.toggle("is-open", next);
+      });
+    });
+    host.querySelectorAll("button.daily-topic-row[data-daily-topic]").forEach((row) => {
+      row.addEventListener("click", () => {
+        const id = row.getAttribute("data-daily-topic");
+        if (!id) return;
+        renderDailyTopicPage(id);
+        showView("dailyTopic");
+      });
+    });
+  }
+
   function renderDailyKnowledgeHome() {
     const host = $("#homeDailyKnowledge");
     const dk = state.knowledge && state.knowledge.dailyKnowledge;
     if (!host || !dk || !dk.modules) return;
     const filterSp = state.dailyKnowledgeFilter === "dog" ? "dog" : "cat";
+    const cols = getDailyGridCols();
+    const maxVisible = cols * 2;
     const mods = dk.modules
       .map((mod) => {
         const topics = (mod.topics || []).filter((t) => topicMatchesSpecies(t, filterSp));
         if (!topics.length) return "";
+        const modId = String(mod.id != null ? mod.id : "");
+        const needsExpand = topics.length > maxVisible;
+        const expanded = state.dailyModuleExpanded[modId] === true;
         const topicRows = topics
-          .map(
-            (t) => {
-              const teaser = t.teaser
-                ? `<span class="daily-topic-teaser muted">${escapeHtml(t.teaser)}</span>`
-                : "";
-              return `
-        <button type="button" class="home-merge-row daily-topic-row" data-daily-topic="${escapeHtml(
-          t.id
-        )}" aria-label="${escapeHtml("查看：" + t.title)}">
-          <span class="home-merge-row-text daily-topic-title-only"><strong>${escapeHtml(t.title)}</strong>${teaser}</span>
+          .map((t, idx) => {
+            const overflow = idx >= maxVisible;
+            const teaserText = topicTeaserForSpecies(t, filterSp);
+            const teaser = teaserText
+              ? `<span class="daily-topic-teaser-inline muted">${escapeHtml(teaserText)}</span>`
+              : "";
+            const oc = overflow ? " daily-topic-row--overflow" : "";
+            return `
+        <button type="button" class="home-merge-row daily-topic-row${oc}" data-daily-topic="${escapeHtml(
+              t.id
+            )}" aria-label="${escapeHtml("查看：" + t.title)}">
+          <span class="home-merge-row-text daily-topic-title-only"><strong>${escapeHtml(
+            t.title
+          )}</strong>${teaser}</span>
         </button>`;
-            }
-          )
+          })
           .join("");
-        return `<section class="daily-mod" data-daily-module="${escapeHtml(mod.id)}">
-        <h3 class="daily-mod-title">${escapeHtml(mod.title)}</h3>
-        <div class="daily-topic-list">${topicRows}</div>
+        const listCollapsed = needsExpand && !expanded ? " is-collapsed" : "";
+        const expandBtn = needsExpand
+          ? `<button type="button" class="daily-mod-expand" data-daily-mod-expand="${escapeHtml(
+              modId
+            )}" aria-expanded="${expanded ? "true" : "false"}" aria-label="${expanded ? "收起" : "展开全部"}">
+          <span class="daily-mod-expand-icon${expanded ? " is-open" : ""}" aria-hidden="true"></span>
+        </button>`
+          : "";
+        return `<section class="daily-mod" data-daily-module="${escapeHtml(modId)}">
+        <div class="daily-mod-head">
+          <h3 class="daily-mod-title">${escapeHtml(mod.title)}</h3>
+          ${expandBtn}
+        </div>
+        <div class="daily-topic-list${listCollapsed}">${topicRows}</div>
       </section>`;
       })
       .filter(Boolean)
       .join("");
     host.innerHTML = mods;
-    $$("[data-daily-topic]", host).forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const id = btn.getAttribute("data-daily-topic");
-        renderDailyTopicPage(id);
-        showView("dailyTopic");
-      });
-    });
+    lastDailyGridCols = cols;
+    bindDailyKnowledgeInteractions(host);
   }
 
   function updateHomeMergedPanels() {
@@ -384,6 +490,11 @@
     $$("[data-view]").forEach((el) => {
       el.hidden = el.getAttribute("data-view") !== name;
     });
+    const wrap = document.querySelector(".wrap");
+    if (wrap) wrap.classList.toggle("wrap--health-chat", name === "healthChat");
+    if (typeof document !== "undefined" && document.body) {
+      document.body.classList.toggle("view-health-chat", name === "healthChat");
+    }
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -986,34 +1097,39 @@
     }
 
     $("#btnDisclaimer").addEventListener("click", () => showView("disclaimer"));
-    $("#pickCat").addEventListener("click", () => {
-      state.species = "cat";
-      updateSpeciesLabels();
-      updateSpeciesCards();
+    const btnHomeChatEnter = $("#btnHomeChatEnter");
+    function openHomeHealthChat() {
       showView("healthChat");
       if (typeof CuraHealthChat !== "undefined" && CuraHealthChat) {
-        CuraHealthChat.open({ species: "cat" });
+        CuraHealthChat.open({});
+        if (typeof CuraHealthChat.reset === "function") CuraHealthChat.reset();
       }
-    });
-    $("#pickDog").addEventListener("click", () => {
-      state.species = "dog";
-      updateSpeciesLabels();
-      updateSpeciesCards();
-      showView("healthChat");
-      if (typeof CuraHealthChat !== "undefined" && CuraHealthChat) {
-        CuraHealthChat.open({ species: "dog" });
-      }
+    }
+    if (btnHomeChatEnter) {
+      btnHomeChatEnter.addEventListener("click", openHomeHealthChat);
+    }
+    $$("#homeQuickQuestions [data-home-quick-question]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const q = String(btn.getAttribute("data-home-quick-question") || "").trim();
+        showView("healthChat");
+        if (typeof CuraHealthChat !== "undefined" && CuraHealthChat) {
+          if (typeof CuraHealthChat.reset === "function") CuraHealthChat.reset();
+          if (q && typeof CuraHealthChat.sendQuickMessage === "function") CuraHealthChat.sendQuickMessage(q);
+        }
+      });
     });
     const dailyCat = $("#dailyFilterCat");
     const dailyDog = $("#dailyFilterDog");
     if (dailyCat && dailyDog) {
       dailyCat.addEventListener("click", () => {
         state.dailyKnowledgeFilter = "cat";
+        state.dailyModuleExpanded = {};
         updateDailyKnowledgeTabsUi();
         updateHomeMergedPanels();
       });
       dailyDog.addEventListener("click", () => {
         state.dailyKnowledgeFilter = "dog";
+        state.dailyModuleExpanded = {};
         updateDailyKnowledgeTabsUi();
         updateHomeMergedPanels();
       });
@@ -1054,6 +1170,130 @@
     $("#startBehavior").addEventListener("click", () => startFlow("behavior"));
     $("#startCatIntake").addEventListener("click", () => startFlow("catIntake"));
     $("#startDogIntake").addEventListener("click", () => startFlow("dogIntake"));
+    if (typeof window !== "undefined") {
+      window.addEventListener("resize", scheduleDailyKnowledgeGridResize);
+    }
+  }
+
+  /** 本机 + ADMIN_CLIENT_SEED=1 时，/api/meta 返回 adminKeyForBrunch，写入 localStorage 并填入输入框 */
+  async function tryPreloadAdminKeyFromMeta() {
+    try {
+      const root =
+        window.CURABOT_API_BASE != null && String(window.CURABOT_API_BASE).trim() !== ""
+          ? String(window.CURABOT_API_BASE).replace(/\/$/, "")
+          : "";
+      const url = (root ? root : "") + "/api/meta";
+      const r = await fetch(url, { cache: "no-store" });
+      if (!r.ok) return;
+      const j = await r.json();
+      if (!j || !j.adminKeyForBrunch || typeof j.adminKeyForBrunch !== "string") return;
+      try {
+        localStorage.setItem("curabot_admin_key", j.adminKeyForBrunch);
+      } catch (e) {
+        /* ignore */
+      }
+      const keyEl = document.getElementById("knowledgeBrunchKey");
+      if (keyEl) keyEl.value = j.adminKeyForBrunch;
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  function bindKnowledgeBrunch() {
+    const btn = document.getElementById("knowledgeBrunchSubmit");
+    const reloadBtn = document.getElementById("knowledgeBrunchReload");
+    const status = document.getElementById("knowledgeBrunchStatus");
+    const text = document.getElementById("knowledgeBrunchText");
+    const title = document.getElementById("knowledgeBrunchTitle");
+    const keyEl = document.getElementById("knowledgeBrunchKey");
+    if (!btn || !text) return;
+
+    function apiRoot() {
+      if (window.CURABOT_API_BASE != null && String(window.CURABOT_API_BASE).trim() !== "") {
+        return String(window.CURABOT_API_BASE).replace(/\/$/, "");
+      }
+      return "";
+    }
+
+    try {
+      const saved = localStorage.getItem("curabot_admin_key");
+      if (keyEl && saved) keyEl.value = saved;
+    } catch (e) {
+      /* ignore */
+    }
+
+    function getKey() {
+      return keyEl ? String(keyEl.value || "").trim() : "";
+    }
+
+    async function postJson(path, body) {
+      const root = apiRoot();
+      const url = (root ? root : "") + path;
+      const k = getKey();
+      if (!k) {
+        if (status) status.textContent = "请填写管理密钥（与服务器 .env 中 ADMIN_KEY 一致）。";
+        return null;
+      }
+      const ac = new AbortController();
+      const timer = setTimeout(() => ac.abort(), 25000);
+      try {
+        const r = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Admin-Key": k },
+          body: JSON.stringify(body || {}),
+          signal: ac.signal,
+          cache: "no-store",
+        });
+        clearTimeout(timer);
+        const j = await r.json().catch(() => ({}));
+        try {
+          localStorage.setItem("curabot_admin_key", k);
+        } catch (e2) {
+          /* ignore */
+        }
+        return { ok: r.ok, j };
+      } catch (e) {
+        clearTimeout(timer);
+        return { ok: false, err: e };
+      }
+    }
+
+    btn.addEventListener("click", async () => {
+      const t = String(text.value || "").trim();
+      const tit = title ? String(title.value || "").trim() : "";
+      if (t.length < 12) {
+        if (status) status.textContent = "正文至少 12 字。";
+        return;
+      }
+      if (status) status.textContent = "提交中…";
+      const res = await postJson("/api/knowledge/ingest", { text: t, title: tit });
+      if (!res) return;
+      if (res.ok && res.j && res.j.ok) {
+        if (status) status.textContent = "已保存，下次对话会优先参考私人笔记。";
+        text.value = "";
+      } else if (res.err) {
+        if (status) status.textContent = "网络失败：请确认本页与 Node 同域，或已设置 CURABOT_API_BASE。";
+      } else {
+        const hint = (res.j && (res.j.hint || res.j.error)) || "提交失败";
+        if (status) status.textContent = hint === "admin_disabled" ? "服务器未配置 ADMIN_KEY。" : String(hint);
+      }
+    });
+
+    if (reloadBtn) {
+      reloadBtn.addEventListener("click", async () => {
+        if (status) status.textContent = "重载中…";
+        const res = await postJson("/api/admin/knowledge/reload", {});
+        if (!res) return;
+        if (res.ok && res.j && res.j.ok) {
+          if (status) status.textContent = "检索缓存已刷新。";
+        } else if (res.err) {
+          if (status) status.textContent = "请求失败。";
+        } else {
+          const hint = (res.j && (res.j.hint || res.j.error)) || "失败";
+          if (status) status.textContent = String(hint);
+        }
+      });
+    }
   }
 
   async function boot() {
@@ -1066,8 +1306,16 @@
       return;
     }
     applyHeroImages();
+    if (typeof CuraAccount !== "undefined" && CuraAccount.init) {
+      await CuraAccount.init();
+    }
     bindNav();
+    await tryPreloadAdminKeyFromMeta();
+    bindKnowledgeBrunch();
     renderHome();
+    if (typeof CuraHealthGraphQuiz !== "undefined" && CuraHealthGraphQuiz.init) {
+      void CuraHealthGraphQuiz.init();
+    }
     registerServiceWorkerAndFollowUp();
   }
 

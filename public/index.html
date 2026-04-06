@@ -3,6 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- 统一相对资源解析到站点根，避免 /images 在部分环境下解析到错误路径 -->
+    <base href="/" />
     <title>CuraBot · 毛孩子温暖小助手</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -12,19 +14,38 @@
     />
     <link rel="stylesheet" href="/css/main.css" />
     <script>
-      // 可选：仅打开静态前端、Node 在另一端口时，填写 API 根地址（与 server.js 一致），例如：
-      // window.CURABOT_API_BASE = "http://127.0.0.1:3000";
+      // 本地 / 局域网用 Live Server 等打开时，自动把 API 指到本机 Node（默认 3000 端口）；部署到公网时请改为你的 API 域名或删除此段。
+      (function () {
+        try {
+          var l = location;
+          if (l.protocol === "file:") {
+            window.CURABOT_API_BASE = "http://127.0.0.1:3000";
+            return;
+          }
+          var h = l.hostname,
+            p = l.port || "";
+          var lan =
+            h === "localhost" ||
+            h === "127.0.0.1" ||
+            /^192\.168\.\d+\.\d+$/.test(h) ||
+            /^10\.\d+\.\d+\.\d+$/.test(h) ||
+            /^172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+$/.test(h);
+          if (lan && p && p !== "3000") window.CURABOT_API_BASE = "http://127.0.0.1:3000";
+        } catch (e) {
+          /* ignore */
+        }
+      })();
     </script>
   </head>
   <body>
     <div class="warm-banner" id="warmBanner" role="banner">
-      <header class="topbar topbar--banner">
+      <header class="topbar topbar--banner topbar--with-auth">
         <button type="button" class="brand brand-home" id="brandHome" aria-label="返回首页">
           <img
             class="brand-logo"
             src="/images/brand-logo.png"
             alt=""
-            width="120"
+            width="44"
             height="44"
             loading="eager"
             decoding="async"
@@ -34,13 +55,13 @@
             <small>愿你与毛孩子都被温柔对待</small>
           </div>
         </button>
+        <div class="topbar-auth" id="topbarAuth" aria-label="毛孩子档案"></div>
       </header>
     </div>
 
     <div class="wrap">
       <section data-view="home">
         <div class="home-stack">
-          <div class="home-section-label" id="label-health">饮食健康</div>
           <div class="hero home-hero home-hero--health">
             <div class="home-health-title-row">
               <h1 class="home-health-title-text">
@@ -64,39 +85,38 @@
             </div>
             <div class="home-health-actions">
               <p class="muted home-health-intro">
-                标准化临床采集清单、急事先筛、按症状追问——把情况说清楚，方便判断要不要尽快去医院（非诊断）。请点选下方<strong>猫猫</strong>或<strong>狗狗</strong>卡片，直接进入
-                <strong>CuraBot</strong> 健康咨询；分诊与标准化采集可从对话内或首页其他入口进入。
+                CuraBot 会结合毛孩子的具体情况，用温和的方式给你可参考的建议（科普，不能代替兽医当面诊断）。
               </p>
-              <div class="species-grid">
-                <button
-                  type="button"
-                  class="species-card"
-                  data-species="cat"
-                  id="pickCat"
-                  aria-pressed="false"
-                  aria-label="进入猫猫健康咨询"
-                >
-                  <img id="heroCatImg" class="species-photo" src="" alt="" width="140" height="140" loading="lazy" />
-                  <span class="species-name">猫猫</span>
-                  <span class="species-card-sub muted">呕吐、排尿异常、皮肤问题等</span>
-                  <span class="species-pill" aria-hidden="true">✓ 已选</span>
-                </button>
-                <button
-                  type="button"
-                  class="species-card"
-                  data-species="dog"
-                  id="pickDog"
-                  aria-pressed="false"
-                  aria-label="进入狗狗健康咨询"
-                >
-                  <img id="heroDogImg" class="species-photo" src="" alt="" width="140" height="140" loading="lazy" />
-                  <span class="species-name">狗狗</span>
-                  <span class="species-card-sub muted">拉稀、扭伤、行为与训练等</span>
-                  <span class="species-pill" aria-hidden="true">✓ 已选</span>
-                </button>
+              <div class="home-chat-entry" id="homeChatEntryBox">
+                <div class="home-chat-entry-avatars" aria-hidden="true">
+                  <img src="/images/hero-cat.png" alt="" width="56" height="56" />
+                  <img src="/images/hero-dog.png" alt="" width="56" height="56" />
+                </div>
+                <button type="button" id="btnHomeChatEnter" class="daily-knowledge-tab home-chat-entry-btn">CuraBot和你一起守护毛孩子的健康，点击开启咨询</button>
+              </div>
+              <div class="home-quick-questions" id="homeQuickQuestions">
+                <div class="home-quick-row">
+                  <span class="home-quick-row-label">猫猫常见问题：</span>
+                  <button type="button" class="home-quick-chip" data-home-quick-question="猫猫这两天呕吐，食欲下降，先看哪些指标？">呕吐食欲差</button>
+                  <button type="button" class="home-quick-chip" data-home-quick-question="猫猫频繁进猫砂盆但尿很少，怎么判断紧急程度？">尿少/频繁蹲盆</button>
+                  <button type="button" class="home-quick-chip" data-home-quick-question="猫猫一直抓痒掉毛，先排查什么？">抓痒掉毛</button>
+                  <button type="button" class="home-quick-chip" data-home-quick-question="猫猫咳嗽有水声，呼吸要重点看什么？">咳嗽有水声</button>
+                  <button type="button" class="home-quick-chip" data-home-quick-question="猫猫突然不爱动，总在角落趴着，可能是什么问题？">突然不爱动</button>
+                </div>
+                <div class="home-quick-row">
+                  <span class="home-quick-row-label">狗狗常见问题：</span>
+                  <button type="button" class="home-quick-chip" data-home-quick-question="狗狗突然拉稀，精神一般，需要先观察什么？">突然拉稀</button>
+                  <button type="button" class="home-quick-chip" data-home-quick-question="狗狗吐黄水但还能吃一点，要不要马上去医院？">吐黄水</button>
+                  <button type="button" class="home-quick-chip" data-home-quick-question="狗狗走路一瘸一拐，先排查什么，什么时候就医？">跛行/扭伤</button>
+                  <button type="button" class="home-quick-chip" data-home-quick-question="狗狗抓耳朵甩头，耳朵发红有味道，怎么处理？">甩头抓耳</button>
+                  <button type="button" class="home-quick-chip" data-home-quick-question="狗狗咳嗽像卡住东西，什么时候要立刻去医院？">咳嗽像卡住</button>
+                </div>
               </div>
             </div>
           </div>
+
+          <div class="home-section-label" id="label-health-graph">健康图谱 · 趣味学</div>
+          <div class="hero home-hero home-hero--graph-quiz" id="healthGraphQuizMount" aria-labelledby="label-health-graph"></div>
 
           <div class="home-section-label" id="label-daily-knowledge">日常知识</div>
           <div class="hero home-hero home-hero--merged home-hero--daily-knowledge">
@@ -233,6 +253,9 @@
                 <span class="curabot-title-rest">聊聊毛孩子的健康</span>
               </span>
             </h2>
+            <p class="muted health-chat-lead">
+              CuraBot 会结合毛孩子的具体情况，用温和的方式给你可参考的建议（科普，不能代替兽医当面诊断）。
+            </p>
           </header>
           <div id="healthEmergencyBanner" class="health-emergency-banner" hidden role="alert">
             <span class="health-emergency-banner-icon" aria-hidden="true">⚠</span>
@@ -241,58 +264,43 @@
               请尽快联系附近动物医院或急诊；若已误食百合/巧克力/木糖醇等，请直接携带包装就医。
             </p>
           </div>
-          <div id="healthChatMessages" class="health-chat-log" role="log" aria-live="polite"></div>
-          <form id="healthChatForm" class="health-chat-form" autocomplete="off">
-            <div class="health-chat-composer" id="healthChatComposer">
-              <div class="health-chat-pending" id="healthChatPending" hidden aria-live="polite"></div>
-              <div class="health-chat-input-row">
-                <input
-                  type="file"
-                  id="healthChatFileInput"
-                  class="visually-hidden"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
-                  multiple
-                  tabindex="-1"
-                />
-                <button
-                  type="button"
-                  class="health-chat-image-btn"
-                  id="btnHealthChatImage"
-                  aria-label="添加图片"
-                  title="上传或粘贴图片，最多 9 张（视觉分析需本机 npm start 与 API）"
-                >
-                  <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path
-                      fill="currentColor"
-                      d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4.86 8.86l-3 3.87L9 13.14 6 17h12l-3.86-5.14z"
-                    />
-                  </svg>
-                </button>
-                <label class="visually-hidden" for="healthChatInput">输入消息</label>
-                <input
-                  type="text"
-                  class="health-chat-input"
-                  id="healthChatInput"
-                  name="healthChatInput"
-                  placeholder="例如：猫一天没尿了、精神很差…"
-                  maxlength="2000"
-                />
+          <div class="health-chat-layout">
+            <aside class="health-chat-sessions" aria-label="会话列表">
+              <button type="button" class="btn secondary health-chat-new-btn" id="btnHealthNewSession">新会话</button>
+              <div id="healthSessionList" class="health-session-list"></div>
+            </aside>
+            <div class="health-chat-main">
+              <div class="health-chat-panel">
+                <div id="healthChatMessages" class="health-chat-log" role="log" aria-live="polite"></div>
+                <form id="healthChatForm" class="health-chat-form" autocomplete="off">
+                  <div class="health-chat-composer" id="healthChatComposer">
+                    <div class="health-chat-pending" id="healthChatPending" hidden aria-live="polite"></div>
+                    <div class="health-chat-input-row">
+                      <label class="visually-hidden" for="healthChatInput">输入消息</label>
+                      <input
+                        type="text"
+                        class="health-chat-input"
+                        id="healthChatInput"
+                        name="healthChatInput"
+                        placeholder=""
+                        maxlength="2000"
+                      />
+                      <div class="health-chat-send-actions">
+                        <button type="submit" class="btn health-chat-btn-send">发送</button>
+                        <button
+                          type="button"
+                          class="btn secondary health-chat-btn-export"
+                          id="btnSoapReport"
+                          title="复制一份给兽医看的摘要，含本页对话与筛查记录（非诊断）"
+                        >
+                          导出就诊简报
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </form>
               </div>
             </div>
-            <div class="health-chat-form-actions">
-              <button type="submit" class="btn">发送</button>
-              <button
-                type="button"
-                class="btn secondary"
-                id="btnSoapReport"
-                title="生成一份给兽医看的结构化摘要（主诉、客观信息与就诊准备，非诊断）"
-              >
-                导出就诊简报
-              </button>
-            </div>
-          </form>
-          <div class="hero-actions hero-actions--bottom">
-            <button type="button" class="btn secondary js-back-home">← 返回首页</button>
           </div>
         </div>
       </section>
@@ -405,9 +413,136 @@
         </div>
       </section>
 
+      <div class="account-modal-overlay" id="accountModalOverlay" hidden>
+        <div class="account-modal" role="dialog" aria-modal="true" aria-labelledby="accountModalTitle">
+          <div class="account-modal-head">
+            <h3 id="accountModalTitle">登录</h3>
+            <button type="button" class="account-modal-close" id="accountModalClose" aria-label="关闭">×</button>
+          </div>
+          <form id="accountAuthForm" class="account-auth-form">
+            <label class="field-label" for="accountEmail">邮箱</label>
+            <input type="email" id="accountEmail" name="email" required autocomplete="email" maxlength="128" class="field-input" />
+            <div id="accountNicknameWrap" class="account-nickname-wrap" hidden>
+              <label class="field-label" for="accountNickname">昵称（选填）</label>
+              <input
+                type="text"
+                id="accountNickname"
+                name="nickname"
+                autocomplete="nickname"
+                maxlength="20"
+                class="field-input"
+                placeholder="不填则自动生成唯一昵称"
+              />
+            </div>
+            <label class="field-label" for="accountPassword">密码（至少 8 位）</label>
+            <input type="password" id="accountPassword" name="password" required autocomplete="current-password" minlength="8" maxlength="128" class="field-input" />
+            <p class="account-modal-error" id="accountModalError" role="alert"></p>
+            <p class="account-auth-switch">
+              <button type="button" class="btn-link" id="btnAuthSwitchMode" data-auth-mode-target="register">
+                没有账号？去注册
+              </button>
+            </p>
+            <button type="submit" class="btn account-modal-submit">提交</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="account-modal-overlay" id="nicknameModalOverlay" hidden>
+        <div class="account-modal" role="dialog" aria-modal="true" aria-labelledby="nicknameModalTitle">
+          <div class="account-modal-head">
+            <h3 id="nicknameModalTitle">修改昵称</h3>
+            <button type="button" class="account-modal-close" id="nicknameModalClose" aria-label="关闭">×</button>
+          </div>
+          <form id="nicknameForm" class="account-auth-form">
+            <label class="field-label" for="nicknameEditInput">昵称</label>
+            <input
+              type="text"
+              id="nicknameEditInput"
+              maxlength="20"
+              class="field-input"
+              autocomplete="nickname"
+              placeholder="1–20 个字"
+            />
+            <p class="account-modal-error" id="nicknameModalError" role="alert"></p>
+            <button type="submit" class="btn account-modal-submit">保存</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="pet-modal-overlay" id="petModalOverlay" hidden>
+        <div class="pet-modal pet-modal--profile" role="dialog" aria-modal="true" aria-labelledby="petModalTitle">
+          <div class="pet-modal-topbar">
+            <h3 id="petModalTitle">添加毛孩子</h3>
+            <button type="button" class="account-modal-close" id="petModalClose" aria-label="关闭">×</button>
+          </div>
+          <form id="petForm" class="pet-form pet-form--profile">
+            <div class="pet-modal-avatar-row">
+              <input type="hidden" id="petAvatarUrl" name="avatar_url" value="" />
+              <input
+                type="file"
+                id="petAvatarFile"
+                name="pet_avatar_file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                class="pet-avatar-file-sr"
+                tabindex="-1"
+                aria-hidden="true"
+              />
+              <button type="button" class="pet-avatar-pick" id="petAvatarPick" tabindex="0" aria-label="点击更换头像">
+                <img id="petAvatarPreview" class="pet-avatar-preview pet-avatar-preview--hero" src="/images/hero-cat.png" alt="" width="96" height="96" />
+              </button>
+              <p class="muted small pet-avatar-row-hint">点击头像更换；不上传则使用默认头像</p>
+            </div>
+            <p class="pet-form-section-hint">请完善档案信息</p>
+            <label class="field-label" for="petNickname">昵称 <span class="req">*</span></label>
+            <input type="text" id="petNickname" name="nickname" required maxlength="32" class="field-input field-input--sage" placeholder="请输入爱宠昵称" />
+            <label class="field-label" for="petSpecies">物种 <span class="req">*</span></label>
+            <select id="petSpecies" name="species" class="field-input field-input--sage" required>
+              <option value="cat">猫猫</option>
+              <option value="dog">狗狗</option>
+            </select>
+            <label class="field-label" for="petBreed">品种</label>
+            <select id="petBreed" name="breed" class="field-input field-input--sage">
+              <option value="">请选择品种（可选）</option>
+            </select>
+            <label class="field-label" for="petBirthDate">出生日期（选填）</label>
+            <div class="pet-birth-age-row">
+              <input type="date" id="petBirthDate" name="birth_date" class="field-input field-input--sage pet-birth-input" />
+              <div class="pet-age-readonly" id="petAgeReadonlyWrap">
+                <span class="pet-age-readonly-k">推算年龄</span>
+                <span id="petAgeDisplay" class="pet-age-readonly-v">填写生日后自动显示</span>
+              </div>
+            </div>
+            <label class="field-label" for="petGender">性别</label>
+            <select id="petGender" name="gender" class="field-input field-input--sage">
+              <option value="">请选择</option>
+              <option value="male">公</option>
+              <option value="female">母</option>
+            </select>
+            <label class="field-label" for="petNeuter">绝育情况</label>
+            <select id="petNeuter" name="neuter" class="field-input field-input--sage">
+              <option value="">请选择</option>
+              <option value="no">未绝育</option>
+              <option value="yes">已绝育</option>
+              <option value="unknown">未知</option>
+            </select>
+            <label class="field-label" for="petWeight">体重（kg，选填）</label>
+            <input type="number" id="petWeight" name="weight_kg" min="0" max="99" step="0.1" class="field-input field-input--sage" placeholder="例如：4.5" />
+            <label class="field-label" for="petNotes">备注</label>
+            <textarea id="petNotes" name="notes" rows="2" maxlength="500" class="field-input field-textarea field-input--sage" placeholder="过敏、慢病史等（非必填）"></textarea>
+            <button type="submit" class="pet-modal-submit">完成</button>
+          </form>
+        </div>
+      </div>
+
       <footer class="site">
         每一份呵护，都有温度 ·
         <a href="https://github.com/youyouzhucc/CuraBot" target="_blank" rel="noopener">GitHub</a>
+        <span id="siteAccountLinks" class="site-account-links" hidden>
+          ·
+          <button type="button" class="btn-link site-account-link" id="btnSiteNickname">修改昵称</button>
+          ·
+          <button type="button" class="btn-link site-account-link" id="btnSiteLogout">退出登录</button>
+        </span>
         <span class="photo-credit">首页猫狗照片仅供界面展示</span>
       </footer>
     </div>
@@ -417,6 +552,8 @@
     <script src="/js/healthBotLocal.js"></script>
     <script src="/js/healthDecisionEngine.js"></script>
     <script src="/js/healthBot.js"></script>
+    <script src="/js/healthGraphQuiz.js"></script>
+    <script src="/js/account.js"></script>
     <script src="/js/app.js"></script>
   </body>
 </html>

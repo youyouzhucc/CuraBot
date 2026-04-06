@@ -12,3 +12,4 @@ data/sessions/*
 !data/sessions/.gitkeep
 data/curabot.db
 data/*.db
+data/knowledge-feedback.jsonl

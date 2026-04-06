@@ -5,7 +5,24 @@
     "disclaimer": "这里的内容用来帮你判断「要不要尽快去医院」，不能代替医生当面检查。若宠物很难受或越来越糟，请直接去医院。",
     "noRxNote": "不提供吃药剂量，也不帮开药；用药一定要听执业兽医的。",
     "educationNote": "科普与分诊表述综合公开兽医文献与家长教育资料的思路撰写，不转载受版权保护的全文。急症时间窗、用药与手术方案须以执业兽医与当面检查为准；默克兽医手册等在线章节可作为自学索引（见「资料目录」内知识图谱简表与参考文献）。",
-    "apiBase": null
+    "apiBase": null,
+    "governance": {
+      "documentVersion": "2026-04",
+    "felineManualVersion": "2026-04-deep+refs",
+      "contentPolicy": "条目以公开兽医教育与家长科普为主线；物种（猫/犬）与年龄段表述须与正文一致。新增主题须带 refIds 指向 references 中已有条目，避免无出处断言。",
+      "reviewPolicy": "临床相关文案变更建议经执业兽医或具备小动物临床经验者审读后再发布；版本号与变更记录可维护在仓库提交说明中。",
+      "ragNote": "检索增强（RAG）推荐路径：将 dailyKnowledge.topics 与 references 拆分为短段落块 → 嵌入向量库 → 用户提问时检索 top-k 块注入 system「仅作背景，不得覆盖用户事实」；未部署向量库前以本文件 + 前端门控规则为准。用户或运营提供的第三方文章列表仅作溯源索引；仓库不镜像受版权保护的全文，回答不得复述期刊原文。",
+      "decisionTreeNote": "结构化分诊以 health-decision-tree.json、intake-flows.json 及 healthBotLocal.js 门控为准；大模型仅补充语气与科普措辞，不得绕开门控给出「确诊」或具体处方。",
+      "llmSafetyAppendix": [
+        "生命相关：宁可建议线下就诊，也不要为「显得专业」而编造检查数值、病名确诊或用药剂量。",
+        "只使用用户已说的症状与档案前缀中的事实；未提及的年龄、品种、体重、化验、影像、既往病名一律不得假设或捏造。",
+        "区分「猫」「犬」与个体差异：不要张冠李戴；不确定时明确说信息不足并建议兽医面诊。",
+        "不输出具体药物名剂量、注射方案、手术操作步骤；可谈「需兽医评估是否用药」类原则。",
+        "若与内置急诊红线或分诊树冲突，以安全侧为准；回答中不要声称「已查阅某私有数据库」除非检索片段已真实注入。",
+        "遇到中毒、外伤、呼吸困难、无尿等高危话题：以尽快/急诊就医为框架，避免替代急诊处置指令的细节臆测。",
+        "运营或用户提供的文献列表仅作溯源与检索索引：不得复述期刊/网站受版权保护的全文；未逐句核对过的外链标题与年份以原站为准。"
+      ]
+    }
   },
   "uiImages": {
     "heroCat": "/images/hero-cat.png",
@@ -13,6 +30,7 @@
     "bannerSoft": null
   },
   "healthChat": {
+    "freeWelcomeText": "你好，我是 CuraBot。**你可以直接在下框打字**，描述食欲、精神、呕吐、大小便等你最担心的情况（科普参考，不能代替兽医诊断）。\n\n若希望更系统地整理线索，可点下方按钮做**可选**的档案与症状筛查；不做筛查也可以一直自由对话。",
     "guidedDonePrompt": "好的，已记录你的选择。请用自然语言描述最近最担心的症状或变化，我会结合这些信息给参考建议（不能代替兽医诊断）。",
     "hint": "建议由大模型生成时不能代替兽医诊断；急症请优先去就医。",
     "guidedSteps": [
@@ -314,6 +332,108 @@
       "title": "ASPCA Animal Poison Control Center（美国）",
       "role": "国际毒物咨询示例；收费与接线方式以官网为准。中国大陆以当地动物医院急诊为准。",
       "url": "https://www.aspca.org/pet-care/animal-poison-control"
+    },
+    {
+      "id": "dvm360-icteric-cat-2025",
+      "category": "综述",
+      "title": "dvm360 · The icteric cat: diagnosis and treatment of common feline hepatopathies (2025)",
+      "role": "黄疸猫常见肝胆疾病鉴别与诊疗思路（专业向综述）；https://dvm360.com/view/the-icteric-cat-diagnosis-and-treatment-of-common-feline-hepatopathies"
+    },
+    {
+      "id": "mvm-flutd-cats",
+      "category": "手册",
+      "title": "Merck Veterinary Manual · Lower Urinary Tract Disease in Cats",
+      "role": "猫 FLUTD/FIC、尿石、感染等概述；https://www.merckvetmanual.com/urinary-system/noninfectious-diseases-of-the-urinary-system-in-small-animals/lower-urinary-tract-disease-in-cats"
+    },
+    {
+      "id": "mvm-renal-dysfunction",
+      "category": "手册",
+      "title": "Merck Veterinary Manual · Renal Dysfunction in Dogs and Cats",
+      "role": "氮质血症分型、CKD 等概述；https://www.merckvetmanual.com/urinary-system/noninfectious-diseases-of-the-urinary-system-in-small-animals/renal-dysfunction-in-dogs-and-cats"
+    },
+    {
+      "id": "mvm-clinical-pathology-overview",
+      "category": "手册",
+      "title": "Merck Veterinary Manual · Clinical Pathology / Laboratory（站内检索）",
+      "role": "血常规、生化、尿液等化验解读入口；请在 merckvetmanual.com 检索 Clinical Pathology、Laboratory Tests、Urinalysis 等关键词。"
+    },
+    {
+      "id": "mvm-diagnostic-imaging-overview",
+      "category": "手册",
+      "title": "Merck Veterinary Manual · Diagnostic Imaging（站内检索）",
+      "role": "X 线、超声、造影等影像诊断章节；请在 merckvetmanual.com 检索 Diagnostic Imaging、Radiography、Ultrasonography。"
+    },
+    {
+      "id": "clinicians-brief-hyperthyroid-senior-cats",
+      "category": "综述",
+      "title": "Clinician's Brief · Hyperthyroidism & Diagnostic Challenges in Senior Cats",
+      "role": "老年猫甲亢诊断挑战（专业向）；请以 cliniciansbrief.com 检索题名。"
+    },
+    {
+      "id": "alliance-hospital-flutd-tw",
+      "category": "卫教",
+      "title": "联盟动物医院 · 貓咪下泌尿道疾病 (FLUTD) 衛教指南",
+      "role": "机构 FLUTD 家长卫教；全文与更新以该院官网或授权转载为准。"
+    },
+    {
+      "id": "vetopia-ckd-cat-guide",
+      "category": "卫教",
+      "title": "Vetopia · 貓慢性腎臟病全攻略",
+      "role": "商业宠物健康平台 CKD 科普；内容以页面为准。"
+    },
+    {
+      "id": "pet-health-net-diabetes-cat",
+      "category": "卫教",
+      "title": "寵物健康醫療網 · 貓咪糖尿病照護指南",
+      "role": "糖尿病照护科普；以页面为准。"
+    },
+    {
+      "id": "alliance-hospital-diabetes-pets",
+      "category": "卫教",
+      "title": "联盟动物医院 · 原來犬貓也有糖尿病",
+      "role": "犬猫糖尿病入门卫教；以机构页面为准。"
+    },
+    {
+      "id": "monster-vet-thyroid-survival",
+      "category": "卫教",
+      "title": "怪獸健康中心 · 貓甲狀腺亢進相關科普",
+      "role": "甲亢预后与照护类科普；以页面为准。"
+    },
+    {
+      "id": "poaipets-fip-intro",
+      "category": "卫教",
+      "title": "poaipets · 貓傳染性腹膜炎（FIP）",
+      "role": "FIP 入门说明；以页面为准。"
+    },
+    {
+      "id": "catster-fip-signs",
+      "category": "卫教",
+      "title": "Catster · Cat FIP Signs & Treatment",
+      "role": "英文家长向 FIP 线索；以 catster.com 当前页面为准。"
+    },
+    {
+      "id": "mihua-cat-vomit-soft-stool",
+      "category": "卫教",
+      "title": "米花犬貓物語 · 貓嘔吐與軟便",
+      "role": "消化症状家长科普；以页面为准。"
+    },
+    {
+      "id": "monster-vet-gi-guide",
+      "category": "卫教",
+      "title": "怪獸健康中心 · 貓消化與腸胃疾病全指南",
+      "role": "猫消化疾病总览类科普；以页面为准。"
+    },
+    {
+      "id": "onedegree-cat-common-diseases",
+      "category": "卫教",
+      "title": "OneDegree · 貓咪常見疾病概览类文章",
+      "role": "保险/平台健康科普；以页面为准。"
+    },
+    {
+      "id": "aupi-ibd-cat",
+      "category": "卫教",
+      "title": "奧沛 · 貓 IBD 發炎性腸病",
+      "role": "IBD 症状与饮食管理类科普；以页面为准。"
     }
   ],
   "ownerFreeGuides": {
@@ -518,6 +638,18 @@
         "aspca-apcc",
         "silverstein-ecc"
       ]
+    },
+    {
+      "id": "pyometra-cat",
+      "species": ["cat"],
+      "title": "母猫：肚子变大、外阴流脓或分泌物、发热萎靡",
+      "signs": [
+        "未绝育或近期未绝育的母猫，饮水尿量异常增多",
+        "腹部胀大、分泌物呈脓性或恶臭",
+        "精神差、呕吐或拒食"
+      ],
+      "action": "开放性或闭合性子宫蓄脓均可危及生命，需尽快急诊评估；是否手术与稳定方案由兽医决定。不要自行喂抗生素拖延（参见小动物外科/内科子宫疾病诊疗思路）。",
+      "refIds": ["fossum", "ettinger", "silverstein-ecc", "mvm"]
     }
   ],
   "bodyRegions": [
@@ -1519,7 +1651,7 @@
     ]
   },
   "dailyKnowledge": {
-    "intro": "按模块浏览科普卡片；内容随下方「猫猫 / 狗狗」切换筛选。",
+    "intro": "按模块浏览科普卡片；内容随下方「猫猫 / 狗狗」切换筛选。健康咨询对话中，皮肤/被毛、口腔/牙齿等会先分步追问再给出分层建议（科普，非诊断）。含「猫咪全维度临床手册」模块：六大系统正常标准、异常分级、鉴别与交叉症状、就诊思路（不能代替兽医诊断与处方）。",
     "modules": [
       {
         "id": "diet",
@@ -1960,6 +2092,7 @@
             "id": "senior-pain",
             "title": "疼痛与关节炎线索",
             "teaser": "猫常「隐藏」疼痛，表现为不爱跳、理毛减少。",
+            "teaserDog": "犬常见跛行、起身慢、玩闹减少；也有忍痛不明显的情况。",
             "species": [
               "cat",
               "dog"
@@ -2026,6 +2159,223 @@
               "mvm",
               "aaha"
             ]
+          }
+        ]
+      },
+      {
+        "id": "feline-deep-manual",
+        "title": "猫咪全维度临床手册（科普分诊）",
+        "summary": "六大系统：正常标准、异常与常见病因、鉴别要点、交叉症状与就诊原则；附品种/年龄风险与用药安全红线。仅供教育，确诊与治疗须执业兽医。",
+        "topics": [
+          {
+            "id": "cat-manual-gi",
+            "title": "消化系统：饮食、呕吐、腹泻、腹痛、口腔",
+            "teaser": "正常食欲饮水排便、呕吐腹泻鉴别、猫瘟梗阻胰腺炎IBD、交叉症状与就诊思路。",
+            "teaserCat": "成年猫饮水约40–60ml/kg/天；排便1–2次/天成形；月≤1次毛球可属生理。急性胃炎、异物、胰腺炎、猫瘟、肝肾衰竭、肠梗阻线索各不相同。",
+            "species": ["cat"],
+            "science": "正常：食欲稳定，饮水量有个体差异需对照「相对平时」；便黄褐成形。呕吐区分毛球偶发 vs 频繁空腹吐；腹泻从单纯消化不良到细菌/寄生虫/病毒/IBD/EPI 等谱系广。厌食可来自口腔疼痛、腹痛或全身病。交叉：吐+泻+热→感染优先；吐+不排便+腹紧→梗阻线索；吐+弓背拒躺→腹痛/胰腺线索；慢性吐泻消瘦→IBD/淋巴增生等须影像/取样；吐+多饮多尿→肝肾代谢线索。诊断由浅入深：体查脱水与腹诊、粪检、血常规生化、影像、必要时内镜/手术探查。治疗原则：轻症支持补液与饮食管理；梗阻/异物急诊手术；重症感染住院；IBD/肿瘤等长期方案由兽医制定。具体止吐、抗生素、免疫抑制剂等须处方。",
+            "advice": [
+              "记录呕吐/反流、次数、呕吐物颜色与是否带血、是否仍排便。",
+              "观察是否弓背、祈祷姿势、腹部是否胀硬拒碰。",
+              "黑便、粪臭味呕吐物、持续水样血便：尽快就医。"
+            ],
+            "vetWhen": "频繁呕吐、呕血、腹胀剧痛、完全不吃超过24–48小时、幼猫精神差伴吐泻：急诊或当日门诊。怀疑线状异物勿拖延。",
+            "graphClusterIds": ["gi-dehydration"],
+            "refIds": [
+              "ettinger",
+              "mvm",
+              "feline-patient",
+              "fossum",
+              "mihua-cat-vomit-soft-stool",
+              "monster-vet-gi-guide",
+              "aupi-ibd-cat",
+              "onedegree-cat-common-diseases"
+            ]
+          },
+          {
+            "id": "cat-manual-uro",
+            "title": "泌尿系统：FLUTD、尿闭与慢性肾病",
+            "teaser": "公猫尿道梗阻高危；尿频尿血无尿鉴别；CKD多饮多尿消瘦。",
+            "species": ["cat"],
+            "science": "正常：排尿顺畅，尿团数量与大小相对稳定，淡黄透明。FLUTD 为统称，含特发性膀胱炎（应激常见）、结晶/结石、尿道栓、老年感染等。尿闭为急症：少尿无尿可迅速导致肾后性损伤与电解质紊乱。CKD 表现为多饮多尿、消瘦、口臭与被毛粗糙等，须化验分期管理。交叉：尿频尿血精神尚可→炎症/结晶线索；尿频无尿吐萎靡→梗阻急诊；多饮多尿消瘦老年→CKD 线索；尿频+血糖高多食→糖尿病继发感染等。诊断：膀胱触诊、尿检、血生化电解质、影像。治疗：梗阻须急诊解除梗阻与稳定内环境；膀胱炎管理疼痛补水与减少应激；CKD 营养与并发症管理由兽医个体化。",
+            "advice": [
+              "记录尿团大小、最后一次排尿时间、是否舔尿道、是否蹲盆嚎叫。",
+              "勿自行灌大量水或喂人用利尿药。",
+              "几乎无尿、腹痛或呕吐：按急诊处理。"
+            ],
+            "vetWhen": "完全尿不出、腹部胀硬、呕吐或精神极差：立即急诊。反复尿频尿血也应尽快门诊。",
+            "graphClusterIds": ["feline-uo"],
+            "refIds": [
+              "isfm",
+              "mvm",
+              "feline-patient",
+              "mvm-flutd-cats",
+              "mvm-renal-dysfunction",
+              "alliance-hospital-flutd-tw",
+              "vetopia-ckd-cat-guide"
+            ]
+          },
+          {
+            "id": "cat-manual-derm",
+            "title": "皮肤与被毛：瘙痒、脱毛、感染、过敏",
+            "teaser": "跳蚤耳螨疥螨、猫癣、过敏、脓皮症、心因性舔毛鉴别。",
+            "species": ["cat"],
+            "science": "正常被毛顺滑、皮肤无破损，抓挠不频繁。寄生虫性：跳蚤黑点、耳螨咖啡渣分泌物、疥螨剧痒结痂等。真菌：圆形脱毛断毛，部分人畜共患。过敏：异位性、食物相关（可伴耳炎/腹泻）、接触性。细菌脂溢与心理性过度舔毛（对称脱毛）需区分。诊断：镜检、伍德氏灯、细胞学、排除试验与耳检。交叉：剧痒全身脱毛→螨/过敏；圆斑断毛→癣；仅腹内侧对称脱毛无皮损→心因性线索；耳臭甩头→耳病；瘙痒+腹泻→食物过敏线索。治疗：驱虫与环境管理按兽医；癣与感染用药；过敏与行为问题综合处理。",
+            "advice": [
+              "定期驱虫方案以兽医为准；避免长期滥用激素类外用药。",
+              "伊丽莎白圈可减少抓挠继发感染。",
+              "人若瘙痒红斑同时就医排查人畜共患。"
+            ],
+            "vetWhen": "大面积溃烂、发热、全身症状或快速扩散：尽快就诊。",
+            "graphClusterIds": ["behavior-masquerade"],
+            "refIds": ["muller-derm", "mvm", "feline-patient"]
+          },
+          {
+            "id": "cat-manual-resp",
+            "title": "呼吸系统：上呼吸道、哮喘、肺炎、异物",
+            "teaser": "安静呼吸20–30次/分；鼻支、哮喘、肺炎、心衰肺水肿鉴别。",
+            "species": ["cat"],
+            "science": "正常无张口呼吸（猫安静时张口呼吸多为重症信号）。上呼吸道感染：喷嚏脓涕眼分泌物等。肺炎：呼吸促、咳、发热、精神差。哮喘：阵发性咳喘腹式呼吸可夜间加重。异物/肿瘤：持续咳、呼吸困难、可能咯血。鉴别：喷嚏眼鼻分泌物→上感；阵发咳喘→哮喘；咳+热萎靡→肺炎；呼吸促+张口喘+泡沫痰→需警惕心源性肺水肿等（心超鉴别）。治疗以支持、抗感染、支气管管理与氧疗等为主，须兽医。",
+            "advice": [
+              "观察呼吸频率、是否张口、粘膜颜色（缺氧线索）。",
+              "记录咳嗽性质与昼夜规律。",
+              "安静时张口喘：尽快急诊。"
+            ],
+            "vetWhen": "呼吸困难、粘膜发绀、持续张口喘或精神极差：急诊。",
+            "graphClusterIds": [],
+            "refIds": ["ettinger", "mvm", "feline-patient"]
+          },
+          {
+            "id": "cat-manual-cardio-body",
+            "title": "循环与体态：体重、心脏、关节、腹部",
+            "teaser": "BCS体况、HCM与动脉血栓、关节炎、腹水、子宫蓄脓、巨结肠。",
+            "species": ["cat"],
+            "science": "BCS 理想约4–5/9：可触肋骨有轻微脂肪覆盖。消瘦：寄生虫、肾病、糖尿病、肿瘤、IBD 等。肥胖：糖尿病、胰腺炎、关节与麻醉风险。猫HCM 常见，可自无症状到喘憋，血栓可致突发后肢冰凉疼痛无法站立。关节老年退变表现为跳高减少。腹部：腹水（肝病、心衰、传腹等须鉴别）、未绝育母猫子宫蓄脓（腹大脓性分泌物发热等）、巨结肠便秘。诊断：体重曲线、心超、影像、腹水分析等。管理：体重与关节、心脏病抗血栓等须兽医；子宫蓄脓常急诊手术。",
+            "advice": [
+              "每月同条件称重；老年猫注意跳高与活动变化。",
+              "突发后肢瘫痪伴脚垫冰凉：尽快急诊。",
+              "未绝育母猫腹大流脓发热：急诊。"
+            ],
+            "vetWhen": "喘憋、后肢突发瘫痪、腹部快速胀大、剧痛：急诊。",
+            "graphClusterIds": ["senior-care"],
+            "refIds": ["mvm", "ettinger", "feline-patient"]
+          },
+          {
+            "id": "cat-manual-neuro-behavior",
+            "title": "精神与神经：疼痛、前庭、癫痫、应激、认知",
+            "teaser": "歪头眼震、抽搐鉴别、强迫舔毛、老年认知变化。",
+            "species": ["cat"],
+            "science": "正常互动与步态稳定。疼痛常表现为躲藏、拒触、食欲下降。前庭：歪头、眼球震颤、转圈。癫痫样发作需与低血糖、中毒等鉴别；发作时常伴意识与括约肌变化线索。应激可表现为过度舔毛、乱尿、拒食。老年认知：作息颠倒、迷路样。治疗：镇痛与抗癫痫等须兽医用猫安全药物；严禁自行使用人用布洛芬/阿司匹林/对乙酰氨基酚等。",
+            "advice": [
+              "抽搐时减少刺激、记录时长与是否失禁，尽快就医。",
+              "行为突变先排除疼痛与泌尿疾病。",
+              "老年神经症状快进展须排除代谢与肿瘤。"
+            ],
+            "vetWhen": "持续抽搐、意识障碍、突发共济失调或头歪：急诊。",
+            "graphClusterIds": ["behavior-masquerade"],
+            "refIds": ["mvm", "ettinger", "feline-patient"]
+          },
+          {
+            "id": "cat-manual-cross",
+            "title": "跨系统交叉症状速查（猫）",
+            "teaser": "吐+多饮多尿、脱毛+腹泻、喘+后肢瘫、尿频+吐萎靡等组合意义。",
+            "species": ["cat"],
+            "science": "组合举例：呕吐+多饮多尿→肾/肝/糖尿病等代谢线索；脱毛+腹泻→食物过敏线索；呼吸急促+后肢瘫痪→心源性血栓等急症线索；腹大+发热+母猫→子宫蓄脓线索；黄疸+吐泻→猫瘟/肝胆/脂质沉积等须化验鉴别；尿频+吐+萎靡→尿闭/肾后性线索；瘙痒+耳炎+腹泻→过敏线索；消瘦+多食多饮→糖尿病线索。以上为分诊提示非确诊。",
+            "advice": [
+              "描述症状时尽量写清「同时出现」与「先后顺序」。",
+              "带上档案中的年龄、是否绝育、品种（若有）。"
+            ],
+            "vetWhen": "任一条组合伴精神极差、疼痛、呼吸困难或无尿：优先急诊。",
+            "graphClusterIds": ["gi-dehydration", "feline-uo"],
+            "refIds": ["mvm", "ecc-sa", "feline-patient"]
+          },
+          {
+            "id": "cat-manual-med-safety",
+            "title": "用药安全红线（猫）",
+            "teaser": "禁用布洛芬等人类止痛药；勿自行抗生素；高危症状勿拖延。",
+            "species": ["cat"],
+            "science": "许多人类药物对猫毒性高。非兽医处方勿使用解热镇痛类（如布洛芬、阿司匹林、对乙酰氨基酚等）。激素类外用药勿长期滥用。抗生素需指征与疗程，勿随意自用或自行停药。尿闭、抽搐、明显呼吸困难、疑似子宫蓄脓等属急诊场景，不应在家拖延「先试药」。具体药物选择与剂量仅由执业兽医决定。",
+            "advice": [
+              "就医时携带可能误食的物质包装。",
+              "不根据网络清单自行配药。"
+            ],
+            "vetWhen": "怀疑中毒、抽搐、喘憋、无尿：立即联系急诊兽医。",
+            "graphClusterIds": ["toxin"],
+            "refIds": ["mvm-toxic-intro", "mvm", "toxicology"]
+          },
+          {
+            "id": "cat-manual-breed-age",
+            "title": "品种、体型、年龄与高发风险（猫）",
+            "teaser": "短毛长毛无毛与体型类型；年龄人类等效分段；折耳布偶暹罗等品种倾向。",
+            "species": ["cat"],
+            "science": "毛发：短毛易观察皮肤；长毛毛球与打结风险高；无毛需保温与皮肤护理。体型：矮壮型（英短、波斯等）肥胖与心肺负担；修长型（暹罗等）应激泌尿与敏感肠胃；大型（缅因等）关节与心脏筛查意义。年龄：幼猫（0–6月）猫瘟、寄生虫、上呼吸道与营养问题；青壮年（约1–6岁）FLUTD、结石、皮肤病与外伤；7岁以上慢病（CKD、牙周、甲旁亢、糖尿病、关节炎、HCM、肿瘤等）筛查价值上升。品种例：折耳软骨发育不良；布偶/缅因/英短心肌与多囊肾筛查讨论；波斯/短鼻泪溢与呼吸道；暹罗哮喘与应激膀胱；斯芬克斯皮肤与心脏。登记模板：品种、毛长、年龄估算、性别与绝育、BCS、体重，便于兽医分层风险评估。",
+            "advice": [
+              "档案尽量填品种与年龄段，咨询时复述一次。",
+              "老年猫半年至年度体检频率与项目听兽医建议。"
+            ],
+            "vetWhen": "品种相关慢性症状（活动减少、喘、肾指标异常）：专科随访。",
+            "graphClusterIds": ["senior-care", "feline-uo"],
+            "refIds": ["isfm", "mvm", "feline-patient", "aaha-aafp"]
+          },
+          {
+            "id": "cat-manual-hepatobiliary",
+            "title": "黄疸与肝胆胰（猫）：鉴别线索",
+            "teaser": "皮肤巩膜发黄、厌食呕吐；脂肪肝、胆管炎、三腺炎、肿瘤等须兽医鉴别。",
+            "species": ["cat"],
+            "science": "黄疸提示胆红素潴留，来源可分为肝前、肝性与肝后等大类，猫常见需鉴别包括肝脂质沉积、胆管炎/胆管肝炎综合征、胰腺炎与肠炎并存（「三腺炎」概念）、肿瘤、溶血等；部分全身病（如传腹）也可表现黄疸。典型非特异线索：厌食、呕吐、体重下降、发热或嗜睡。诊断通常需血常规与生化（肝酶、胆红素、胆汁酸等）、凝血、影像（超声对肝胆胰较敏感）、有时细胞学/取样；具体组合与解读须兽医。治疗以纠正脱水与电解质、营养支持、针对病因药物为主，须住院/门诊方案个体化，不提供剂量。",
+            "advice": [
+              "发现耳廓、牙龈或眼白发黄尽快就诊，勿自行喂护肝药或人用药。",
+              "记录厌食持续天数与呕吐频次；幼猫与肥胖猫长期拒食风险更高。",
+              "就诊带既往化验与用药史。"
+            ],
+            "vetWhen": "黄疸伴精神极差、抽搐、出血倾向或腹痛：急诊。任何新发黄疸：尽快门诊，勿观望。",
+            "graphClusterIds": ["gi-dehydration"],
+            "refIds": [
+              "dvm360-icteric-cat-2025",
+              "mvm",
+              "ettinger",
+              "feline-patient",
+              "mvm-clinical-pathology-overview",
+              "mvm-diagnostic-imaging-overview"
+            ]
+          },
+          {
+            "id": "cat-manual-metabolic-chronic",
+            "title": "慢性肾病、糖尿病与老年甲亢（猫）",
+            "teaser": "多饮多尿消瘦、多食仍瘦、呕吐与心血管负荷；化验分期须兽医。",
+            "species": ["cat"],
+            "science": "CKD：肾单位不可逆丧失可表现为多饮多尿、体重下降、被毛与口腔气味变化等，分期与管理依 IRIS 思路与个体化验。糖尿病：多饮多尿多食仍消瘦，可伴虚弱与继发感染风险。老年甲亢：代谢亢进致体重下降、多食、活动与心率变化、呕吐等，需与肾病、心脏病等交叉鉴别。三者均可出现「看似泌尿症状」或胃肠道症状，不能凭单条线索确诊。诊断依赖血生化、尿液、激素或果糖胺等专业检测与影像。治疗为处方饮食、胰岛素或其他药物、监测方案，全部由兽医制定。",
+            "advice": [
+              "家用记录饮水量、尿团大小与体重趋势。",
+              "老年猫年度体检可讨论甲功与尿检。",
+              "勿自行使用人用降糖药或激素。"
+            ],
+            "vetWhen": "多饮多尿伴快速消瘦、呕吐或虚弱：尽快门诊；精神极差：急诊评估。",
+            "graphClusterIds": ["senior-care", "diet-body-condition", "feline-uo"],
+            "refIds": [
+              "mvm-renal-dysfunction",
+              "vetopia-ckd-cat-guide",
+              "pet-health-net-diabetes-cat",
+              "alliance-hospital-diabetes-pets",
+              "clinicians-brief-hyperthyroid-senior-cats",
+              "monster-vet-thyroid-survival",
+              "mvm",
+              "isfm"
+            ]
+          },
+          {
+            "id": "cat-manual-fip",
+            "title": "猫传染性腹膜炎（FIP）线索（科普）",
+            "teaser": "湿性渗出、干性肉芽肿、发热消瘦；确诊与治疗路径变化快，须兽医。",
+            "species": ["cat"],
+            "science": "FIP 由猫冠状病毒相关病理过程引起，表现谱系宽：可腹水（湿性）、胸水、发热、体重下降、神经或眼症状等（干性或其他形式）。症状与淋巴瘤、脓胸、传腹以外的感染等重叠高，不能凭肉眼或单一检查在家确诊。近年来治疗选择与时效在快速发展，是否用药、用药方案与监测须跟随持牌兽医与本地法规。家长可记录起病速度、腹围变化、呼吸与精神状态。",
+            "advice": [
+              "幼猫与多猫环境更需关注呼吸道与应激管理；新猫隔离与卫生按兽医建议。",
+              "出现腹水或神经症状勿自行用药拖延。"
+            ],
+            "vetWhen": "腹水、胸水、持续发热、神经症状或快速恶化：尽快专科/急诊。",
+            "graphClusterIds": ["gi-dehydration"],
+            "refIds": ["poaipets-fip-intro", "catster-fip-signs", "mvm", "feline-patient", "ettinger"]
           }
         ]
       }
