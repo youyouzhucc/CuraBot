@@ -24,8 +24,8 @@ if (!fs.existsSync(dbPath)) {
 }
 
 try {
-  const { DatabaseSync } = require("node:sqlite");
-  const db = new DatabaseSync(dbPath);
+  const { openDatabaseSync } = require("../open-sqlite");
+  const db = openDatabaseSync(dbPath);
   const row = db.prepare("SELECT id, nickname FROM users WHERE email = ? COLLATE NOCASE").get(emailArg);
   if (!row) {
     console.log("未找到用户:", emailArg);

@@ -68,12 +68,192 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
+  overflow-x: hidden;
   background: linear-gradient(180deg, #fdfbf8 0%, #f2ebe4 100%);
   color: var(--text);
   line-height: 1.65;
+  -webkit-tap-highlight-color: rgba(230, 126, 34, 0.15);
+}
+
+/* 桌面 / 手机两套文案（默认桌面） */
+.u-mobile-only {
+  display: none !important;
+}
+
+.u-desktop-only {
+  display: inline;
+}
+
+@media (max-width: 640px) {
+  .u-desktop-only {
+    display: none !important;
+  }
+
+  .u-mobile-only {
+    display: inline !important;
+  }
+
+  .home-health-intro .u-mobile-only {
+    display: block !important;
+  }
+
+  .home-chat-entry-btn .u-mobile-only {
+    display: block !important;
+    width: 100%;
+    text-align: center;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .brand-tagline .u-mobile-only {
+    display: inline !important;
+  }
+
+  .home-section-label .u-mobile-only {
+    display: inline !important;
+  }
+
+  .home-health-title-row .curabot-title-rest .u-mobile-only {
+    display: inline !important;
+  }
+}
+
+/* 首页：快捷提问折叠（手机默认收起，脚本在宽屏展开） */
+.home-quick-details {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.home-quick-details-summary {
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.home-quick-details-summary::-webkit-details-marker {
+  display: none;
+}
+
+.home-quick-details-title {
+  font-weight: 700;
+  color: #6b453c;
+}
+
+.home-quick-details-hint {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.home-quick-details-summary-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.12rem;
+  min-width: 0;
+  text-align: left;
+}
+
+@media (min-width: 641px) {
+  .home-quick-details > .home-quick-details-summary {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .home-quick-details-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    padding: 0.75rem 0.85rem;
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, #fffdfa 0%, #f7f0ec 100%);
+    border: 1px solid rgba(230, 126, 34, 0.22);
+    box-shadow: 0 2px 10px rgba(62, 54, 46, 0.06);
+    font-size: 0.95rem;
+    margin-bottom: 0;
+    margin-top: 0.15rem;
+}
+
+  .home-quick-details-summary::after {
+    content: "";
+    flex-shrink: 0;
+    width: 0.5rem;
+    height: 0.5rem;
+    margin-left: 0.35rem;
+    border-right: 2px solid #8b6914;
+    border-bottom: 2px solid #8b6914;
+    transform: rotate(45deg);
+    transition: transform 0.2s ease;
+    opacity: 0.85;
+  }
+
+  .home-quick-details[open] .home-quick-details-summary {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom: none;
+    box-shadow: none;
+  }
+
+  .home-quick-details[open] .home-quick-details-summary::after {
+    transform: rotate(225deg);
+    margin-top: 0.2rem;
+  }
+
+  .home-quick-details .home-quick-questions {
+    margin-top: 0;
+    padding: 0.5rem 0.65rem 0.7rem;
+    border: 1px solid rgba(230, 126, 34, 0.2);
+    border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius);
+    background: rgba(255, 255, 255, 0.55);
+  }
+
+  .home-quick-details-summary-text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .home-stack {
+    gap: clamp(0.95rem, 3vw, 1.35rem);
+  }
+
+  .home-hero--health {
+    padding-top: clamp(1.1rem, 4vw, 1.6rem);
+    padding-bottom: clamp(1rem, 3.5vw, 1.45rem);
+  }
+
+  .home-health-actions {
+    gap: clamp(0.85rem, 3vw, 1.35rem);
+  }
+
+  .home-chat-entry .home-chat-entry-btn {
+    min-height: 3rem;
+    padding: 0.65rem 1rem;
+    border-radius: calc(var(--radius) + 4px);
+    font-size: 1rem;
+  }
+
+  .home-quick-chip:active {
+    transform: scale(0.98);
+  }
+
+  .home-chat-entry-btn:active {
+    transform: scale(0.99);
+  }
 }
 
 a {
@@ -373,6 +553,136 @@ section[data-view="disclaimer"] > .hero {
   .home-chat-entry {
     grid-template-columns: auto minmax(0, 1fr);
     gap: 0.45rem;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  /* 标题区：允许换行，取消横向滚动条 */
+  .home-health-title-row .home-health-title-text,
+  .home-health-title-row h1.home-health-title-text {
+    overflow-x: visible;
+    overflow-y: visible;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .home-health-title-row .curabot-title-inline {
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    white-space: normal;
+    max-width: 100%;
+    row-gap: 0.35rem;
+    column-gap: 0.35rem;
+  }
+
+  .home-health-title-row .curabot-title-rest {
+    white-space: normal;
+    flex: 1 1 100%;
+    text-align: center;
+    line-height: 1.4;
+    font-size: clamp(0.92rem, 3.8vw, 1.05rem);
+  }
+
+  .home-health-actions {
+    align-items: stretch;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .home-health-intro {
+    max-width: 100%;
+    padding-left: 0.15rem;
+    padding-right: 0.15rem;
+  }
+
+  /* 快捷问题：标签独占一行换行，避免挤出屏幕 */
+  .home-quick-questions {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .home-quick-row {
+    width: 100%;
+    max-width: 100%;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+
+  .home-quick-row-label {
+    flex: 0 0 100%;
+    width: 100%;
+    min-width: 0;
+    margin-bottom: 0.1rem;
+  }
+
+  .home-quick-chip {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 100%;
+    text-align: center;
+    box-sizing: border-box;
+  }
+
+  /* 健康咨询页：标题与副标题允许换行，避免横向滚动 */
+  .health-chat-hero .health-chat-title-with-logo .curabot-title-inline {
+    flex-wrap: wrap;
+    white-space: normal;
+    justify-content: flex-start;
+  }
+
+  .health-chat-hero .health-chat-title-with-logo .curabot-title-rest {
+    white-space: normal;
+    flex: 1 1 100%;
+  }
+
+  .health-chat-hero .health-chat-title-pill.health-chat-title-with-logo {
+    overflow-x: visible;
+    overflow-y: visible;
+  }
+
+  .health-chat-lead {
+    white-space: normal;
+    overflow-x: visible;
+    overflow-y: visible;
+  }
+
+  /* 输入行：窄屏时按钮换行，避免挤出视口 */
+  .health-chat-input-row {
+    flex-wrap: wrap;
+  }
+
+  .health-chat-send-actions {
+    flex: 1 1 100%;
+    justify-content: stretch;
+  }
+
+  .health-chat-send-actions .health-chat-btn-send,
+  .health-chat-send-actions .health-chat-btn-export {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.25;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-chat-entry {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: stretch;
+  }
+
+  .home-chat-entry-avatars {
+    justify-content: center;
+    margin-bottom: 0.35rem;
+  }
+
+  .hero.home-hero--health {
+    padding-left: max(0.85rem, env(safe-area-inset-left));
+    padding-right: max(0.85rem, env(safe-area-inset-right));
   }
 }
 

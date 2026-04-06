@@ -52,7 +52,10 @@
           />
           <div class="brand-text">
             <span class="brand-name">CuraBot</span>
-            <small>愿你与毛孩子都被温柔对待</small>
+            <small class="brand-tagline"
+              ><span class="u-desktop-only">愿你与毛孩子都被温柔对待</span
+              ><span class="u-mobile-only">温柔相伴</span></small
+            >
           </div>
         </button>
         <div class="topbar-auth" id="topbarAuth" aria-label="毛孩子档案"></div>
@@ -79,24 +82,45 @@
                     />
                   </span>
                   <span class="curabot-title-brand">CuraBot</span>
-                  <span class="curabot-title-rest">聊聊毛孩子的健康</span>
+                  <span class="curabot-title-rest"
+                    ><span class="u-desktop-only">聊聊毛孩子的健康</span
+                    ><span class="u-mobile-only">聊聊健康</span></span
+                  >
                 </span>
               </h1>
             </div>
             <div class="home-health-actions">
               <p class="muted home-health-intro">
-                CuraBot 会结合毛孩子的具体情况，用温和的方式给你可参考的建议（科普，不能代替兽医当面诊断）。
+                <span class="u-desktop-only"
+                  >CuraBot 会结合毛孩子的具体情况，用温和的方式给你可参考的建议（科普，不能代替兽医当面诊断）。</span
+                >
+                <span class="u-mobile-only"
+                  >温和科普参考，不能代替兽医当面诊断。</span
+                >
               </p>
               <div class="home-chat-entry" id="homeChatEntryBox">
                 <div class="home-chat-entry-avatars" aria-hidden="true">
                   <img src="/images/hero-cat.png" alt="" width="56" height="56" />
                   <img src="/images/hero-dog.png" alt="" width="56" height="56" />
                 </div>
-                <button type="button" id="btnHomeChatEnter" class="daily-knowledge-tab home-chat-entry-btn">CuraBot和你一起守护毛孩子的健康，点击开启咨询</button>
+                <button type="button" id="btnHomeChatEnter" class="daily-knowledge-tab home-chat-entry-btn">
+                  <span class="u-desktop-only">CuraBot和你一起守护毛孩子的健康，点击开启咨询</span>
+                  <span class="u-mobile-only">开启健康咨询</span>
+                </button>
               </div>
-              <div class="home-quick-questions" id="homeQuickQuestions">
+              <details id="homeQuickDetails" class="home-quick-details" open>
+                <summary class="home-quick-details-summary">
+                  <span class="home-quick-details-summary-text">
+                    <span class="home-quick-details-title">快捷提问</span>
+                    <span class="home-quick-details-hint">点选一句开始</span>
+                  </span>
+                </summary>
+                <div class="home-quick-questions" id="homeQuickQuestions">
                 <div class="home-quick-row">
-                  <span class="home-quick-row-label">猫猫常见问题：</span>
+                  <span class="home-quick-row-label"
+                    ><span class="u-desktop-only">猫猫常见问题：</span
+                    ><span class="u-mobile-only">猫猫 ·</span></span
+                  >
                   <button type="button" class="home-quick-chip" data-home-quick-question="猫猫这两天呕吐，食欲下降，先看哪些指标？">呕吐食欲差</button>
                   <button type="button" class="home-quick-chip" data-home-quick-question="猫猫频繁进猫砂盆但尿很少，怎么判断紧急程度？">尿少/频繁蹲盆</button>
                   <button type="button" class="home-quick-chip" data-home-quick-question="猫猫一直抓痒掉毛，先排查什么？">抓痒掉毛</button>
@@ -104,18 +128,43 @@
                   <button type="button" class="home-quick-chip" data-home-quick-question="猫猫突然不爱动，总在角落趴着，可能是什么问题？">突然不爱动</button>
                 </div>
                 <div class="home-quick-row">
-                  <span class="home-quick-row-label">狗狗常见问题：</span>
+                  <span class="home-quick-row-label"
+                    ><span class="u-desktop-only">狗狗常见问题：</span
+                    ><span class="u-mobile-only">狗狗 ·</span></span
+                  >
                   <button type="button" class="home-quick-chip" data-home-quick-question="狗狗突然拉稀，精神一般，需要先观察什么？">突然拉稀</button>
                   <button type="button" class="home-quick-chip" data-home-quick-question="狗狗吐黄水但还能吃一点，要不要马上去医院？">吐黄水</button>
                   <button type="button" class="home-quick-chip" data-home-quick-question="狗狗走路一瘸一拐，先排查什么，什么时候就医？">跛行/扭伤</button>
                   <button type="button" class="home-quick-chip" data-home-quick-question="狗狗抓耳朵甩头，耳朵发红有味道，怎么处理？">甩头抓耳</button>
                   <button type="button" class="home-quick-chip" data-home-quick-question="狗狗咳嗽像卡住东西，什么时候要立刻去医院？">咳嗽像卡住</button>
                 </div>
-              </div>
+                </div>
+              </details>
+              <script>
+                (function () {
+                  var el = document.getElementById("homeQuickDetails");
+                  if (!el) return;
+                  function syncHomeQuickDetails() {
+                    try {
+                      if (window.matchMedia("(max-width: 640px)").matches) {
+                        el.removeAttribute("open");
+                      } else {
+                        el.setAttribute("open", "");
+                      }
+                    } catch (e) {
+                      el.setAttribute("open", "");
+                    }
+                  }
+                  syncHomeQuickDetails();
+                  window.addEventListener("resize", syncHomeQuickDetails);
+                })();
+              </script>
             </div>
           </div>
 
-          <div class="home-section-label" id="label-health-graph">健康图谱 · 趣味学</div>
+          <div class="home-section-label" id="label-health-graph">
+            <span class="u-desktop-only">健康图谱 · 趣味学</span><span class="u-mobile-only">健康图谱</span>
+          </div>
           <div class="hero home-hero home-hero--graph-quiz" id="healthGraphQuizMount" aria-labelledby="label-health-graph"></div>
 
           <div class="home-section-label" id="label-daily-knowledge">日常知识</div>

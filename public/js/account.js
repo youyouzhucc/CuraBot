@@ -660,7 +660,7 @@
         invalid_credentials: "邮箱或密码错误",
         invalid_nickname: "昵称需为 1–20 个字",
         nickname_taken: "该昵称已被使用，请换一个",
-        sqlite_unavailable: "服务器未启用数据库（需 Node 22.5+ 与本站 API）",
+        sqlite_unavailable: "服务器未启用数据库（请部署端 npm install 含 better-sqlite3，或 Node 22.5+）",
       };
       const code = err.code || (err.body && err.body.error) || err.message;
       if (errEl) errEl.textContent = map[code] || err.message || "操作失败";

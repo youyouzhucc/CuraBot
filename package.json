@@ -9,9 +9,10 @@
     "validate:knowledge": "node scripts/validate-knowledge.mjs"
   },
   "engines": {
-    "node": ">=22.5.0"
+    "node": ">=18.0.0"
   },
   "dependencies": {
+    "better-sqlite3": "^11.10.0",
     "dotenv": "^17.4.0",
     "express": "^4.21.0",
     "multer": "^2.1.1"

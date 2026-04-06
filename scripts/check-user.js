@@ -20,8 +20,8 @@ if (!fs.existsSync(dbPath)) {
 }
 
 try {
-  const { DatabaseSync } = require("node:sqlite");
-  const db = new DatabaseSync(dbPath);
+  const { openDatabaseSync } = require("../open-sqlite");
+  const db = openDatabaseSync(dbPath);
   const row = db
     .prepare("SELECT id, email, nickname, created_at FROM users WHERE email = ? COLLATE NOCASE")
     .get(emailArg.trim().toLowerCase());
@@ -34,6 +34,6 @@ try {
     console.log("未找到该邮箱记录:", emailArg);
   }
 } catch (e) {
-  console.error("查询失败（需 Node.js 22.5+ 与 node:sqlite）:", e.message || e);
+  console.error("查询失败（需 npm install 或 Node 22.5+）:", e.message || e);
   process.exit(3);
 }

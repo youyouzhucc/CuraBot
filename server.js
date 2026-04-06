@@ -118,12 +118,12 @@ async function resolveVisionImageUrlForApi(imageUrl, publicDir, uploadsHealthDir
   return { ok: true, url: `data:${mime};base64,${b64}` };
 }
 
-/** 健康会话快照：SQLite（Node 22.5+ 内置 node:sqlite，替代 data/sessions/*.json） */
+/** 健康会话快照：SQLite（优先 node:sqlite，否则 better-sqlite3；替代 data/sessions/*.json） */
+const { openDatabaseSync } = require("./open-sqlite");
 let healthDb = null;
 try {
-  const { DatabaseSync } = require("node:sqlite");
   const dbPath = path.join(dataDir, "curabot.db");
-  healthDb = new DatabaseSync(dbPath);
+  healthDb = openDatabaseSync(dbPath);
   healthDb.exec(`
     CREATE TABLE IF NOT EXISTS health_sessions (
       id TEXT PRIMARY KEY,
@@ -207,7 +207,7 @@ try {
   }
 } catch (e) {
   console.error(
-    "[health-session] SQLite 未初始化（需要 Node.js 22.5+）。请升级 Node 或检查 node:sqlite：",
+    "[health-session] SQLite 未初始化。请执行 npm install（含 better-sqlite3）或将 Node 升级到 22.5+：",
     e.message || e
   );
 }
@@ -282,7 +282,11 @@ function ensureUserNickname(userId) {
 
 function requireAuth(req, res, next) {
   if (!healthDb) {
-    return res.status(503).json({ ok: false, error: "sqlite_unavailable", hint: "需要 Node.js 22.5+ 与 SQLite" });
+    return res.status(503).json({
+      ok: false,
+      error: "sqlite_unavailable",
+      hint: "需要 SQLite：请 npm install（better-sqlite3）或升级 Node 至 22.5+",
+    });
   }
   const tok = parseBearer(req);
   if (!tok) {
@@ -980,7 +984,11 @@ app.post("/api/vision/analyze", async (req, res) => {
 /** HealthCheckSession 快照：SQLite（data/curabot.db） */
 app.post("/api/health-session/snapshot", (req, res) => {
   if (!healthDb) {
-    return res.status(503).json({ ok: false, error: "sqlite_unavailable", hint: "需要 Node.js 22.5+ 与 node:sqlite" });
+    return res.status(503).json({
+      ok: false,
+      error: "sqlite_unavailable",
+      hint: "需要 SQLite：请 npm install（better-sqlite3）或升级 Node 至 22.5+",
+    });
   }
   try {
     const id = crypto.randomUUID();

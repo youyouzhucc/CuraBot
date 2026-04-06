@@ -3,14 +3,14 @@
  * 用法：node scripts/delete-user-by-email.js [email]
  */
 const path = require("path");
-const { DatabaseSync } = require("node:sqlite");
+const { openDatabaseSync } = require("../open-sqlite");
 
 const dbPath = path.join(__dirname, "..", "data", "curabot.db");
 const email = String(process.argv[2] || "nianqingchenjc@163.com")
   .trim()
   .toLowerCase();
 
-const db = new DatabaseSync(dbPath);
+const db = openDatabaseSync(dbPath);
 const row = db.prepare("SELECT id FROM users WHERE email = ? COLLATE NOCASE").get(email);
 if (!row) {
   console.log("未找到用户:", email);
