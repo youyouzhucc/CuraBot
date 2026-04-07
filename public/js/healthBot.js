@@ -1615,7 +1615,7 @@
         metaHtml = "";
       } else {
         try {
-          localMeta = CuraHealthBotLocal.reply({
+          localMeta = await CuraHealthBotLocal.reply({
             message: composedForLlm,
             species,
             knowledge: getKnowledge(),
@@ -1636,7 +1636,7 @@
       }
     } catch (e) {
       try {
-        localMeta = CuraHealthBotLocal.reply({
+        localMeta = await CuraHealthBotLocal.reply({
           message: composedForLlm,
           species,
           knowledge: getKnowledge(),

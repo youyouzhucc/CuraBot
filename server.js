@@ -1319,6 +1319,88 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
+/* ───────────────────────────────────────────────────────
+ * /api/chat-local  —— 轻量 LLM 润色端点
+ *   - healthBotLocal.js 中的"可委托"分支调用
+ *   - system prompt 极短、max_tokens 低、超时 8 秒
+ *   - 失败时 reply: null，前端 fallback 到硬编码模板
+ * ─────────────────────────────────────────────────────── */
+app.post("/api/chat-local", async (req, res) => {
+  try {
+    const { key, base, model } = resolveLlmConfig();
+    if (!key) return res.json({ reply: null, reason: "no_api_key" });
+
+    const { message, species, context, style } = req.body || {};
+    const sp = species === "dog" ? "狗狗" : species === "cat" ? "猫猫" : "宠物";
+
+    const styleGuides = {
+      greeting:
+        `用户刚打招呼，你是 CuraBot 宠物健康助手。用一两句温暖但简洁的话欢迎用户，说明你能做科普和筛查但不能诊断，提醒当前按「${sp}」来聊。不要使用 markdown 标题。`,
+      acknowledgment:
+        `用户表达了感谢/确认。用一句话自然回应，末尾温和提醒"症状变化或加重时尽快联系兽医"。不要使用 markdown 标题。`,
+      topic_explain:
+        `你在帮助用户了解宠物健康知识。根据下方 context 提供的知识条目标题和科学摘要，用口语化的方式向用户解释，保持温暖但专业。结尾提醒何时该看兽医。不超过 150 字。`,
+      followup:
+        `用户的描述信息不足，请温和地引导用户补充：品种年龄、具体症状、持续时间、食欲精神等。不要一次问太多，只问最关键的 1-2 个问题。语气像朋友聊天。`,
+      synthesis:
+        `根据 context 提供的结构化信息（严重程度、标签等），用自然口语写一段综合性回复。保持科普定位，不诊断不开药。`,
+    };
+
+    const systemPrompt = [
+      `你是 CuraBot 宠物健康科普助手，简体中文，温暖简洁。当前物种：${sp}。`,
+      `严禁：确诊病名、开药、编造症状、使用「确诊」「一定是」等断言。`,
+      styleGuides[style] || styleGuides.followup,
+      context ? `\n【参考信息】${typeof context === "string" ? context : JSON.stringify(context)}` : "",
+    ].filter(Boolean).join("\n");
+
+    const msgs = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: String(message || "").slice(0, 2000) },
+    ];
+
+    const timeoutMs = 8000;
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), timeoutMs);
+
+    let r;
+    try {
+      r = await fetch(`${base}/chat/completions`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${key}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          messages: msgs,
+          temperature: 0.5,
+          max_tokens: 280,
+        }),
+        signal: ac.signal,
+      });
+    } catch (err) {
+      clearTimeout(timer);
+      console.warn("[api/chat-local] fetch failed:", err && err.message);
+      return res.json({ reply: null, reason: "network" });
+    }
+    clearTimeout(timer);
+
+    if (!r.ok) {
+      console.warn("[api/chat-local] http", r.status);
+      return res.json({ reply: null, reason: "http_" + r.status });
+    }
+
+    const data = await r.json();
+    const text =
+      data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+    const reply = (text && String(text).trim()) || null;
+    return res.json({ reply });
+  } catch (e) {
+    console.error("[api/chat-local]", e);
+    return res.json({ reply: null, reason: "server" });
+  }
+});
+
 /** 显式挂载 /images，避免个别环境下静态资源解析异常 */
 app.use("/images", express.static(path.join(publicDir, "images"), { index: false }));
 app.use(express.static(publicDir));
