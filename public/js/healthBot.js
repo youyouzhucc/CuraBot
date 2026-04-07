@@ -1069,6 +1069,43 @@
     return null;
   }
 
+  /**
+   * 从用户本轮输入中做物种硬识别：
+   * - 同时出现猫/狗时返回 null（避免误切）
+   * - 只出现其一时返回 cat|dog
+   */
+  function detectSpeciesFromUserText(text) {
+    const t = String(text || "");
+    const hitDog = /(狗狗|小狗|狗子|犬|汪)/.test(t);
+    const hitCat = /(猫猫|小猫|猫咪|猫子|喵)/.test(t);
+    if (hitDog && !hitCat) return "dog";
+    if (hitCat && !hitDog) return "cat";
+    return null;
+  }
+
+  /**
+   * 用户显式提到物种时，强制切换会话物种并清理跨物种粘滞上下文。
+   */
+  function forceSwitchSpeciesIfNeeded(inputText, getSpecies) {
+    const detected = detectSpeciesFromUserText(inputText);
+    if (detected !== "cat" && detected !== "dog") return null;
+    const current = getChatSpecies(getSpecies);
+    chatProfile.species = detected;
+    syncProfileToWindow();
+    if (current && current !== detected) {
+      mandatoryThreadKind = null;
+      quizSupplementLines = [];
+      answeredQuizIds = [];
+      decisionSession = null;
+      treePhaseActive = false;
+      guidedStepIndex = 0;
+      guidedComplete = true;
+      syncDecisionSessionWindow();
+      setEmergencyBannerVisible(false, "");
+    }
+    return detected;
+  }
+
   function setLoading(on) {
     const { form, input } = getEls();
     if (input) input.disabled = on;
@@ -1700,8 +1737,9 @@
 
     const knowledge = getKnowledge();
     const steps = getGuidedSteps(knowledge);
+    const switchedSpecies = forceSwitchSpeciesIfNeeded(raw, getSpecies);
+    const species = switchedSpecies || getChatSpecies(getSpecies);
     const prefix = formatProfilePrefix(chatProfile, steps);
-    const species = getChatSpecies(getSpecies);
 
     let composedForLlm = "";
     if (raw) {

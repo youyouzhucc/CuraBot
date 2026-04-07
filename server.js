@@ -1112,7 +1112,24 @@ app.post("/api/chat", async (req, res) => {
       });
     }
 
-    const sp = species === "dog" ? "犬" : species === "cat" ? "猫" : "宠物";
+    function detectSpeciesFromText(text) {
+      const t = String(text || "");
+      const hitDog = /(狗狗|小狗|狗子|犬|汪)/.test(t);
+      const hitCat = /(猫猫|小猫|猫咪|猫子|喵)/.test(t);
+      if (hitDog && !hitCat) return "dog";
+      if (hitCat && !hitDog) return "cat";
+      return null;
+    }
+    const speciesFromMsg = detectSpeciesFromText(message);
+    const speciesFromHist = Array.isArray(history)
+      ? [...history]
+          .reverse()
+          .map((h) => detectSpeciesFromText(h && h.role === "user" ? h.content : ""))
+          .find((x) => x === "cat" || x === "dog") || null
+      : null;
+    const speciesResolved =
+      speciesFromMsg || (species === "dog" || species === "cat" ? species : null) || speciesFromHist || "cat";
+    const sp = speciesResolved === "dog" ? "犬" : speciesResolved === "cat" ? "猫" : "宠物";
 
     const hintExtra =
       inquiryHint === "general_mandatory_probing"
@@ -1199,7 +1216,7 @@ app.post("/api/chat", async (req, res) => {
           ].join("\n")
         : "";
 
-    const speciesNorm = species === "dog" ? "dog" : species === "cat" ? "cat" : "cat";
+    const speciesNorm = speciesResolved === "dog" ? "dog" : "cat";
     const ragDisabled = String(process.env.RAG_DISABLE || "").trim() === "1";
     const ragAppend = ragDisabled
       ? ""
@@ -1215,6 +1232,7 @@ app.post("/api/chat", async (req, res) => {
       "【禁止机械套话】不要反复使用同一句开场（如「先把关键点对齐一下」「先抱抱你」若与上一轮雷同）；若需安抚，**换措辞**且不超过一句。不要像体检表一样一次性罗列吐/拉/咳/瘸等全部选项，除非用户本身描述非常笼统。",
       "【追问策略】每次优先只问 **1～2 个**最关键的问题；沿用户**已提及的主诉系统**深入（如呼吸道→呼吸频率/是否费力；消化道→频次与脱水风险），避免无关联跳跃。",
       `用户当前关注的是：${sp}。请严格围绕该物种回复，不要混用另一物种的特有概念（如对狗不要提猫砂盆/尿团，对猫不要提遛弯/抬腿排尿）。`,
+      `若用户本轮明确说“狗狗/猫猫”，以本轮为最高优先级覆盖历史上下文，禁止继续沿用旧物种称呼。`,
       "你只能提供科普、家庭观察与就医时机类建议，不能给出确诊病名、不能开具药物或具体剂量。",
       "【严禁】编造用户未说过的症状、年龄、性别、绝育情况、化验结果或病史；只能依据用户本次输入，以及消息前缀「【用户已选档案】」里已写明的档案项。若档案未出现某项，不要假设（例如未写性别就不要写「公猫/母猫」）。",
       "若知识库片段来自私人笔记（若有标注），可视为家长既往记录，纳入语气上的连续性，但仍不得编造未出现的细节。",
