@@ -49,7 +49,7 @@
     if (fromProfile === "cat" || fromProfile === "dog") return fromProfile;
     if (/(狗|犬|狗狗)/.test(b) && !/(猫|喵|猫猫)/.test(b)) return "dog";
     if (/(猫|喵|猫猫)/.test(b)) return "cat";
-    return fromProfile || "cat";
+    return fromProfile || null;
   }
 
   function computeCatUrinaryEvidence(history, profile, quizLines, ctx) {
@@ -57,7 +57,8 @@
     const blob = joinUserBlobForUro(history, quizLines);
     const sp = effectiveSpeciesFromBlob(profile, blob);
     const latest = getLatestUserPlain(history);
-    const urinaryInBlob = /(没尿|无尿|不尿|尿不出|尿团|排尿|砂盆|蹲盆|滴尿|尿频|尿急|尿闭)/.test(blob);
+    const urinaryInBlobCat = /(没尿|无尿|不尿|尿不出|尿团|排尿|砂盆|蹲盆|滴尿|尿频|尿急|尿闭)/.test(blob);
+    const urinaryInBlobDog = /(没尿|无尿|不尿|尿不出|排尿|滴尿|尿频|尿急|尿闭|尿血|血尿|费力)/.test(blob);
     const urinaryInLatest = urinaryIntentIn(latest);
     const uroSession = ctx.mandatoryThreadKind === "urinary";
 
@@ -70,13 +71,19 @@
         strongNegative: false,
         blob,
         topicShiftOffUrinary: true,
+        species: sp,
       };
     }
 
-    const threadActive =
+    const catThread =
       sp === "cat" &&
       !/(狗|犬)/.test(blob) &&
-      (urinaryInLatest || (uroSession && urinaryInBlob));
+      (urinaryInLatest || (uroSession && urinaryInBlobCat));
+    const dogThread =
+      sp === "dog" &&
+      !/(猫|喵)/.test(blob) &&
+      (urinaryInLatest || (uroSession && urinaryInBlobDog));
+    const threadActive = catThread || dogThread;
     if (!threadActive) {
       return {
         threadActive: false,
@@ -85,6 +92,7 @@
         immediateDanger: false,
         strongNegative: false,
         blob,
+        species: sp,
       };
     }
     const immediateDanger =
@@ -97,10 +105,15 @@
 
     let clinicalScore = 0;
     if (/(一天|整天|整日|24|两天|很久|小时|昨夜|今早|超过|12～|12-24|约12|十二)/.test(blob)) clinicalScore++;
-    if (/(砂盆|猫砂|尿团|地毯|床底|隐蔽|检查|找过|都看过|别处|换砂)/.test(blob)) clinicalScore++;
-    if (/(蹲盆|滴尿|频繁|挤不出|总去|尿不出来|几乎没有尿|没去砂盆|用力尿)/.test(blob)) clinicalScore++;
+    if (sp === "cat") {
+      if (/(砂盆|猫砂|尿团|地毯|床底|隐蔽|检查|找过|都看过|别处|换砂)/.test(blob)) clinicalScore++;
+      if (/(蹲盆|滴尿|频繁|挤不出|总去|尿不出来|几乎没有尿|没去砂盆|用力尿)/.test(blob)) clinicalScore++;
+    } else {
+      if (/(遛|户外|草地|检查|找过|都看过|别处|之前尿过)/.test(blob)) clinicalScore++;
+      if (/(蹲|抬腿|滴尿|频繁|挤不出|总蹲|尿不出来|几乎没有尿|用力尿|做排尿姿势)/.test(blob)) clinicalScore++;
+    }
     if (/(精神|食欲|不吃|萎靡|嗜睡|尚可|活跃|正常玩)/.test(blob)) clinicalScore++;
-    if (/(吐|呕|胀|硬|疼|叫|舔尿道|血尿|粉红)/.test(blob)) clinicalScore++;
+    if (/(吐|呕|胀|硬|疼|叫|舔尿道|舔生殖器|血尿|粉红)/.test(blob)) clinicalScore++;
 
     const allowEmergencyTag = immediateDanger || (clinicalScore >= 5 && !strongNegative);
     return {
@@ -110,6 +123,7 @@
       immediateDanger,
       strongNegative,
       blob,
+      species: sp,
     };
   }
 
@@ -120,8 +134,44 @@
   function getNextCatUrinaryMandatoryQuestion(ev) {
     if (!ev || !ev.threadActive || ev.immediateDanger) return null;
     const b = ev.blob || "";
-    /** 与 computeCatUrinaryEvidence 计分维度完全一致，避免「分数未满却已无追问」 */
-    const dims = [
+    const isDog = ev.species === "dog";
+    const dims = isDog ? [
+      {
+        id: "time",
+        test: () => /(一天|整天|整日|24|两天|很久|小时|昨夜|今早|超过|12～|12-24|约12|十二)/.test(b),
+        text: "大概从什么时候发现排尿变少或排不出？",
+        hint: "",
+        options: ["昨晚起", "今天白天", "近一两天"],
+      },
+      {
+        id: "env",
+        test: () => /(遛|户外|草地|检查|找过|都看过|别处|之前尿过)/.test(b),
+        text: "最近一次正常排尿是在什么时候、什么场景？在家有排尿吗？",
+        hint: "",
+        options: ["遛弯时尿过", "在家排尿量很少", "记不清上次正常排尿"],
+      },
+      {
+        id: "behavior",
+        test: () => /(蹲|抬腿|滴尿|频繁|挤不出|总蹲|尿不出来|几乎没有尿|用力尿|做排尿姿势)/.test(b),
+        text: "排尿时有什么异常姿势吗？是频繁做排尿动作但尿不出，还是完全没有排尿表现？",
+        hint: "",
+        options: ["频繁蹲/抬腿但尿不出几滴", "完全没有排尿动作", "说不清，我再观察一下"],
+      },
+      {
+        id: "spirit",
+        test: () => /(精神|食欲|不吃|萎靡|嗜睡|尚可|活跃|正常玩)/.test(b),
+        text: "现在精神、吃东西、喝水，和平时比怎么样？",
+        hint: "",
+        options: ["和平时差不多", "精神差或吃得少", "介于两者之间"],
+      },
+      {
+        id: "systemic",
+        test: () => /(吐|呕|胀|硬|疼|叫|舔生殖器|舔尿道|血尿|粉红)/.test(b),
+        text: "有没有呕吐、肚子胀硬、频繁舔生殖器、尿色发粉或带血？",
+        hint: "",
+        options: ["没有这些情况", "有一项或多项", "不太确定"],
+      },
+    ] : [
       {
         id: "time",
         test: () => /(一天|整天|整日|24|两天|很久|小时|昨夜|今早|超过|12～|12-24|约12|十二)/.test(b),
@@ -837,6 +887,23 @@
     }
 
     if (
+      sp === "dog" &&
+      asked.indexOf("dog_uro") === -1 &&
+      /(没尿|无尿|不尿|尿不出|排尿|尿频|尿血|血尿|费力)/.test(msg)
+    ) {
+      return {
+        id: "dog_uro",
+        prompt: "关于排尿，需要先确认现象：目前更接近哪一种？",
+        options: [
+          { value: "strain", label: "频繁做排尿姿势但只能滴尿或几乎挤不出" },
+          { value: "anuria", label: "很久没看到排尿" },
+          { value: "blood", label: "尿量少、颜色深或带血" },
+          { value: "unclear", label: "还不确定，主要心里担心" },
+        ],
+      };
+    }
+
+    if (
       asked.indexOf("onset") === -1 &&
       !hasTimeHint(msg) &&
       /吐|呕|腹泻|拉稀|软便|尿频|尿血|抽搐|瘸|跛|痒|抓/.test(msg)
@@ -873,16 +940,20 @@
     return null;
   }
 
-  /** 猫：仅模糊排尿相关、缺少行为/时间细节时，走启发式问诊而非直接套急诊或知识条目 */
+  /** 仅模糊排尿相关、缺少行为/时间细节时，走启发式问诊而非直接套急诊或知识条目 */
   function needsCatUrinaryHeuristic(msg, sp, history, profile, quizLines) {
-    if (sp !== "cat") return false;
+    if (sp !== "cat" && sp !== "dog") return false;
     const ev = computeCatUrinaryEvidence(history || [], profile || {}, quizLines || [], null);
     const blob = ev.blob || msg;
-    if (/(狗|犬)/.test(blob)) return false;
+    if (sp === "cat" && /(狗|犬)/.test(blob)) return false;
+    if (sp === "dog" && /(猫|喵)/.test(blob)) return false;
     if (ev.threadActive && ev.allowEmergencyTag) return false;
-    if (catUrinaryStrongSignal(blob) && ev.allowEmergencyTag) return false;
-    if (!/(没尿|无尿|不尿|尿不出|没排尿|没有尿|尿团|排尿|一天|整天|小时|尿尿)/.test(blob)) return false;
-    if (/(滴尿|频尿|尿血|粉红|呕|吐|精神差|不吃|疼|痛|尿闭|绝育|公猫|母猫|腹部|胀|血尿|蹲盆|舔尿道)/.test(blob)) {
+    if (sp === "cat" && catUrinaryStrongSignal(blob) && ev.allowEmergencyTag) return false;
+    if (!/(没尿|无尿|不尿|尿不出|没排尿|没有尿|尿团|排尿|一天|整天|小时|尿尿|尿血|血尿)/.test(blob)) return false;
+    if (sp === "cat" && /(滴尿|频尿|尿血|粉红|呕|吐|精神差|不吃|疼|痛|尿闭|绝育|公猫|母猫|腹部|胀|血尿|蹲盆|舔尿道)/.test(blob)) {
+      return false;
+    }
+    if (sp === "dog" && /(滴尿|频尿|粉红|呕|吐|精神差|不吃|疼|痛|尿闭|腹部|胀|蹲|抬腿|做排尿姿势|舔生殖器)/.test(blob)) {
       return false;
     }
     return true;

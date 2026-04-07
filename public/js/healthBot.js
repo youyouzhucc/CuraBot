@@ -940,7 +940,7 @@
     renderPendingChatPreviews();
     input.disabled = false;
     const gs = typeof global.__healthGetSpecies === "function" ? global.__healthGetSpecies : null;
-    const sp = gs ? getChatSpecies(gs) : chatProfile.species === "dog" ? "dog" : "cat";
+    const sp = gs ? getChatSpecies(gs) : chatProfile.species || null;
     if (treePhaseActive) {
       input.placeholder = "（可选）在此补充描述；完成上方选择题后系统会一并参考。";
     } else if (sp === "dog") {
@@ -1066,7 +1066,7 @@
     if (ext === "cat" || ext === "dog") return ext;
     const fromProfile = chatProfile.species;
     if (fromProfile === "cat" || fromProfile === "dog") return fromProfile;
-    return "cat";
+    return null;
   }
 
   function setLoading(on) {
@@ -1082,7 +1082,7 @@
   function inferInquiryHint(composedMessage, species) {
     const t = String(composedMessage || "");
     const strip = t.replace(/^【用户已选档案】[\s\S]*?\n\n/, "");
-    const sp = species === "dog" ? "dog" : "cat";
+    const sp = species || "cat";
 
     /** 近期用户发言合并（用于识别「上一句说没尿、这句只说男生」仍处同一线程） */
     const recentUserBlob = history
@@ -1096,7 +1096,9 @@
     const uroEv = Eng && Eng.compute ? Eng.compute(history, chatProfile, quizSupplementLines, ctx) : null;
     if (uroEv && uroEv.threadActive) {
       if (uroEv.immediateDanger) return null;
-      if (!uroEv.allowEmergencyTag) return "cat_urinary_mandatory_probing";
+      if (!uroEv.allowEmergencyTag) {
+        return sp === "dog" ? "dog_urinary_mandatory_probing" : "cat_urinary_mandatory_probing";
+      }
       return null;
     }
 
@@ -1112,16 +1114,24 @@
       !/(狗|犬)/.test(strip + recentUserBlob) &&
       /(没尿|无尿|不尿|尿不出|尿团|排尿|少尿|尿频|尿急|尿闭|蹲盆|砂盆|滴尿|一天.*尿|整天.*尿|很久.*尿)/.test(recentUserBlob + "\n" + strip);
 
+    const dogUrinaryInThread =
+      sp === "dog" &&
+      !/(猫|喵)/.test(strip + recentUserBlob) &&
+      /(没尿|无尿|不尿|尿不出|排尿|少尿|尿频|尿急|尿闭|滴尿|尿血|血尿|一天.*尿|整天.*尿|很久.*尿)/.test(recentUserBlob + "\n" + strip);
+
     /** 本条仅为性别/绝育/年龄段等短补充，未新增排尿细节时，模型易结合历史误判急诊，须继续走启发式 */
-    function isCatShortDemographicsOnly(s) {
+    function isShortDemographicsOnly(s) {
       const x = String(s || "").trim();
       if (x.length >= 56) return false;
       if (/(吐|呕|腹|胀|血|滴尿|尿血|精神|不吃|疼痛|呕吐|尿频|无尿|没尿|不尿)/.test(x)) return false;
-      return /^(他是|她是|公猫|母猫|男生|女生|雄性|雌性|已绝育|未绝育|绝育|不清楚|幼年|成年|老年)/.test(x) || /^(他|她)(是|的)/.test(x);
+      return /^(他是|她是|公猫|母猫|公狗|母狗|男生|女生|雄性|雌性|已绝育|未绝育|绝育|不清楚|幼年|成年|老年)/.test(x) || /^(他|她)(是|的)/.test(x);
     }
 
-    if (catUrinaryInThread && isCatShortDemographicsOnly(strip)) {
+    if (catUrinaryInThread && isShortDemographicsOnly(strip)) {
       return "cat_urinary_heuristic";
+    }
+    if (dogUrinaryInThread && isShortDemographicsOnly(strip)) {
+      return "dog_urinary_heuristic";
     }
 
     if (
@@ -1134,7 +1144,7 @@
         return "cat_urinary_heuristic";
       }
     }
-    if (sp === "dog" && /(尿|排尿)/.test(strip) && /(没|无|少|不|血)/.test(strip) && !/(精神|呕|吐|胀|疼)/.test(strip)) {
+    if (sp === "dog" && /(尿|排尿)/.test(strip) && /(没|无|少|不|血|费力)/.test(strip) && !/(精神|呕|吐|胀|疼)/.test(strip)) {
       return "dog_urinary_heuristic";
     }
     if (strip.length < 48 && /(不舒服|难受|怪怪的|担心|反常)/.test(strip) && !/(吐|泻|尿|喘|瘸|拉|吃|喝)/.test(strip)) {
