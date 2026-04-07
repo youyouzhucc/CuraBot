@@ -2,6 +2,8 @@ const path = require("path");
 const fs = require("fs");
 const fsp = require("fs/promises");
 const kbRetrieval = require("./kb-retrieval");
+const triageEngine = require("./triage-engine");
+const modelRouter = require("./model-router");
 const crypto = require("crypto");
 const express = require("express");
 const multer = require("multer");
@@ -761,6 +763,7 @@ app.get("/api/capabilities", (_req, res) => {
       "GET /api/capabilities",
       "GET /api/chat/status",
       "POST /api/chat",
+      "POST /api/triage/consult",
       "POST /api/auth/register",
       "POST /api/auth/login",
       "POST /api/auth/logout",
@@ -831,6 +834,7 @@ app.post("/api/knowledge/ingest", requireAdminKey, (req, res) => {
     mod.topics.push({
       id,
       title: String(title || "").trim() || `笔记 ${day}`,
+      sourceLevel: "C",
       species: ["cat", "dog"],
       teaser: t.slice(0, 160),
       science: t.slice(0, 2000),
@@ -1342,6 +1346,142 @@ app.post("/api/chat", async (req, res) => {
       hint: "服务器处理对话时出错，请查看终端日志。",
       error: "server",
     });
+  }
+});
+
+function sanitizeClinicalReply(text) {
+  let t = String(text || "");
+  // Guardrail：去除潜在剂量表达（例如 x mg/kg、每次 x mg）
+  t = t.replace(/\b\d+(\.\d+)?\s*(mg|ml|片|粒)\s*\/?\s*(kg|次|天|d)\b/gi, "（剂量信息已省略）");
+  t = t.replace(/(处方|剂量|每次用量|按体重给药).*/g, "如需用药请由执业兽医当面评估后开具。");
+  return t.trim();
+}
+
+/** 双脑协同分诊：DeepSeek 结构化 + Gemini 视觉/润色 + 加权评分 + SOAP */
+app.post("/api/triage/consult", async (req, res) => {
+  try {
+    const body = req.body && typeof req.body === "object" ? req.body : {};
+    const userInput = String(body.message || "").trim();
+    const history = Array.isArray(body.history) ? body.history.slice(-12) : [];
+    const images = Array.isArray(body.images) ? body.images.slice(0, 4) : [];
+    const explicitSpecies = body.species === "dog" || body.species === "cat" ? body.species : null;
+    if (!userInput) {
+      return res.status(400).json({ ok: false, error: "invalid_message", hint: "message 必填" });
+    }
+
+    const species =
+      triageEngine.detectSpeciesFromText(userInput) ||
+      explicitSpecies ||
+      history
+        .slice()
+        .reverse()
+        .map((h) => triageEngine.detectSpeciesFromText((h && h.role === "user" && h.content) || ""))
+        .find((x) => x === "cat" || x === "dog") ||
+      "cat";
+
+    const schema = triageEngine.REQUIRED_SLOTS;
+    const deepseekResult = await modelRouter.deepseekAnalyzeClinical({
+      userInput,
+      species,
+      history,
+      schema,
+    });
+
+    const structured = triageEngine.normalizeStructured(deepseekResult.structured || {});
+    const vision = await modelRouter.geminiAnalyzeImage({
+      images,
+      species,
+      context: userInput,
+    });
+    const visionStructured = triageEngine.structuredFromVisionSummary(vision.summary || "");
+    const structuredWithVision = triageEngine.mergeStructured(
+      triageEngine.mergeStructured(structured, visionStructured),
+      {
+        chief_complaint: structured.chief_complaint || (vision.summary ? "含视觉线索待结合评估" : ""),
+      }
+    );
+
+    const triage = triageEngine.scoreRisk(
+      structuredWithVision,
+      [userInput, vision.summary || ""].filter(Boolean).join("\n")
+    );
+    const followUpQuestions = triageEngine.buildFollowUpQuestions(structuredWithVision, 2);
+
+    const ragResult = kbRetrieval.retrieveDailyKnowledgeSnippets(
+      [userInput, vision.summary || ""].filter(Boolean).join("\n"),
+      species,
+      publicDir,
+      { limit: 3, maxSnippetLen: 360 }
+    );
+    const ragBlock = kbRetrieval.formatRagSystemBlock(ragResult);
+
+    const soap = triageEngine.buildSoap({
+      species,
+      userMessage: userInput,
+      structured: structuredWithVision,
+      visionSummary: vision.summary,
+      triage,
+      planText: followUpQuestions.length
+        ? "请先补齐关键病史，再决定观察或就医优先级。"
+        : "依据当前风险分层执行下一步（急诊/尽快门诊/观察复评）。",
+    });
+
+    const geminiFinal = await modelRouter.geminiComposeReport({
+      species,
+      structured: structuredWithVision,
+      triage,
+      followUpQuestions,
+      ragText: ragBlock,
+      soap,
+    });
+
+    const missing = triageEngine.missingSlots(structuredWithVision);
+    let reply = String(geminiFinal.text || "").trim();
+    if (!reply) {
+      const triLabel =
+        triage.level === "emergency" ? "紧急" : triage.level === "moderate" ? "中等" : triage.level === "normal" ? "正常" : "不明确";
+      const qText = followUpQuestions.length
+        ? `我还需要你补充这两点：\n- ${followUpQuestions.join("\n- ")}`
+        : "已具备基础信息，建议按当前分层尽快联系线下兽医完成面诊。";
+      reply = `我先把你提供的信息整理好了，会按${species === "dog" ? "狗狗" : "猫猫"}路径继续判断。\n\n${qText}\n\n【建议分层：${triLabel}】`;
+    }
+    reply = sanitizeClinicalReply(reply);
+    reply = triageEngine.enforceClinicalGuardrail({
+      reply,
+      triageLevel: triage.level,
+      missingSlots: missing,
+      userInput,
+    });
+
+    return res.json({
+      ok: true,
+      mode: "triage_orchestrated",
+      providerModes: {
+        deepseek: deepseekResult.mode || "unknown",
+        geminiVision: vision.mode || "unknown",
+        geminiFinal: geminiFinal.mode || "unknown",
+      },
+      species,
+      structured: structuredWithVision,
+      missingSlots: missing,
+      followUpQuestions,
+      triage,
+      soap,
+      rag: {
+        hit: ragResult.hit,
+        topScore: ragResult.topScore,
+        snippets: ragResult.snippets.map((s) => ({
+          topicId: s.topicId,
+          score: s.score,
+          sourceLevel: s.sourceLevel || "C",
+        })),
+      },
+      visionSummary: vision.summary || "",
+      reply,
+    });
+  } catch (e) {
+    console.error("[api/triage/consult]", e);
+    return res.status(500).json({ ok: false, error: "server", hint: String(e.message || e) });
   }
 });
 

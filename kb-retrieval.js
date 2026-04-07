@@ -13,13 +13,40 @@ function topicMatchesSpecies(topic, species) {
   return topic.species.indexOf(sp) !== -1;
 }
 
+function normalizeSourceLevel(v) {
+  const s = String(v || "").trim().toUpperCase();
+  return s === "A" || s === "B" || s === "C" ? s : "";
+}
+
+function inferSourceLevel(moduleTitle, topic, isPrivate) {
+  if (isPrivate) return "C";
+  const fromTopic = normalizeSourceLevel(topic && topic.sourceLevel);
+  if (fromTopic) return fromTopic;
+  const fromModule = normalizeSourceLevel(topic && topic.moduleSourceLevel);
+  if (fromModule) return fromModule;
+  const mod = String(moduleTitle || "");
+  if (/(AAFP|AAHA|WSAVA|ISFM|CDC|WHO|Merck|默克|指南)/i.test(mod)) return "A";
+  if (/(教材|手册|内科学|教科书)/i.test(mod)) return "B";
+  return "C";
+}
+
+function sourceLevelBonus(level) {
+  if (level === "A") return 18;
+  if (level === "B") return 8;
+  return 0;
+}
+
 function flattenDailyTopics(knowledge) {
   const out = [];
   const dk = knowledge && knowledge.dailyKnowledge;
   if (!dk || !dk.modules) return out;
   for (const mod of dk.modules) {
     for (const t of mod.topics || []) {
-      out.push({ moduleTitle: mod.title || "", topic: t });
+      out.push({
+        moduleTitle: mod.title || "",
+        topic: t,
+        sourceLevel: inferSourceLevel(mod.title || "", t, false),
+      });
     }
   }
   return out;
@@ -33,7 +60,11 @@ function flattenPrivateTopics(root) {
   for (const mod of mods) {
     for (const t of mod.topics || []) {
       const topic = Object.assign({}, t, { _private: true });
-      out.push({ moduleTitle: mod.title || "私人笔记", topic });
+      out.push({
+        moduleTitle: mod.title || "私人笔记",
+        topic,
+        sourceLevel: inferSourceLevel(mod.title || "私人笔记", topic, true),
+      });
     }
   }
   return out;
@@ -60,7 +91,7 @@ function keywordBuckets(text) {
   return [...uni];
 }
 
-function scoreMatch(userMsg, moduleTitle, topic, species) {
+function scoreMatch(userMsg, moduleTitle, topic, species, sourceLevel) {
   const m = String(userMsg || "").replace(/\s/g, "");
   if (!m) return 0;
   let score = 0;
@@ -82,7 +113,8 @@ function scoreMatch(userMsg, moduleTitle, topic, species) {
   }
   const plainTitle = String(topic.title || "").replace(/\s/g, "");
   if (plainTitle.length >= 4 && m.indexOf(plainTitle) !== -1) score += 28;
-  if (topic._private) score = Math.floor(score * 1.34);
+  if (topic._private) score = Math.floor(score * 1.18);
+  score += sourceLevelBonus(sourceLevel);
   return score;
 }
 
@@ -131,16 +163,20 @@ function retrieveDailyKnowledgeSnippets(userMsg, species, publicDir, options) {
   const stripped = stripProfilePrefix(userMsg);
   const scored = [];
   const spNorm = species === "dog" ? "dog" : "cat";
-  for (const { moduleTitle, topic } of flatAll) {
+  for (const { moduleTitle, topic, sourceLevel } of flatAll) {
     if (!topicMatchesSpecies(topic, species)) continue;
-    const sc = scoreMatch(stripped, moduleTitle, topic, spNorm);
-    scored.push({ moduleTitle, topic, sc });
+    const sc = scoreMatch(stripped, moduleTitle, topic, spNorm, sourceLevel);
+    scored.push({ moduleTitle, topic, sc, sourceLevel: sourceLevel || "C" });
   }
-  scored.sort((a, b) => b.sc - a.sc);
+  scored.sort((a, b) => {
+    if (b.sc !== a.sc) return b.sc - a.sc;
+    return sourceLevelBonus(b.sourceLevel) - sourceLevelBonus(a.sourceLevel);
+  });
   const positive = scored.filter((x) => x.sc > 0).slice(0, limit);
   const snippets = positive.map((x) => ({
     score: x.sc,
     topicId: x.topic.id || "",
+    sourceLevel: x.sourceLevel || "C",
     text: buildSnippet(x.moduleTitle, x.topic, maxSnippetLen, spNorm),
   }));
   return {
@@ -160,7 +196,7 @@ function formatRagSystemBlock(result) {
     );
   }
   const body = result.snippets
-    .map((s, i) => `${i + 1}. [${s.topicId || "topic"}]\n${s.text}`)
+    .map((s, i) => `${i + 1}. [${s.topicId || "topic"} · 证据级别 ${s.sourceLevel || "C"}]\n${s.text}`)
     .join("\n\n");
   return `${header}\n${body}`;
 }
