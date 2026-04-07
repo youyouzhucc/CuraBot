@@ -1,6 +1,7 @@
 const path = require("path");
 const fs = require("fs");
 const fsp = require("fs/promises");
+const dns = require("dns");
 const kbRetrieval = require("./kb-retrieval");
 const triageEngine = require("./triage-engine");
 const modelRouter = require("./model-router");
@@ -12,6 +13,46 @@ const multer = require("multer");
 require("dotenv").config({ path: path.join(__dirname, ".env") });
 if (fs.existsSync(path.join(__dirname, ".env.local"))) {
   require("dotenv").config({ path: path.join(__dirname, ".env.local"), override: true });
+}
+
+/** 可选：给 Node fetch 配置代理（适用于本机浏览器可访问但 Node fetch failed 的场景） */
+try {
+  const proxyUrl =
+    (process.env.HTTPS_PROXY || process.env.HTTP_PROXY || process.env.ALL_PROXY || "").trim();
+  if (proxyUrl) {
+    let undiciMod = null;
+    try {
+      undiciMod = require("node:undici");
+    } catch (_) {
+      try {
+        undiciMod = require("undici");
+      } catch (_) {
+        undiciMod = null;
+      }
+    }
+    if (undiciMod && undiciMod.setGlobalDispatcher && undiciMod.ProxyAgent) {
+      undiciMod.setGlobalDispatcher(new undiciMod.ProxyAgent(proxyUrl));
+      console.log(`[net] fetch proxy enabled: ${proxyUrl}`);
+    } else {
+      const envProxy = String(process.env.NODE_USE_ENV_PROXY || "").trim();
+      if (envProxy === "1" || envProxy.toLowerCase() === "true") {
+        console.log("[net] using NODE_USE_ENV_PROXY=1 (native env proxy mode)");
+      } else {
+        console.warn("[net] proxy requested but undici unavailable; set NODE_USE_ENV_PROXY=1 and restart");
+      }
+    }
+  }
+} catch (e) {
+  console.warn("[net] fetch proxy setup skipped:", e && e.message);
+}
+
+/** 某些网络环境下 Node fetch 优先 IPv6 会导致外部 LLM 域名连接失败（fetch failed） */
+try {
+  if (typeof dns.setDefaultResultOrder === "function") {
+    dns.setDefaultResultOrder("ipv4first");
+  }
+} catch (e) {
+  /* ignore */
 }
 
 /**
@@ -1360,6 +1401,7 @@ function sanitizeClinicalReply(text) {
 /** 双脑协同分诊：DeepSeek 结构化 + Gemini 视觉/润色 + 加权评分 + SOAP */
 app.post("/api/triage/consult", async (req, res) => {
   try {
+    const startedAt = Date.now();
     const body = req.body && typeof req.body === "object" ? req.body : {};
     const userInput = String(body.message || "").trim();
     const history = Array.isArray(body.history) ? body.history.slice(-12) : [];
@@ -1437,6 +1479,7 @@ app.post("/api/triage/consult", async (req, res) => {
 
     const missing = triageEngine.missingSlots(structuredWithVision);
     let reply = String(geminiFinal.text || "").trim();
+    const usedReplyFallback = !reply;
     if (!reply) {
       const triLabel =
         triage.level === "emergency" ? "紧急" : triage.level === "moderate" ? "中等" : triage.level === "normal" ? "正常" : "不明确";
@@ -1452,6 +1495,24 @@ app.post("/api/triage/consult", async (req, res) => {
       missingSlots: missing,
       userInput,
     });
+
+    const llmTrace = {
+      deepseekMode: deepseekResult.mode || "unknown",
+      geminiVisionMode: vision.mode || "unknown",
+      geminiFinalMode: geminiFinal.mode || "unknown",
+      geminiVisionRetryCount: Number(vision.retryCount || 0),
+      geminiFinalRetryCount: Number(geminiFinal.retryCount || 0),
+      geminiVisionLastHttpStatus: Number(vision.lastHttpStatus || 0),
+      geminiFinalLastHttpStatus: Number(geminiFinal.lastHttpStatus || 0),
+      usedReplyFallback,
+      hasVisionInput: images.length > 0,
+      visionSummaryLength: String(vision.summary || "").length,
+      geminiReplyLength: String(geminiFinal.text || "").length,
+      errorHints: [deepseekResult.mode, vision.mode, geminiFinal.mode]
+        .filter((x) => /failed|error|timeout|unsupported|invalid/i.test(String(x || "")))
+        .map(String),
+      elapsedMs: Date.now() - startedAt,
+    };
 
     return res.json({
       ok: true,
@@ -1478,6 +1539,9 @@ app.post("/api/triage/consult", async (req, res) => {
       },
       visionSummary: vision.summary || "",
       reply,
+      meta: {
+        llmTrace,
+      },
     });
   } catch (e) {
     console.error("[api/triage/consult]", e);

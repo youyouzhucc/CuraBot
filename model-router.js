@@ -26,7 +26,46 @@ function getDeepSeekConfig() {
 function getGeminiConfig() {
   const key = (process.env.GEMINI_API_KEY || "").trim();
   const model = (process.env.GEMINI_MODEL || "gemini-1.5-pro").trim();
-  return { key, model };
+  const base = (process.env.GEMINI_BASE_URL || "https://generativelanguage.googleapis.com").trim().replace(/\/$/, "");
+  return { key, model, base };
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchGeminiWithRetry(endpoint, body, maxAttempts = 3) {
+  let lastStatus = 0;
+  let lastError = "";
+  for (let i = 1; i <= maxAttempts; i += 1) {
+    try {
+      const r = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      lastStatus = r.status;
+      if (r.ok) {
+        const j = await r.json().catch(() => ({}));
+        return { ok: true, status: r.status, json: j, attempts: i, retried: i - 1 };
+      }
+      // 仅对可恢复状态重试
+      if (i < maxAttempts && (r.status === 429 || r.status === 503 || r.status === 504)) {
+        await sleep(300 * Math.pow(2, i - 1));
+        continue;
+      }
+      const t = await r.text().catch(() => "");
+      return { ok: false, status: r.status, text: t, attempts: i, retried: i - 1 };
+    } catch (e) {
+      lastError = String((e && e.message) || e || "");
+      if (i < maxAttempts) {
+        await sleep(300 * Math.pow(2, i - 1));
+        continue;
+      }
+      return { ok: false, status: lastStatus || 0, error: lastError, attempts: i, retried: i - 1 };
+    }
+  }
+  return { ok: false, status: lastStatus || 0, error: lastError, attempts: maxAttempts, retried: maxAttempts - 1 };
 }
 
 function extractJsonObject(text) {
@@ -118,8 +157,8 @@ async function deepseekAnalyzeClinical({ userInput, species, history, schema }) 
 async function geminiAnalyzeImage({ images, species, context }) {
   if (!hasGemini()) return { mode: "no_gemini", summary: "" };
   if (!Array.isArray(images) || !images.length) return { mode: "no_image", summary: "" };
-  const { key, model } = getGeminiConfig();
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
+  const { key, model, base } = getGeminiConfig();
+  const endpoint = `${base}/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
 
   const imageParts = images
     .filter((x) => typeof x === "string" && x.trim())
@@ -139,13 +178,16 @@ async function geminiAnalyzeImage({ images, species, context }) {
   };
 
   try {
-    const r = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    if (!r.ok) return { mode: `gemini_http_${r.status}`, summary: "" };
-    const j = await r.json().catch(() => ({}));
+    const r = await fetchGeminiWithRetry(endpoint, body, 3);
+    if (!r.ok) {
+      return {
+        mode: r.status ? `gemini_http_${r.status}` : "gemini_fetch_failed",
+        summary: "",
+        retryCount: r.retried || 0,
+        lastHttpStatus: r.status || 0,
+      };
+    }
+    const j = r.json || {};
     const txt =
       j &&
       j.candidates &&
@@ -154,16 +196,21 @@ async function geminiAnalyzeImage({ images, species, context }) {
       Array.isArray(j.candidates[0].content.parts)
         ? j.candidates[0].content.parts.map((p) => p.text || "").join("\n").trim()
         : "";
-    return { mode: "gemini", summary: txt };
+    return {
+      mode: "gemini",
+      summary: txt,
+      retryCount: r.retried || 0,
+      lastHttpStatus: r.status || 0,
+    };
   } catch (e) {
-    return { mode: "gemini_fetch_failed", summary: "" };
+    return { mode: "gemini_fetch_failed", summary: "", retryCount: 0, lastHttpStatus: 0 };
   }
 }
 
 async function geminiComposeReport({ species, structured, triage, followUpQuestions, ragText, soap }) {
   if (!hasGemini()) return { mode: "fallback", text: "" };
-  const { key, model } = getGeminiConfig();
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
+  const { key, model, base } = getGeminiConfig();
+  const endpoint = `${base}/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
   const prompt = [
     "你是宠物临床分诊沟通助手。要求：专业、温和、短句、不确诊、不提供剂量。",
     `物种：${species === "dog" ? "狗狗" : "猫猫"}`,
@@ -176,16 +223,20 @@ async function geminiComposeReport({ species, structured, triage, followUpQuesti
   ].join("\n");
 
   try {
-    const r = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.25, maxOutputTokens: 520 },
-      }),
-    });
-    if (!r.ok) return { mode: `gemini_http_${r.status}`, text: "" };
-    const j = await r.json().catch(() => ({}));
+    const requestBody = {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.25, maxOutputTokens: 520 },
+    };
+    const r = await fetchGeminiWithRetry(endpoint, requestBody, 3);
+    if (!r.ok) {
+      return {
+        mode: r.status ? `gemini_http_${r.status}` : "gemini_fetch_failed",
+        text: "",
+        retryCount: r.retried || 0,
+        lastHttpStatus: r.status || 0,
+      };
+    }
+    const j = r.json || {};
     const txt =
       j &&
       j.candidates &&
@@ -194,9 +245,14 @@ async function geminiComposeReport({ species, structured, triage, followUpQuesti
       Array.isArray(j.candidates[0].content.parts)
         ? j.candidates[0].content.parts.map((p) => p.text || "").join("\n").trim()
         : "";
-    return { mode: "gemini", text: txt };
+    return {
+      mode: "gemini",
+      text: txt,
+      retryCount: r.retried || 0,
+      lastHttpStatus: r.status || 0,
+    };
   } catch (e) {
-    return { mode: "gemini_fetch_failed", text: "" };
+    return { mode: "gemini_fetch_failed", text: "", retryCount: 0, lastHttpStatus: 0 };
   }
 }
 
