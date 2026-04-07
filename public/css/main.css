@@ -4506,6 +4506,106 @@ body.view-health-chat {
   }
 }
 
+/* ===== Mobile adaptive hardening =====
+ * 目标：避免手机浏览器工具栏导致的 100vh 裁切、标题溢出与输入区拥挤。
+ */
+@media (max-width: 960px) {
+  body.view-health-chat {
+    overflow: auto;
+  }
+
+  .wrap.wrap--health-chat {
+    height: auto;
+    min-height: calc(100dvh - 12px);
+    overflow: visible;
+  }
+
+  .wrap.wrap--health-chat section[data-view="healthChat"] > .hero,
+  .wrap.wrap--health-chat .health-chat-hero,
+  .wrap.wrap--health-chat .health-chat-layout {
+    height: auto;
+    min-height: 0;
+  }
+
+  .health-chat-hero {
+    overflow: visible;
+  }
+
+  .health-chat-layout {
+    overflow: visible;
+  }
+}
+
+@supports not (height: 100dvh) {
+  @media (max-width: 960px) {
+    .wrap.wrap--health-chat {
+      min-height: calc(100vh - 12px);
+    }
+  }
+}
+
+@media (max-width: 560px) {
+  .wrap {
+    max-width: 100%;
+    margin-top: 0.55rem;
+    padding-left: max(0.7rem, env(safe-area-inset-left));
+    padding-right: max(0.7rem, env(safe-area-inset-right));
+  }
+
+  .topbar,
+  .warm-banner .topbar,
+  .topbar--banner {
+    gap: 0.6rem;
+    min-height: 0;
+  }
+
+  .curabot-title-inline {
+    white-space: normal;
+    flex-wrap: wrap;
+    row-gap: 0.25rem;
+  }
+
+  .curabot-title-rest {
+    white-space: normal;
+  }
+
+  .health-chat-layout {
+    padding: 0.45rem;
+    border-radius: 14px;
+  }
+
+  .health-chat-hero .health-chat-log {
+    padding: 0.55rem 0.55rem;
+  }
+
+  .health-chat-composer {
+    padding-left: 0.55rem;
+    padding-right: 0.55rem;
+  }
+
+  .health-chat-input-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.45rem;
+  }
+
+  .health-chat-send-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.45rem;
+  }
+
+  .health-chat-send-actions .health-chat-btn-send,
+  .health-chat-send-actions .health-chat-btn-export {
+    width: 100%;
+    min-width: 0;
+    padding-left: 0.55rem;
+    padding-right: 0.55rem;
+    font-size: 0.84rem;
+  }
+}
+
 .hgq-body-title--dynamic {
   margin: 0 0 0.35rem;
   font-size: 1.02rem;
