@@ -1802,6 +1802,17 @@ app.post("/api/chat-local", async (req, res) => {
 
 /** 显式挂载 /images，避免个别环境下静态资源解析异常 */
 app.use("/images", express.static(path.join(publicDir, "images"), { index: false }));
+/** 禁止浏览器缓存 HTML/JS/CSS — 微信内置浏览器缓存极其顽固 */
+app.use((req, res, next) => {
+  const p = req.path.toLowerCase();
+  if (p === "/" || p.endsWith(".html") || p.endsWith(".js") || p.endsWith(".css") || p.endsWith(".json")) {
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    res.set("Pragma", "no-cache");
+    res.set("Expires", "0");
+    res.set("Surrogate-Control", "no-store");
+  }
+  next();
+});
 app.use(express.static(publicDir, { etag: false, maxAge: 0 }));
 
 app.use((err, req, res, next) => {
