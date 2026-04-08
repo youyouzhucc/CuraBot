@@ -1079,7 +1079,7 @@
           const p =
             typeof window !== "undefined" && window.__healthChatProfile && window.__healthChatProfile.species;
           if (p === "cat" || p === "dog") return p;
-          return "cat";
+          return null;
         },
         getKnowledge: () => state.knowledge,
         onOpenEmergency: () => {

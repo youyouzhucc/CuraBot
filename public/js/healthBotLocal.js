@@ -937,6 +937,65 @@
       };
     }
 
+    // 兜底：正则未命中但消息涉及健康/症状，生成通用追问
+    if (looksLikeHealthConcern(msg, asked)) {
+      return buildGenericFollowUp(nick, asked);
+    }
+
+    return null;
+  }
+
+  /** 宽松检测消息是否涉及健康/症状（排除纯打招呼/感谢） */
+  function looksLikeHealthConcern(msg, asked) {
+    const t = (msg || "").trim();
+    if (/^(你好|谢谢|嗯|好的|ok|谢|感谢|棒|明白|了解|收到|在吗|hi|hello)/i.test(t)) return false;
+    if (t.length < 4) return false;
+    // 已答过 onset+spirit 就不再弹通用追问
+    if (asked && asked.indexOf("onset") !== -1 && asked.indexOf("spirit") !== -1) return false;
+    return /(不吃|少吃|拒食|喝水多|喝水少|呼吸|咳|喘|打喷嚏|流涕|流鼻|眼睛|鼻子|耳朵|皮肤|掉毛|脱毛|红肿|肿|包|疙瘩|发烧|发热|体温|发抖|抖|无力|站不稳|不走|走不动|异常|不对劲|奇怪|担心|着急|怎么办|生病|不舒服|看医生|看兽医|症状|便秘|拉血|黑便|便血|口臭|流口水|打蔫|没精神|蔫了|趴着不动|不想动|挠|蹭|舔|结痂|毛粗|消瘦|体重|变瘦|变胖|喝水|多饮多尿)/.test(t);
+  }
+
+  /** 生成通用追问选择题，根据已回答问题动态选择 */
+  function buildGenericFollowUp(nick, asked) {
+    // 优先追问持续时间（如果还没问过）
+    if (asked.indexOf("onset") === -1 && asked.indexOf("generic_onset") === -1) {
+      return {
+        id: "generic_onset",
+        prompt: `${nick}出现这种情况大概多久了？`,
+        options: [
+          { value: "today", label: "今天刚发现" },
+          { value: "1-2d", label: "1～2 天" },
+          { value: "3d+", label: "3 天以上" },
+          { value: "unknown", label: "不太确定" },
+        ],
+      };
+    }
+    // 然后追问精神食欲
+    if (asked.indexOf("spirit") === -1 && asked.indexOf("generic_spirit") === -1) {
+      return {
+        id: "generic_spirit",
+        prompt: `${nick}的精神和食欲目前怎么样？`,
+        options: [
+          { value: "poor", label: "精神差或不吃" },
+          { value: "ok", label: "还行，能吃喝" },
+          { value: "normal", label: "基本正常" },
+          { value: "unknown", label: "不确定" },
+        ],
+      };
+    }
+    // 最后问有无其他伴随症状
+    if (asked.indexOf("generic_other") === -1) {
+      return {
+        id: "generic_other",
+        prompt: `除了这个，${nick}还有没有其他不对劲的地方？`,
+        options: [
+          { value: "vomit", label: "有呕吐或腹泻" },
+          { value: "behavior", label: "行为异常（躲藏/嗜睡等）" },
+          { value: "none", label: "暂时没发现其他问题" },
+          { value: "other", label: "有，我补充说明" },
+        ],
+      };
+    }
     return null;
   }
 
@@ -1107,7 +1166,7 @@
     if (/^(你好|您好|哈喽|嗨|hi|hello|在吗)/i.test(msg)) {
       const llm = await fetchLocalLlm(msg, sp, "greeting");
       return {
-        text: llm || `你好，我是 CuraBot 健康助手，当前按「${nick}」来聊。请用一两句话描述最担心的症状；我会给科普级参考，**不能代替兽医诊断**。\n\n你也可以从首页进入标准化采集，或问我「急症有哪些」。`,
+        text: llm || `你好，我是 CuraBot，当前按「${nick}」来聊。说说最担心的症状，我来帮你梳理（科普参考，不替代兽医诊断）。`,
         source: llm ? "local-llm" : "local",
         severity: "normal",
       };
@@ -1222,9 +1281,7 @@
 
     return {
       text: llmFallback ||
-        `我根据现有资料**没法精确对应**你这句话；可能信息太少或需要当面检查。\n\n` +
-        `建议：① 用首页「从这里开始」按步骤描述；② 打开「这些情况要抓紧去医院」对照红线；③ 直接联系兽医说明品种、年龄与症状持续时间。\n\n` +
-        `若已配置大模型服务，联网对话会更灵活；未配置时由本地知识库兜底。`,
+        `信息还不太够，我需要了解更多才能给你有针对性的建议。\n\n可以补充一下：品种年龄、具体症状、持续多久、精神食欲怎么样。`,
       source: llmFallback ? "local-llm" : "local",
       severity: "unclear",
       followUpQuiz: quizDefault,

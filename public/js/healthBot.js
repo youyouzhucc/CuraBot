@@ -1993,21 +1993,8 @@
     const hc = (knowledge && knowledge.healthChat) || {};
     const base =
       hc.freeWelcomeText ||
-      "你好，我是 CuraBot。**你可以直接在下框打字**，描述食欲、精神、呕吐、大小便等你最担心的情况（科普参考，不能代替兽医诊断）。\n\n先和我说一下你在咨询猫猫还是狗狗，我会按对应方向继续追问。";
-    let dietHint = "";
-    try {
-      if (
-        localStorage.getItem("curabot_quiz_weak_diet") === "1" &&
-        !sessionStorage.getItem("curabot_quiz_diet_hint_shown")
-      ) {
-        sessionStorage.setItem("curabot_quiz_diet_hint_shown", "1");
-        dietHint =
-          "\n\n（小提示：你在首页「趣味闯关」里饮食相关题目若曾选错，我们可以多聊聊喂食与安全食物——仍属科普参考。）";
-      }
-    } catch (e) {
-      /* ignore */
-    }
-    const text = `**欢迎来到健康咨询。**\n\n${base}${dietHint}`;
+      "你好，我是 CuraBot 🐾 直接告诉我毛孩子怎么了，我来帮你梳理。（科普参考，不替代兽医诊断）";
+    const text = base;
     const wrap = document.createElement("div");
     wrap.className = "health-msg health-msg--bot health-welcome-free";
     wrap.innerHTML = wrapHealthMsgRow(
