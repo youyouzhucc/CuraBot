@@ -248,10 +248,10 @@
         </div>
         <span class="hgq-toolbar-divider" aria-hidden="true"></span>
         <div class="daily-knowledge-tabs hgq-unified-tabs-seg" role="tablist" aria-label="内容模块">
-          <button type="button" class="daily-knowledge-tab ${mapOn ? "is-active" : ""}" role="tab" aria-selected="${mapOn ? "true" : "false"}" data-hgq-tab="map" id="hgqTabMap">剪影图谱</button>
-          <button type="button" class="daily-knowledge-tab ${poopOn ? "is-active" : ""}" role="tab" aria-selected="${poopOn ? "true" : "false"}" data-hgq-tab="poop" id="hgqTabPoop">便便识别</button>
-          <button type="button" class="daily-knowledge-tab ${bodyOn ? "is-active" : ""}" role="tab" aria-selected="${bodyOn ? "true" : "false"}" data-hgq-tab="body" id="hgqTabBody">体况识别</button>
-          <button type="button" class="daily-knowledge-tab ${quizOn ? "is-active" : ""}" role="tab" aria-selected="${quizOn ? "true" : "false"}" data-hgq-tab="quiz" id="hgqTabQuiz">趣味闯关</button>
+          <button type="button" class="daily-knowledge-tab ${mapOn ? "is-active" : ""}" role="tab" aria-selected="${mapOn ? "true" : "false"}" data-hgq-tab="map" id="hgqTabMap"><span class="u-desktop-only">剪影图谱</span><span class="u-mobile-only">图谱</span></button>
+          <button type="button" class="daily-knowledge-tab ${poopOn ? "is-active" : ""}" role="tab" aria-selected="${poopOn ? "true" : "false"}" data-hgq-tab="poop" id="hgqTabPoop"><span class="u-desktop-only">便便识别</span><span class="u-mobile-only">便便</span></button>
+          <button type="button" class="daily-knowledge-tab ${bodyOn ? "is-active" : ""}" role="tab" aria-selected="${bodyOn ? "true" : "false"}" data-hgq-tab="body" id="hgqTabBody"><span class="u-desktop-only">体况识别</span><span class="u-mobile-only">体况</span></button>
+          <button type="button" class="daily-knowledge-tab ${quizOn ? "is-active" : ""}" role="tab" aria-selected="${quizOn ? "true" : "false"}" data-hgq-tab="quiz" id="hgqTabQuiz"><span class="u-desktop-only">趣味闯关</span><span class="u-mobile-only">闯关</span></button>
         </div>
       </div>`;
   }

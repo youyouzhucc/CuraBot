@@ -12,7 +12,7 @@
       href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/css/main.css?v=20260408b" />
+    <link rel="stylesheet" href="/css/main.css?v=20260408c" />
     <script>
       // 本地 / 局域网用 Live Server 等打开时，自动把 API 指到本机 Node（默认 3000 端口）；部署到公网时请改为你的 API 域名或删除此段。
       (function () {
@@ -278,11 +278,28 @@
             <span class="disclaimer-box-text"><strong>小提示</strong>：这里不能代替医生当面检查，也不会告诉你具体吃多少药。</span>
             <button type="button" class="btn secondary btn-inline" id="btnDisclaimer">查看完整说明</button>
           </div>
+
+          <!-- 移动端底部毛孩子档案区 -->
+          <div class="home-pet-bottom" id="homePetBottom" aria-label="毛孩子档案"></div>
+
         </div>
       </section>
 
       <section data-view="healthChat" hidden>
         <div class="hero flow-sheet health-chat-hero">
+          <!-- 移动端顶栏 -->
+          <div class="health-chat-mobile-topbar" id="healthChatMobileTopbar">
+            <button type="button" class="health-chat-mobile-menu-btn" id="btnHealthChatMenu" aria-label="会话列表">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            <span class="health-chat-mobile-brand">
+              <img src="/images/brand-logo.png" alt="" width="26" height="26" loading="lazy" decoding="async" class="health-chat-mobile-brand-logo"/>
+              CuraBot
+            </span>
+            <button type="button" class="health-chat-mobile-home-btn" id="btnHealthChatHome" aria-label="返回首页">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-8 9 8"/><path d="M5 10v9a1 1 0 001 1h3v-5h6v5h3a1 1 0 001-1v-9"/></svg>
+            </button>
+          </div>
           <header class="flow-head health-chat-head">
             <button type="button" class="health-chat-back-btn" id="btnHealthChatBack" aria-label="返回首页">&larr; 返回</button>
             <h2 class="health-chat-title-pill health-chat-title-with-logo">
@@ -315,10 +332,11 @@
             </p>
           </div>
           <div class="health-chat-layout">
-            <aside class="health-chat-sessions" aria-label="会话列表">
+            <aside class="health-chat-sessions" id="healthChatSessionsAside" aria-label="会话列表">
               <button type="button" class="btn secondary health-chat-new-btn" id="btnHealthNewSession">新会话</button>
               <div id="healthSessionList" class="health-session-list"></div>
             </aside>
+            <div class="health-chat-sessions-backdrop" id="healthChatSessionsBackdrop" hidden></div>
             <div class="health-chat-main">
               <div class="health-chat-panel">
                 <div id="healthChatMessages" class="health-chat-log" role="log" aria-live="polite"></div>
@@ -336,14 +354,18 @@
                         maxlength="2000"
                       />
                       <div class="health-chat-send-actions">
-                        <button type="submit" class="btn health-chat-btn-send">发送</button>
+                        <button type="submit" class="btn health-chat-btn-send">
+                          <span class="health-chat-btn-text">发送</span>
+                          <span class="health-chat-btn-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></span>
+                        </button>
                         <button
                           type="button"
                           class="btn secondary health-chat-btn-export"
                           id="btnSoapReport"
                           title="复制一份给兽医看的摘要，含本页对话与筛查记录（非诊断）"
                         >
-                          导出就诊简报
+                          <span class="health-chat-btn-text">导出就诊简报</span>
+                          <span class="health-chat-btn-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
                         </button>
                       </div>
                     </div>
@@ -597,13 +619,13 @@
       </footer>
     </div>
 
-    <script src="/js/triageEngine.js?v=20260408b"></script>
-    <script src="/js/intakeEval.js?v=20260408b"></script>
-    <script src="/js/healthBotLocal.js?v=20260408b"></script>
-    <script src="/js/healthDecisionEngine.js?v=20260408b"></script>
-    <script src="/js/healthBot.js?v=20260408b"></script>
-    <script src="/js/healthGraphQuiz.js?v=20260408b"></script>
-    <script src="/js/account.js?v=20260408b"></script>
-    <script src="/js/app.js?v=20260408b"></script>
+    <script src="/js/triageEngine.js?v=20260408c"></script>
+    <script src="/js/intakeEval.js?v=20260408c"></script>
+    <script src="/js/healthBotLocal.js?v=20260408c"></script>
+    <script src="/js/healthDecisionEngine.js?v=20260408c"></script>
+    <script src="/js/healthBot.js?v=20260408c"></script>
+    <script src="/js/healthGraphQuiz.js?v=20260408c"></script>
+    <script src="/js/account.js?v=20260408c"></script>
+    <script src="/js/app.js?v=20260408c"></script>
   </body>
 </html>

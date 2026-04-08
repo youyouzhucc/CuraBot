@@ -414,6 +414,32 @@
     host.innerHTML = `<div class="topbar-auth-inner">${petBlock}</div>`;
     bindTopbarPetEvents();
     updateSiteAccountLinksVisibility();
+    // 同步毛孩子档案到首页底部区域（移动端）
+    syncPetToHomeBottom(tilesHtml);
+  }
+
+  function syncPetToHomeBottom(tilesHtml) {
+    var bottom = document.getElementById("homePetBottom");
+    if (!bottom) return;
+    bottom.innerHTML =
+      '<div class="topbar-pet-block" aria-label="毛孩子档案">' +
+        '<span class="topbar-pet-label">毛孩子档案</span>' +
+        '<div class="pet-archive-grid pet-archive-grid--avatars topbar-pet-grid">' + (tilesHtml || "") + '</div>' +
+      '</div>';
+    // 给底部克隆的卡片绑定相同事件
+    bottom.querySelectorAll("[data-pet-id]").forEach(function (tile) {
+      tile.addEventListener("click", function () {
+        var srcTile = document.querySelector("#topbarPetGrid [data-pet-id=\"" + tile.dataset.petId + "\"]");
+        if (srcTile) srcTile.click();
+      });
+    });
+    var addBtn = bottom.querySelector(".pet-archive-add");
+    if (addBtn) {
+      addBtn.addEventListener("click", function () {
+        var srcAdd = document.querySelector("#topbarPetGrid .pet-archive-add");
+        if (srcAdd) srcAdd.click();
+      });
+    }
   }
 
   function updateAuthSwitchLabel(mode) {

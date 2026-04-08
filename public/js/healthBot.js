@@ -2525,28 +2525,34 @@
       btnNewSession.dataset.bound = "1";
       btnNewSession.addEventListener("click", () => {
         resetConversation(getKnowledge, getSpecies, undefined, { forceNew: true });
-        // 移动端：创建新会话后自动收起列表
-        if (window.innerWidth <= 960) {
-          const aside = btnNewSession.closest(".health-chat-sessions");
-          if (aside) aside.classList.remove("is-expanded");
-        }
+        closeSessionDrawer();
       });
-
-      // 移动端：在新会话按钮下方插入 "历史会话" 折叠切换
-      if (window.innerWidth <= 960 || window.matchMedia("(max-width: 960px)").matches) {
-        const aside = btnNewSession.closest(".health-chat-sessions");
-        if (aside && !aside.querySelector(".health-session-toggle")) {
-          const toggle = document.createElement("button");
-          toggle.type = "button";
-          toggle.className = "health-session-toggle";
-          toggle.textContent = "历史会话";
-          toggle.addEventListener("click", () => {
-            aside.classList.toggle("is-expanded");
-          });
-          btnNewSession.insertAdjacentElement("afterend", toggle);
-        }
-      }
     }
+
+    // 移动端会话抽屉
+    const sessionsAside = document.getElementById("healthChatSessionsAside");
+    const sessionsBackdrop = document.getElementById("healthChatSessionsBackdrop");
+    const btnMenuOpen = document.getElementById("btnHealthChatMenu");
+    const btnChatHome = document.getElementById("btnHealthChatHome");
+
+    function openSessionDrawer() {
+      if (sessionsAside) sessionsAside.classList.add("is-drawer-open");
+      if (sessionsBackdrop) { sessionsBackdrop.hidden = false; sessionsBackdrop.classList.add("is-visible"); }
+    }
+    function closeSessionDrawer() {
+      if (sessionsAside) sessionsAside.classList.remove("is-drawer-open");
+      if (sessionsBackdrop) { sessionsBackdrop.classList.remove("is-visible"); sessionsBackdrop.hidden = true; }
+    }
+
+    if (btnMenuOpen) btnMenuOpen.addEventListener("click", () => {
+      sessionsAside && sessionsAside.classList.contains("is-drawer-open") ? closeSessionDrawer() : openSessionDrawer();
+    });
+    if (sessionsBackdrop) sessionsBackdrop.addEventListener("click", closeSessionDrawer);
+    if (btnChatHome) btnChatHome.addEventListener("click", () => {
+      closeSessionDrawer();
+      const brandBtn = document.getElementById("brandHome");
+      if (brandBtn) brandBtn.click();
+    });
 
     // 返回按钮
     const btnBack = document.getElementById("btnHealthChatBack");
