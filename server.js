@@ -1802,7 +1802,7 @@ app.post("/api/chat-local", async (req, res) => {
 
 /** 显式挂载 /images，避免个别环境下静态资源解析异常 */
 app.use("/images", express.static(path.join(publicDir, "images"), { index: false }));
-app.use(express.static(publicDir));
+app.use(express.static(publicDir, { etag: false, maxAge: 0 }));
 
 app.use((err, req, res, next) => {
   if (!err) return next();
