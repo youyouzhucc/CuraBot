@@ -5,6 +5,7 @@ const dns = require("dns");
 const kbRetrieval = require("./kb-retrieval");
 const triageEngine = require("./triage-engine");
 const modelRouter = require("./model-router");
+const dailyLearner = require("./daily-learner");
 const crypto = require("crypto");
 const express = require("express");
 const multer = require("multer");
@@ -890,6 +891,171 @@ app.post("/api/knowledge/ingest", requireAdminKey, (req, res) => {
   }
 });
 
+/* ───────────────────────────────────────────────────────
+ * 每日自动学习管理端点
+ * ─────────────────────────────────────────────────────── */
+
+/** 查看草稿列表 */
+app.get("/api/admin/learning/drafts", requireAdminKey, (_req, res) => {
+  try {
+    const data = dailyLearner.readDrafts();
+    res.json({ ok: true, count: data.drafts.length, lastRun: data.lastRun, drafts: data.drafts });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: String(e.message || e) });
+  }
+});
+
+/** 手动触发一次学习 */
+app.post("/api/admin/learning/trigger", requireAdminKey, async (_req, res) => {
+  try {
+    const result = await dailyLearner.run();
+    res.json(result);
+  } catch (e) {
+    console.error("[learning/trigger]", e);
+    res.status(500).json({ ok: false, error: String(e.message || e) });
+  }
+});
+
+/** 批准草稿合入正式知识库 */
+app.post("/api/admin/learning/approve", requireAdminKey, (req, res) => {
+  try {
+    const { draftId } = req.body || {};
+    const draftsData = dailyLearner.readDrafts();
+    const idx = draftsData.drafts.findIndex((d) => d.draftId === draftId);
+    if (idx === -1) return res.status(404).json({ ok: false, error: "draft_not_found" });
+
+    const draft = draftsData.drafts[idx];
+    const topic = draft.topic;
+
+    // 读取 knowledge.json 并追加
+    const kPath = path.join(publicDir, "data", "knowledge.json");
+    const knowledge = JSON.parse(fs.readFileSync(kPath, "utf8"));
+
+    // 检查 ID 重复
+    const existingIds = dailyLearner.getExistingTopicIds();
+    if (existingIds.has(topic.id)) {
+      return res.status(409).json({ ok: false, error: "duplicate_id", id: topic.id });
+    }
+
+    // 找到目标 module 并追加
+    const targetMod = draft.targetModule || "diet";
+    let mod = knowledge.dailyKnowledge.modules.find((m) => m.id === targetMod);
+    if (!mod) mod = knowledge.dailyKnowledge.modules[0];
+    if (!Array.isArray(mod.topics)) mod.topics = [];
+    mod.topics.push(topic);
+
+    fs.writeFileSync(kPath, JSON.stringify(knowledge, null, 2), "utf8");
+    kbRetrieval.reloadKnowledgeCache();
+
+    // 从草稿移除
+    draftsData.drafts.splice(idx, 1);
+    dailyLearner.writeDrafts(draftsData);
+
+    dailyLearner.auditLog("approved", { draftId, topicId: topic.id, title: topic.title });
+    res.json({ ok: true, topicId: topic.id, title: topic.title });
+  } catch (e) {
+    console.error("[learning/approve]", e);
+    res.status(500).json({ ok: false, error: String(e.message || e) });
+  }
+});
+
+/** 批准全部草稿 */
+app.post("/api/admin/learning/approve-all", requireAdminKey, (req, res) => {
+  try {
+    const draftsData = dailyLearner.readDrafts();
+    if (draftsData.drafts.length === 0) {
+      return res.json({ ok: true, approved: 0, message: "no_drafts" });
+    }
+
+    const kPath = path.join(publicDir, "data", "knowledge.json");
+    const knowledge = JSON.parse(fs.readFileSync(kPath, "utf8"));
+    const existingIds = dailyLearner.getExistingTopicIds();
+    let approved = 0;
+
+    for (const draft of draftsData.drafts) {
+      const topic = draft.topic;
+      if (existingIds.has(topic.id)) continue;
+
+      const targetMod = draft.targetModule || "diet";
+      let mod = knowledge.dailyKnowledge.modules.find((m) => m.id === targetMod);
+      if (!mod) mod = knowledge.dailyKnowledge.modules[0];
+      if (!Array.isArray(mod.topics)) mod.topics = [];
+      mod.topics.push(topic);
+      existingIds.add(topic.id);
+      approved++;
+
+      dailyLearner.auditLog("approved", { draftId: draft.draftId, topicId: topic.id, title: topic.title });
+    }
+
+    fs.writeFileSync(kPath, JSON.stringify(knowledge, null, 2), "utf8");
+    kbRetrieval.reloadKnowledgeCache();
+    draftsData.drafts = [];
+    dailyLearner.writeDrafts(draftsData);
+
+    res.json({ ok: true, approved });
+  } catch (e) {
+    console.error("[learning/approve-all]", e);
+    res.status(500).json({ ok: false, error: String(e.message || e) });
+  }
+});
+
+/** 拒绝/删除指定草稿 */
+app.post("/api/admin/learning/reject", requireAdminKey, (req, res) => {
+  try {
+    const { draftId } = req.body || {};
+    const draftsData = dailyLearner.readDrafts();
+    const idx = draftsData.drafts.findIndex((d) => d.draftId === draftId);
+    if (idx === -1) return res.status(404).json({ ok: false, error: "draft_not_found" });
+
+    const removed = draftsData.drafts.splice(idx, 1)[0];
+    dailyLearner.writeDrafts(draftsData);
+    dailyLearner.auditLog("rejected", { draftId, topicId: removed.topic.id });
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: String(e.message || e) });
+  }
+});
+
+/** 查看待学习主题列表 */
+app.get("/api/admin/learning/topics", requireAdminKey, (_req, res) => {
+  try {
+    const topicsPath = path.join(__dirname, "data", "learning-topics.json");
+    const data = JSON.parse(fs.readFileSync(topicsPath, "utf8"));
+    const pending = data.topics.filter((t) => !t.done).length;
+    const done = data.topics.filter((t) => t.done).length;
+    res.json({ ok: true, pending, done, total: data.topics.length, topics: data.topics });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: String(e.message || e) });
+  }
+});
+
+/** 添加新的待学习主题 */
+app.post("/api/admin/learning/topics", requireAdminKey, (req, res) => {
+  try {
+    const { query, species, module: mod } = req.body || {};
+    if (!query || String(query).trim().length < 4) {
+      return res.status(400).json({ ok: false, error: "query 至少 4 个字符" });
+    }
+    const topicsPath = path.join(__dirname, "data", "learning-topics.json");
+    let data;
+    try {
+      data = JSON.parse(fs.readFileSync(topicsPath, "utf8"));
+    } catch (_) {
+      data = { topics: [] };
+    }
+    data.topics.push({
+      query: String(query).trim(),
+      species: Array.isArray(species) ? species : ["cat", "dog"],
+      module: mod || "diet",
+      done: false,
+    });
+    fs.writeFileSync(topicsPath, JSON.stringify(data, null, 2), "utf8");
+    res.json({ ok: true, total: data.topics.length });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: String(e.message || e) });
+  }
+});
+
 /** 对话反馈（没用/有帮助）→ 追加写入 data/knowledge-feedback.jsonl 供后续人工筛补 */
 app.post("/api/feedback/chat", (req, res) => {
   try {
@@ -1647,8 +1813,26 @@ app.use((err, req, res, next) => {
   res.status(500).json({ ok: false, error: "server" });
 });
 
+/* ── 每日自动学习定时器 ── */
+const LEARN_HOUR = Number(process.env.LEARN_HOUR) || 3; // 默认凌晨 3:00
+let _lastLearnDate = "";
+setInterval(() => {
+  const now = new Date();
+  const today = now.toISOString().slice(0, 10);
+  if (now.getHours() === LEARN_HOUR && now.getMinutes() === 0 && _lastLearnDate !== today) {
+    _lastLearnDate = today;
+    console.log("[daily-learner] 定时触发自动学习...");
+    dailyLearner.run().then(r => {
+      console.log("[daily-learner] 定时学习完成:", JSON.stringify(r));
+    }).catch(e => {
+      console.error("[daily-learner] 定时学习失败:", e.message);
+    });
+  }
+}, 60 * 1000);
+
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`CuraBot listening on http://0.0.0.0:${PORT}`);
+  console.log(`[daily-learner] 定时器已注册，每天 ${LEARN_HOUR}:00 自动学习`);
   console.log(
     "[API] capabilities · chat · knowledge ingest/reload · feedback · auth/pets · health-upload · vision · health-session"
   );
