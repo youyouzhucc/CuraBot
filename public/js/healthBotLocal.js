@@ -1148,7 +1148,7 @@
     if (!msg) {
       const llm = await fetchLocalLlm("（用户发送了空消息）", sp, "greeting");
       return {
-        text: llm || `可以说说${speciesName(sp)}的食欲、精神、呕吐、大小便里你最担心的一点；紧急情况请直接去医院。`,
+        text: llm || `你好呀～告诉我你家毛孩子是猫猫还是狗狗，最近哪里让你担心了？我来帮你梳理（科普参考，不替代兽医诊断）`,
         source: llm ? "local-llm" : "local",
         severity: "unclear",
       };
@@ -1166,7 +1166,7 @@
     if (/^(你好|您好|哈喽|嗨|hi|hello|在吗)/i.test(msg)) {
       const llm = await fetchLocalLlm(msg, sp, "greeting");
       return {
-        text: llm || `你好，我是 CuraBot。说说毛孩子怎么了，我来帮你梳理（科普参考，不替代兽医诊断）。`,
+        text: llm || `你好，我是 CuraBot～告诉我你家是猫猫还是狗狗，最近有什么让你担心的状况吧，我来帮你梳理线索（科普参考，不替代兽医诊断）`,
         source: llm ? "local-llm" : "local",
         severity: "normal",
       };

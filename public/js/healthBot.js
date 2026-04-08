@@ -1993,7 +1993,7 @@
     const hc = (knowledge && knowledge.healthChat) || {};
     const base =
       hc.freeWelcomeText ||
-      "你好，我是 CuraBot 🐾 直接告诉我毛孩子怎么了，我来帮你梳理。（科普参考，不替代兽医诊断）";
+      "你好，我是 CuraBot 🐾 告诉我你家是猫猫还是狗狗，最近有什么让你担心的状况吧～我来帮你梳理线索（科普参考，不替代兽医诊断）";
     const text = base;
     const wrap = document.createElement("div");
     wrap.className = "health-msg health-msg--bot health-welcome-free";
