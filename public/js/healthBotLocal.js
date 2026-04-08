@@ -1166,7 +1166,7 @@
     if (/^(你好|您好|哈喽|嗨|hi|hello|在吗)/i.test(msg)) {
       const llm = await fetchLocalLlm(msg, sp, "greeting");
       return {
-        text: llm || `你好，我是 CuraBot，当前按「${nick}」来聊。说说最担心的症状，我来帮你梳理（科普参考，不替代兽医诊断）。`,
+        text: llm || `你好，我是 CuraBot。说说毛孩子怎么了，我来帮你梳理（科普参考，不替代兽医诊断）。`,
         source: llm ? "local-llm" : "local",
         severity: "normal",
       };
