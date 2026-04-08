@@ -1119,7 +1119,7 @@
   function inferInquiryHint(composedMessage, species) {
     const t = String(composedMessage || "");
     const strip = t.replace(/^【用户已选档案】[\s\S]*?\n\n/, "");
-    const sp = species || "cat";
+    const sp = species || null;
 
     /** 近期用户发言合并（用于识别「上一句说没尿、这句只说男生」仍处同一线程） */
     const recentUserBlob = history
