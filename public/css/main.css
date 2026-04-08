@@ -5397,7 +5397,7 @@ body.view-health-chat {
 .home-pet-bottom { display: none; }
 
 @media (max-width: 960px) {
-  /* ---------- 移动端顶栏 ---------- */
+  /* ---------- 移动端顶栏（微信风格） ---------- */
   .health-chat-mobile-topbar {
     display: flex;
     align-items: center;
@@ -5405,10 +5405,8 @@ body.view-health-chat {
     position: sticky;
     top: 0;
     z-index: 100;
-    padding: 0.55rem 0.75rem;
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    padding: 0.5rem 0.6rem;
+    background: #ededed;
     border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   }
 
@@ -5418,7 +5416,7 @@ body.view-health-chat {
     border: none;
     padding: 0.35rem;
     cursor: pointer;
-    color: #475569;
+    color: #1a1a1a;
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -5436,7 +5434,7 @@ body.view-health-chat {
     font-family: "Fredoka", sans-serif;
     font-weight: 600;
     font-size: 1.05rem;
-    color: var(--accent-dark, #1e3a8a);
+    color: #1a1a1a;
   }
   .health-chat-mobile-brand-logo {
     border-radius: 6px;
@@ -5520,35 +5518,49 @@ body.view-health-chat {
     overflow-y: auto !important;
     padding: 0.65rem 0.75rem !important;
     min-height: 0 !important;
+    background: #ededed !important;
   }
 
-  /* ---------- 底部输入栏（固定） ---------- */
+  /* ---------- 底部输入栏（微信风格） ---------- */
   .health-chat-form {
     flex-shrink: 0;
     border-top: 1px solid rgba(0, 0, 0, 0.08);
-    background: #fff;
+    background: #f7f7f7;
   }
 
   .health-chat-composer {
-    padding: 0.5rem 0.65rem calc(0.5rem + env(safe-area-inset-bottom)) !important;
+    padding: 0.45rem 0.5rem calc(0.45rem + env(safe-area-inset-bottom)) !important;
   }
 
   .health-chat-input-row {
     flex-direction: row !important;
     align-items: center !important;
-    gap: 0.4rem !important;
+    gap: 0.35rem !important;
   }
 
   .health-chat-input {
     flex: 1 !important;
     min-width: 0 !important;
+    background: #fff !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 0.5rem 0.7rem !important;
+    font-size: 1rem !important;
+    line-height: 1.4 !important;
+    box-shadow: none !important;
+    outline: none !important;
+  }
+  .health-chat-input:focus {
+    border: none !important;
+    box-shadow: none !important;
   }
 
   .health-chat-send-actions {
     display: flex !important;
     width: auto !important;
-    gap: 0.35rem !important;
+    gap: 0.15rem !important;
     grid-template-columns: none !important;
+    flex-shrink: 0;
   }
 
   /* 按钮：隐藏文字，显示 icon */
@@ -5561,10 +5573,27 @@ body.view-health-chat {
 
   .health-chat-send-actions .health-chat-btn-send,
   .health-chat-send-actions .health-chat-btn-export {
-    width: auto !important;
+    width: 36px !important;
+    height: 36px !important;
     min-width: 0 !important;
-    padding: 0.45rem 0.55rem !important;
+    min-height: 0 !important;
+    padding: 0 !important;
     font-size: 0 !important;
+    border: none !important;
+    border-radius: 50% !important;
+    background: none !important;
+    color: #07c160 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: none !important;
+  }
+  .health-chat-send-actions .health-chat-btn-export {
+    color: #8e8e93 !important;
+  }
+  .health-chat-send-actions .health-chat-btn-send:active,
+  .health-chat-send-actions .health-chat-btn-export:active {
+    background: rgba(0, 0, 0, 0.06) !important;
   }
 
   /* ---------- 会话抽屉 ---------- */
