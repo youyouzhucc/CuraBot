@@ -193,7 +193,7 @@
     }
     const gs = typeof global.__healthGetSpecies === "function" ? global.__healthGetSpecies : null;
     const sp = getChatSpecies(gs);
-    const src = sp === "dog" ? "/images/hero-dog.png" : "/images/hero-cat.png";
+    const src = sp === "dog" ? "/images/hero-dog.png" : sp === "cat" ? "/images/hero-cat.png" : "/images/brand-logo.png";
     return `<div class="health-msg-avatar health-msg-avatar--user" aria-hidden="true"><img class="health-msg-avatar-img" src="${escapeHtml(src)}" alt="" width="40" height="40" loading="lazy" decoding="async" /></div>`;
   }
 
@@ -1909,7 +1909,7 @@
     const knowledge = getKnowledge();
     const steps = getGuidedSteps(knowledge);
     const species = getChatSpecies(global.__healthGetSpecies || (() => chatProfile.species));
-    const label = species === "dog" ? "狗狗" : "猫猫";
+    const label = species === "dog" ? "狗狗" : species === "cat" ? "猫猫" : "毛孩子";
     const parts = [];
     parts.push(`【${label}就诊简报】（科普整理，非诊断、不开药）`);
     parts.push("");
