@@ -280,7 +280,7 @@ a {
 }
 
 .wrap {
-  max-width: min(98vw, 1680px);
+  max-width: min(98vw, 1200px);
   margin: 1.15rem auto 0;
   padding: 0.15rem var(--space-page-x) max(2.75rem, env(safe-area-inset-bottom));
   padding-left: max(var(--space-page-x), env(safe-area-inset-left));
@@ -499,6 +499,7 @@ section[data-view="disclaimer"] > .hero {
   align-items: center;
   gap: 0.45rem;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .home-quick-row-label {
@@ -2915,7 +2916,7 @@ body.view-health-chat {
 }
 
 .wrap.wrap--health-chat {
-  max-width: min(98vw, 1680px);
+  max-width: min(98vw, 1100px);
   height: calc(100vh - 24px);
   padding-top: max(0.8rem, env(safe-area-inset-top));
   padding-bottom: max(0.8rem, env(safe-area-inset-bottom));
@@ -3129,6 +3130,12 @@ body.view-health-chat {
   margin-bottom: 0.35rem;
 }
 
+/* 返回按钮 & 历史会话切换：默认隐藏，移动端显示 */
+.health-chat-back-btn,
+.health-session-toggle {
+  display: none;
+}
+
 @media (max-width: 960px) {
   .health-chat-layout {
     grid-template-columns: 1fr;
@@ -3140,9 +3147,58 @@ body.view-health-chat {
     position: static;
     order: 0;
     border-right: none;
-    border-bottom: 1px solid rgba(37, 99, 235, 0.18);
-    padding-bottom: 0.55rem;
-    margin-bottom: 0.45rem;
+    border-bottom: none;
+    padding-bottom: 0.35rem;
+    margin-bottom: 0.25rem;
+  }
+
+  /* 会话列表默认收起 */
+  .health-session-list {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.25s ease;
+  }
+  .health-chat-sessions.is-expanded .health-session-list {
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+
+  /* 历史会话折叠切换 */
+  .health-session-toggle {
+    display: block;
+    background: none;
+    border: none;
+    padding: 0.2rem 0;
+    font-size: 0.78rem;
+    color: var(--muted);
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
+    margin-bottom: 0.25rem;
+  }
+  .health-session-toggle::after {
+    content: " \25BE";
+    font-size: 0.7em;
+  }
+  .health-chat-sessions.is-expanded .health-session-toggle::after {
+    content: " \25B4";
+  }
+
+  .health-chat-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: none;
+    border: 1px solid var(--border-warm);
+    border-radius: 999px;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.82rem;
+    color: var(--accent-dark);
+    cursor: pointer;
+    margin-bottom: 0.5rem;
+  }
+  .health-chat-back-btn:hover {
+    background: var(--accent-soft);
   }
 
   .health-chat-main {
@@ -3396,6 +3452,23 @@ body.view-health-chat {
 .topbar--banner.topbar--with-auth .topbar-auth-inner {
   max-width: none;
   width: auto;
+}
+
+/* 手机端 header：品牌居中 + 毛孩子信息缩到下方 */
+@media (max-width: 640px) {
+  .topbar--banner.topbar--with-auth {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  .topbar--banner.topbar--with-auth .brand-home {
+    justify-self: center;
+  }
+  .topbar--banner.topbar--with-auth .topbar-auth {
+    justify-content: center;
+    width: 100%;
+  }
 }
 
 .topbar-pet-block {
@@ -4336,8 +4409,8 @@ body.view-health-chat {
   border: 1px solid rgba(30, 58, 138, 0.12);
   background: rgba(255, 255, 255, 0.65);
   border-radius: 999px;
-  padding: 0.35rem 0.85rem;
-  font-size: 0.88rem;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.85rem;
   cursor: pointer;
   color: var(--muted);
 }
@@ -4355,6 +4428,13 @@ body.view-health-chat {
 
 .hgq-panel[hidden] {
   display: none !important;
+}
+
+@media (max-width: 640px) {
+  .hgq-tab {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.82rem;
+  }
 }
 
 @keyframes hgq-fade {

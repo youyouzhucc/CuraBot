@@ -2525,6 +2525,37 @@
       btnNewSession.dataset.bound = "1";
       btnNewSession.addEventListener("click", () => {
         resetConversation(getKnowledge, getSpecies, undefined, { forceNew: true });
+        // 移动端：创建新会话后自动收起列表
+        if (window.innerWidth <= 960) {
+          const aside = btnNewSession.closest(".health-chat-sessions");
+          if (aside) aside.classList.remove("is-expanded");
+        }
+      });
+
+      // 移动端：在新会话按钮下方插入 "历史会话" 折叠切换
+      if (window.innerWidth <= 960 || window.matchMedia("(max-width: 960px)").matches) {
+        const aside = btnNewSession.closest(".health-chat-sessions");
+        if (aside && !aside.querySelector(".health-session-toggle")) {
+          const toggle = document.createElement("button");
+          toggle.type = "button";
+          toggle.className = "health-session-toggle";
+          toggle.textContent = "历史会话";
+          toggle.addEventListener("click", () => {
+            aside.classList.toggle("is-expanded");
+          });
+          btnNewSession.insertAdjacentElement("afterend", toggle);
+        }
+      }
+    }
+
+    // 返回按钮
+    const btnBack = document.getElementById("btnHealthChatBack");
+    if (btnBack && !btnBack.dataset.bound) {
+      btnBack.dataset.bound = "1";
+      btnBack.addEventListener("click", () => {
+        // 回首页
+        const brandBtn = document.getElementById("brandHome");
+        if (brandBtn) brandBtn.click();
       });
     }
     const chatInput = document.getElementById("healthChatInput");
