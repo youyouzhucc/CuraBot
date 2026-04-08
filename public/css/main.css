@@ -3030,8 +3030,8 @@ body.view-health-chat {
 
 .health-msg--bot .health-msg-inner {
   max-width: 100%;
-  background: #fff;
-  border: 1px solid var(--fill-warm);
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
   padding: 0.6rem 0.85rem;
   border-radius: 12px;
 }
