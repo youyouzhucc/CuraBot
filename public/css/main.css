@@ -4587,42 +4587,8 @@ body.view-health-chat {
 }
 
 /* ===== Mobile adaptive hardening =====
- * 目标：避免手机浏览器工具栏导致的 100vh 裁切、标题溢出与输入区拥挤。
+ * 已被末尾沉浸式全屏规则取代，保留注释以备回溯。
  */
-@media (max-width: 960px) {
-  body.view-health-chat {
-    overflow: auto;
-  }
-
-  .wrap.wrap--health-chat {
-    height: auto;
-    min-height: calc(100dvh - 12px);
-    overflow: visible;
-  }
-
-  .wrap.wrap--health-chat section[data-view="healthChat"] > .hero,
-  .wrap.wrap--health-chat .health-chat-hero,
-  .wrap.wrap--health-chat .health-chat-layout {
-    height: auto;
-    min-height: 0;
-  }
-
-  .health-chat-hero {
-    overflow: visible;
-  }
-
-  .health-chat-layout {
-    overflow: visible;
-  }
-}
-
-@supports not (height: 100dvh) {
-  @media (max-width: 960px) {
-    .wrap.wrap--health-chat {
-      min-height: calc(100vh - 12px);
-    }
-  }
-}
 
 @media (max-width: 560px) {
   .wrap {
@@ -5447,7 +5413,7 @@ body.view-health-chat {
   }
 
   .health-chat-mobile-menu-btn,
-  .health-chat-mobile-home-btn {
+  .health-chat-mobile-back-btn {
     background: none;
     border: none;
     padding: 0.35rem;
@@ -5459,7 +5425,7 @@ body.view-health-chat {
     justify-content: center;
   }
   .health-chat-mobile-menu-btn:active,
-  .health-chat-mobile-home-btn:active {
+  .health-chat-mobile-back-btn:active {
     background: rgba(0, 0, 0, 0.06);
   }
 
@@ -5664,7 +5630,10 @@ body.view-health-chat {
     overflow: hidden !important;
   }
 
-  body.view-health-chat .warm-banner { display: none; }
+  body.view-health-chat .warm-banner { display: none !important; }
+
+  /* ---------- 隐藏底部站点 footer ---------- */
+  body.view-health-chat footer.site { display: none !important; }
 }
 
 /* 覆盖 560px 的竖排规则 */
