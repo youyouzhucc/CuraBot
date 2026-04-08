@@ -5582,14 +5582,14 @@ body.view-health-chat {
     border: none !important;
     border-radius: 50% !important;
     background: none !important;
-    color: #07c160 !important;
+    color: #2563eb !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     box-shadow: none !important;
   }
   .health-chat-send-actions .health-chat-btn-export {
-    color: #8e8e93 !important;
+    color: #64748b !important;
   }
   .health-chat-send-actions .health-chat-btn-send:active,
   .health-chat-send-actions .health-chat-btn-export:active {
