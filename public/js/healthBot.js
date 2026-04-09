@@ -1738,7 +1738,18 @@
     const knowledge = getKnowledge();
     const steps = getGuidedSteps(knowledge);
     const switchedSpecies = forceSwitchSpeciesIfNeeded(raw, getSpecies);
-    const species = switchedSpecies || getChatSpecies(getSpecies);
+    let species = switchedSpecies || getChatSpecies(getSpecies);
+
+    /* 如果 species 来自档案/上次会话而非用户本次文字，且 history 中用户
+       从未主动提到猫/狗，就不把 species 传给 LLM，避免回复默认提「猫猫」 */
+    if (species && !switchedSpecies) {
+      const userTexts = history
+        .filter(function (h) { return h.role === "user"; })
+        .map(function (h) { return String(h.content || ""); })
+        .join("\n") + "\n" + raw;
+      const userMentioned = detectSpeciesFromUserText(userTexts);
+      if (!userMentioned) species = null;
+    }
     const prefix = formatProfilePrefix(chatProfile, steps);
 
     let composedForLlm = "";
